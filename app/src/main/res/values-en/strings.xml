@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Al-Minshawi</string>
+    <string name="sheikh_name">Sheikh Mohamed Siddiq Al-Minshawi</string>
+    <string name="sheikh_short">Sheikh Al-Minshawi - Murattal</string>
+    <string name="surah_prefix">Surah</string>
+    <string name="search_surahs">Search surahs…</string>
+    <string name="settings">Settings</string>
+    <string name="language">Language</string>
+    <string name="arabic">العربية</string>
+    <string name="english">English</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="rewind">Rewind 10s</string>
+    <string name="forward">Forward 30s</string>
+    <string name="app_language">App Language</string>
+    <string name="close">Close</string>
+</resources>

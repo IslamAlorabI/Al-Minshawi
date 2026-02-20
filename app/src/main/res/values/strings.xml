@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">المنشاوي</string>
+    <string name="sheikh_name">الشيخ محمد صديق المنشاوي</string>
+    <string name="sheikh_short">الشيخ المنشاوي - مرتل</string>
+    <string name="surah_prefix">سورة</string>
+    <string name="search_surahs">ابحث في السور…</string>
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="arabic">العربية</string>
+    <string name="english">English</string>
+    <string name="play">تشغيل</string>
+    <string name="pause">إيقاف</string>
+    <string name="rewind">إرجاع 10 ثواني</string>
+    <string name="forward">تقديم 30 ثانية</string>
+    <string name="app_language">لغة التطبيق</string>
+    <string name="close">إغلاق</string>
+</resources>
