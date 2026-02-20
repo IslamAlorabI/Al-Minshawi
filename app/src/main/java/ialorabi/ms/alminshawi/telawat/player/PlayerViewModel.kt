@@ -12,6 +12,7 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import ialorabi.ms.alminshawi.telawat.data.Surah
+import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -136,7 +137,7 @@ class PlayerViewModel : ViewModel() {
 
     fun seekForward() {
         player?.let {
-            val nextPosition = (it.currentPosition + 10_000).coerceAtMost(it.duration)
+            val nextPosition = (it.currentPosition + 30_000).coerceAtMost(it.duration)
             seekTo(nextPosition)
         }
     }
@@ -145,6 +146,22 @@ class PlayerViewModel : ViewModel() {
         player?.let {
             val previousPosition = (it.currentPosition - 10_000).coerceAtLeast(0L)
             seekTo(previousPosition)
+        }
+    }
+
+    fun playNextSurah() {
+        val currentId = _currentPlayingSurahId.value ?: return
+        val surahs = SurahRepository.surahs
+        if (currentId < surahs.size) {
+            playSurah(surahs[currentId]) // currentId is 1-based, so surahs[currentId] naturally points to index currentId (which is the next item)
+        }
+    }
+
+    fun playPreviousSurah() {
+        val currentId = _currentPlayingSurahId.value ?: return
+        val surahs = SurahRepository.surahs
+        if (currentId > 1) {
+            playSurah(surahs[currentId - 2]) // currentId - 1 gives current, so - 2 gives previous index
         }
     }
 

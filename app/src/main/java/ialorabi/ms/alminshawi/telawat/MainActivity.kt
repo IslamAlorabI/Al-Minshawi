@@ -25,6 +25,10 @@ import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
@@ -64,15 +68,11 @@ class MainActivity : AppCompatActivity() {
                 QuranAppUi(playerViewModel)
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
         playerViewModel.initializeController(this)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
         playerViewModel.releaseController()
     }
 }
@@ -123,7 +123,16 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold) },
+                title = { 
+                    Column {
+                        Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.app_subtitle),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -181,7 +190,8 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                     SurahItem(
                         surah = surah,
                         localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
-                        isPlayingHere = currentSurahId == surah.id,
+                        isCurrentSelected = currentSurahId == surah.id,
+                        isPlaying = isPlaying,
                         isBuffering = isBuffering && currentSurahId == surah.id,
                         onPlayClick = { viewModel.playSurah(surah) },
                         onPauseClick = { viewModel.togglePlayPause() }
@@ -242,8 +252,8 @@ fun WavyTopDecor() {
             moveTo(0f, height / 2)
             var currentX = 0f
             while (currentX < width) {
-                relativeQuadraticBezierTo(waveWidth / 4, -height / 2, waveWidth / 2, 0f)
-                relativeQuadraticBezierTo(waveWidth / 4, height / 2, waveWidth / 2, 0f)
+                relativeQuadraticTo(waveWidth / 4, -height / 2, waveWidth / 2, 0f)
+                relativeQuadraticTo(waveWidth / 4, height / 2, waveWidth / 2, 0f)
                 currentX += waveWidth
             }
         }
@@ -259,7 +269,8 @@ fun WavyTopDecor() {
 fun SurahItem(
     surah: Surah,
     localizedName: String,
-    isPlayingHere: Boolean,
+    isCurrentSelected: Boolean,
+    isPlaying: Boolean,
     isBuffering: Boolean,
     onPlayClick: () -> Unit,
     onPauseClick: () -> Unit
@@ -268,11 +279,11 @@ fun SurahItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                if (isPlayingHere) onPauseClick() else onPlayClick()
+                if (isCurrentSelected) onPauseClick() else onPlayClick()
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isPlayingHere) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+            containerColor = if (isCurrentSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         )
     ) {
         Row(
@@ -310,11 +321,13 @@ fun SurahItem(
                 BufferingIndicator(modifier = Modifier.size(40.dp))
             } else {
                 IconButton(
-                    onClick = { if (isPlayingHere) onPauseClick() else onPlayClick() }
+                    onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() }
                 ) {
+                    val icon = if (isCurrentSelected && isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow
+                    val desc = if (isCurrentSelected && isPlaying) stringResource(R.string.pause) else stringResource(R.string.play)
                     Icon(
-                        imageVector = if (isPlayingHere) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (isPlayingHere) stringResource(R.string.pause) else stringResource(R.string.play),
+                        imageVector = icon,
+                        contentDescription = desc,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
@@ -411,14 +424,15 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
 
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
-            .statusBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .statusBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
         Box(
             modifier = Modifier
@@ -436,22 +450,40 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
-            text = "${stringResource(R.string.surah_prefix)} $localizedName",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = stringResource(R.string.sheikh_name),
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
-        )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.MenuBook,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${stringResource(R.string.surah_prefix)} $localizedName (${surah.id})",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.sheikh_name),
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
         Slider(
             value = progress,
@@ -473,46 +505,61 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            FilledTonalIconButton(
-                onClick = { viewModel.seekBackward() },
-                modifier = Modifier.size(64.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Replay10,
-                    contentDescription = stringResource(R.string.rewind),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+                IconButton(
+                    onClick = { viewModel.playPreviousSurah() },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(imageVector = Icons.Rounded.SkipPrevious, contentDescription = "Previous Surah", modifier = Modifier.size(32.dp))
+                }
 
-            if (isBuffering) {
-                BufferingIndicator(modifier = Modifier.size(80.dp))
-            } else {
-                FilledIconButton(
-                    onClick = { viewModel.togglePlayPause() },
-                    modifier = Modifier.size(80.dp)
+                FilledTonalIconButton(
+                    onClick = { viewModel.seekBackward() },
+                    modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                        modifier = Modifier.size(44.dp)
+                        imageVector = Icons.Rounded.Replay10,
+                        contentDescription = stringResource(R.string.rewind),
+                        modifier = Modifier.size(28.dp)
                     )
                 }
-            }
 
-            FilledTonalIconButton(
-                onClick = { viewModel.seekForward() },
-                modifier = Modifier.size(64.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Forward30,
-                    contentDescription = stringResource(R.string.forward),
-                    modifier = Modifier.size(32.dp)
-                )
+                if (isBuffering) {
+                    BufferingIndicator(modifier = Modifier.size(80.dp))
+                } else {
+                    FilledIconButton(
+                        onClick = { viewModel.togglePlayPause() },
+                        modifier = Modifier.size(80.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                            modifier = Modifier.size(44.dp)
+                        )
+                    }
+                }
+
+                FilledTonalIconButton(
+                    onClick = { viewModel.seekForward() },
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Forward30,
+                        contentDescription = stringResource(R.string.forward),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = { viewModel.playNextSurah() },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(imageVector = Icons.Rounded.SkipNext, contentDescription = "Next Surah", modifier = Modifier.size(32.dp))
+                }
             }
         }
     }

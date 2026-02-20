@@ -2,6 +2,7 @@
     <string name="app_name">Al-Minshawi</string>
     <string name="sheikh_name">Mohamed Siddiq Al-Minshawi</string>
     <string name="sheikh_short">Sheikh Al-Minshawi - Murattal</string>
+    <string name="app_subtitle">Sheikh Al-Minshawi – Murattal Quran</string>
     <string name="surah_prefix">Surah</string>
     <string name="search_surahs">Search surahs…</string>
     <string name="settings">Settings</string>
