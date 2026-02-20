@@ -9,7 +9,7 @@ data class Surah(
 object SurahRepository {
     // Replace this with the actual Archive.org identifier/path where you uploaded the files.
     // Ensure the files are named like 001.mp3, 002.mp3, ... 114.mp3
-    private const val BASE_URL = "https://archive.org/download/001_20260219_202602/"
+    private const val BASE_URL = "https://archive.org/download/002_20260220/"
 
     private val surahNames = listOf(
         "الفاتحة", "البقرة", "آل عمران", "النساء", "المائدة", "الأنعام", "الأعراف", "الأنفال",
