@@ -98,6 +98,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 sheetState = sheetState,
                 containerColor = MaterialTheme.colorScheme.surface,
                 dragHandle = {},
+                shape = androidx.compose.ui.graphics.RectangleShape,
                 modifier = Modifier.fillMaxSize()
             ) {
                 FullScreenPlayer(
