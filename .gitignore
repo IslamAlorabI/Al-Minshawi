@@ -66,3 +66,6 @@ CTestTestfile.cmake
 
 # Mac
 .DS_Store
+
+# Build output
+app/release/
