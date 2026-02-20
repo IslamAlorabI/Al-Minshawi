@@ -30,4 +30,5 @@
     <string name="no_cached_surahs">No Surahs have been cached yet.</string>
     <string name="undo">Undo</string>
     <string name="surah_deleted">Surah deleted</string>
+    <string name="confirm_delete_surah">Confirm delete?</string>
 </resources>

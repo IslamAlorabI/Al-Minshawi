@@ -15,13 +15,10 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.background
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -243,69 +240,75 @@ class SettingsActivity : AppCompatActivity() {
                                                 items = cachedSurahs,
                                                 key = { it.id }
                                             ) { surah ->
-                                                val dismissState = rememberSwipeToDismissBoxState(
-                                                    confirmValueChange = { value ->
-                                                        if (value != SwipeToDismissBoxValue.Settled) {
-                                                            val removedSurah = surah
-                                                            PlaybackService.removeSurahCache(removedSurah)
-                                                            cachedSurahs = PlaybackService.getCachedSurahs()
-                                                            cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
-                                                            scope.launch {
-                                                                val result = snackbarHostState.showSnackbar(
-                                                                    message = deletedText,
-                                                                    actionLabel = undoText,
-                                                                    duration = SnackbarDuration.Short
-                                                                )
-                                                                if (result == SnackbarResult.ActionPerformed) {
-                                                                    // Undo is not possible after cache removal,
-                                                                    // the file will be re-cached on next play
-                                                                }
-                                                            }
-                                                            true
-                                                        } else false
-                                                    }
-                                                )
-                                                SwipeToDismissBox(
-                                                    state = dismissState,
-                                                    backgroundContent = {
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .fillMaxSize()
-                                                                .background(MaterialTheme.colorScheme.errorContainer)
-                                                                .padding(horizontal = 20.dp),
-                                                            contentAlignment = Alignment.CenterEnd
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Rounded.Delete,
-                                                                contentDescription = null,
-                                                                tint = MaterialTheme.colorScheme.onErrorContainer
-                                                            )
-                                                        }
-                                                    },
-                                                    enableDismissFromStartToEnd = false
-                                                ) {
+                                                var showInlineConfirm by remember { mutableStateOf(false) }
+
+                                                Column(modifier = Modifier.animateItem()) {
                                                     val localizedName = localizedNames.getOrElse(surah.id - 1) { surah.name }
                                                     Row(
                                                         modifier = Modifier
                                                             .fillMaxWidth()
-                                                            .background(MaterialTheme.colorScheme.surface)
-                                                            .padding(vertical = 12.dp, horizontal = 4.dp),
+                                                            .padding(vertical = 4.dp),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
-                                                        Text(
-                                                            text = "${surah.id}. $localizedName",
+                                                        AnimatedContent(
+                                                            targetState = showInlineConfirm,
+                                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
                                                             modifier = Modifier.weight(1f),
-                                                            style = MaterialTheme.typography.bodyLarge
-                                                        )
-                                                        Icon(
-                                                            imageVector = Icons.Rounded.Delete,
-                                                            contentDescription = null,
-                                                            tint = MaterialTheme.colorScheme.error,
-                                                            modifier = Modifier.size(20.dp)
-                                                        )
+                                                            label = "confirmDelete"
+                                                        ) { isConfirming ->
+                                                            if (isConfirming) {
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    verticalAlignment = Alignment.CenterVertically,
+                                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                                ) {
+                                                                    Text(
+                                                                        text = stringResource(R.string.confirm_delete_surah),
+                                                                        style = MaterialTheme.typography.bodyMedium,
+                                                                        color = MaterialTheme.colorScheme.error,
+                                                                        modifier = Modifier.padding(start = 8.dp)
+                                                                    )
+                                                                    Row {
+                                                                        TextButton(onClick = { showInlineConfirm = false }) {
+                                                                            Text(stringResource(R.string.cancel))
+                                                                        }
+                                                                        TextButton(
+                                                                            onClick = {
+                                                                                showInlineConfirm = false
+                                                                                PlaybackService.removeSurahCache(surah)
+                                                                                cachedSurahs = PlaybackService.getCachedSurahs()
+                                                                                cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                                                                            }
+                                                                        ) {
+                                                                            Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                                                                        }
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                Row(
+                                                                    modifier = Modifier.fillMaxWidth(),
+                                                                    verticalAlignment = Alignment.CenterVertically
+                                                                ) {
+                                                                    Text(
+                                                                        text = "${surah.id}. $localizedName",
+                                                                        modifier = Modifier.weight(1f),
+                                                                        style = MaterialTheme.typography.bodyLarge
+                                                                    )
+                                                                    IconButton(
+                                                                        onClick = { showInlineConfirm = true }
+                                                                    ) {
+                                                                        Icon(
+                                                                            imageVector = Icons.Rounded.Delete,
+                                                                            contentDescription = null,
+                                                                            tint = MaterialTheme.colorScheme.error
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
+                                                    HorizontalDivider()
                                                 }
-                                                HorizontalDivider()
                                             }
                                         }
                                     }
