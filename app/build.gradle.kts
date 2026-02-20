@@ -23,6 +23,8 @@ android {
 
     buildTypes {
         release {
+            // Using debug key for local release testing allows you to run it via Android Studio
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
