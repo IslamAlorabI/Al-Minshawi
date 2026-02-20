@@ -61,6 +61,7 @@ class PlaybackService : MediaSessionService() {
         val cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache!!)
             .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
         val player = ExoPlayer.Builder(this)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
