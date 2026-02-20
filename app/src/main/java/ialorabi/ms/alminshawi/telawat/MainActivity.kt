@@ -54,9 +54,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             AlMinshawiTheme {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    QuranAppUi(playerViewModel)
-                }
+                QuranAppUi(playerViewModel)
             }
         }
     }
@@ -118,16 +116,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        IconButton(onClick = {
-                            context.startActivity(Intent(context, SettingsActivity::class.java))
-                        }) {
-                            Icon(
-                                imageVector = Icons.Rounded.Settings,
-                                contentDescription = stringResource(R.string.settings),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
+                    IconButton(onClick = {
+                        context.startActivity(Intent(context, SettingsActivity::class.java))
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             )
@@ -180,32 +176,30 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 
 @Composable
 fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: Boolean, onActiveChange: (Boolean) -> Unit) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        TextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text(stringResource(R.string.search_surahs)) },
-            leadingIcon = {
-                Icon(Icons.Rounded.Search, contentDescription = null)
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Rounded.Close, contentDescription = null)
-                    }
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        placeholder = { Text(stringResource(R.string.search_surahs)) },
+        leadingIcon = {
+            Icon(Icons.Rounded.Search, contentDescription = null)
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Rounded.Close, contentDescription = null)
                 }
-            },
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium,
-            colors = TextFieldDefaults.colors(
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
-            )
+            }
+        },
+        singleLine = true,
+        shape = MaterialTheme.shapes.medium,
+        colors = TextFieldDefaults.colors(
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent
         )
-    }
+    )
 }
 
 @Composable
@@ -257,17 +251,15 @@ fun SurahItem(
             if (isBuffering) {
                 BufferingIndicator(modifier = Modifier.size(40.dp))
             } else {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    IconButton(
-                        onClick = { if (isPlayingHere) onPauseClick() else onPlayClick() }
-                    ) {
-                        Icon(
-                            imageVector = if (isPlayingHere) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isPlayingHere) stringResource(R.string.pause) else stringResource(R.string.play),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                IconButton(
+                    onClick = { if (isPlayingHere) onPauseClick() else onPlayClick() }
+                ) {
+                    Icon(
+                        imageVector = if (isPlayingHere) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (isPlayingHere) stringResource(R.string.pause) else stringResource(R.string.play),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
@@ -285,17 +277,15 @@ fun BufferingIndicator(modifier: Modifier = Modifier) {
         ),
         label = "rotation"
     )
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = Icons.Rounded.Sync,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(24.dp)
-                    .rotate(rotation)
-            )
-        }
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Icon(
+            imageVector = Icons.Rounded.Sync,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(24.dp)
+                .rotate(rotation)
+        )
     }
 }
 
@@ -337,17 +327,15 @@ fun BottomPlayerBar(
             if (isBuffering) {
                 BufferingIndicator(modifier = Modifier.size(50.dp))
             } else {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    FilledIconButton(
-                        onClick = onPlayPauseClick,
-                        modifier = Modifier.size(50.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                FilledIconButton(
+                    onClick = onPlayPauseClick,
+                    modifier = Modifier.size(50.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
@@ -406,70 +394,66 @@ fun FullScreenPlayer(surah: Surah, viewModel: PlayerViewModel) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Slider(
-                value = progress,
-                onValueChange = { newProgress ->
-                    viewModel.seekTo((newProgress * duration).toLong())
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+        Slider(
+            value = progress,
+            onValueChange = { newProgress ->
+                viewModel.seekTo((newProgress * duration).toLong())
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
-                Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
-            }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
+            Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilledTonalIconButton(
+                onClick = { viewModel.seekBackward() },
+                modifier = Modifier.size(64.dp)
             ) {
-                FilledTonalIconButton(
-                    onClick = { viewModel.seekBackward() },
-                    modifier = Modifier.size(64.dp)
+                Icon(
+                    imageVector = Icons.Rounded.Replay10,
+                    contentDescription = stringResource(R.string.rewind),
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            if (isBuffering) {
+                BufferingIndicator(modifier = Modifier.size(80.dp))
+            } else {
+                FilledIconButton(
+                    onClick = { viewModel.togglePlayPause() },
+                    modifier = Modifier.size(80.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Replay10,
-                        contentDescription = stringResource(R.string.rewind),
-                        modifier = Modifier.size(32.dp)
+                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                        modifier = Modifier.size(44.dp)
                     )
                 }
+            }
 
-                if (isBuffering) {
-                    BufferingIndicator(modifier = Modifier.size(80.dp))
-                } else {
-                    FilledIconButton(
-                        onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
-                }
-
-                FilledTonalIconButton(
-                    onClick = { viewModel.seekForward() },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Forward30,
-                        contentDescription = stringResource(R.string.forward),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+            FilledTonalIconButton(
+                onClick = { viewModel.seekForward() },
+                modifier = Modifier.size(64.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Forward30,
+                    contentDescription = stringResource(R.string.forward),
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     }

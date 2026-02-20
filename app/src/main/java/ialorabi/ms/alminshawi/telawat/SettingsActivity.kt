@@ -33,64 +33,62 @@ class SettingsActivity : AppCompatActivity() {
                     mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags())
                 }
 
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                title = { Text(stringResource(R.string.settings)) },
-                                navigationIcon = {
-                                    IconButton(onClick = { finish() }) {
-                                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.close))
-                                    }
-                                },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            )
-                        }
-                    ) { padding ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding)
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.app_language),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            LanguageOption(
-                                label = stringResource(R.string.system_default),
-                                icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                                isSelected = currentLang.isEmpty(),
-                                onClick = {
-                                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
-                                    currentLang = ""
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(R.string.settings)) },
+                            navigationIcon = {
+                                IconButton(onClick = { finish() }) {
+                                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.close))
                                 }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                             )
+                        )
+                    }
+                ) { padding ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.app_language),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
 
-                            LanguageOption(
-                                label = stringResource(R.string.arabic),
-                                isSelected = currentLang.startsWith("ar"),
-                                onClick = {
-                                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ar"))
-                                    currentLang = "ar"
-                                }
-                            )
+                        LanguageOption(
+                            label = stringResource(R.string.system_default),
+                            icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = currentLang.isEmpty(),
+                            onClick = {
+                                AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+                                currentLang = ""
+                            }
+                        )
 
-                            LanguageOption(
-                                label = stringResource(R.string.english),
-                                isSelected = currentLang.startsWith("en"),
-                                onClick = {
-                                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
-                                    currentLang = "en"
-                                }
-                            )
-                        }
+                        LanguageOption(
+                            label = stringResource(R.string.arabic),
+                            isSelected = currentLang.startsWith("ar"),
+                            onClick = {
+                                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ar"))
+                                currentLang = "ar"
+                            }
+                        )
+
+                        LanguageOption(
+                            label = stringResource(R.string.english),
+                            isSelected = currentLang.startsWith("en"),
+                            onClick = {
+                                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
+                                currentLang = "en"
+                            }
+                        )
                     }
                 }
             }
