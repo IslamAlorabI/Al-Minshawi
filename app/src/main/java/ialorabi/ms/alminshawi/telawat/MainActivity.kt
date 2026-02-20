@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringArrayResource
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
@@ -85,8 +86,13 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
 
+    val localizedSurahNames = stringArrayResource(R.array.surah_names)
+
     val filteredSurahs = if (searchQuery.isEmpty()) surahs
-    else surahs.filter { it.name.contains(searchQuery) || it.id.toString().contains(searchQuery) }
+    else surahs.filter { surah ->
+        val locName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name }
+        locName.contains(searchQuery, ignoreCase = true) || surah.name.contains(searchQuery, ignoreCase = true) || surah.id.toString().contains(searchQuery) 
+    }
 
     if (showBottomSheet && currentSurahId != null) {
         val currentSurah = surahs.find { it.id == currentSurahId }
@@ -101,6 +107,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             ) {
                 FullScreenPlayer(
                     surah = surah,
+                    localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
                     viewModel = viewModel
                 )
             }
@@ -134,6 +141,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 currentSurah?.let {
                     BottomPlayerBar(
                         surah = it,
+                        localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
                         onPlayPauseClick = { viewModel.togglePlayPause() },
@@ -163,6 +171,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 items(filteredSurahs) { surah ->
                     SurahItem(
                         surah = surah,
+                        localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
                         isPlayingHere = currentSurahId == surah.id,
                         isBuffering = isBuffering && currentSurahId == surah.id,
                         onPlayClick = { viewModel.playSurah(surah) },
@@ -205,6 +214,7 @@ fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: B
 @Composable
 fun SurahItem(
     surah: Surah,
+    localizedName: String,
     isPlayingHere: Boolean,
     isBuffering: Boolean,
     onPlayClick: () -> Unit,
@@ -240,7 +250,7 @@ fun SurahItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = "${stringResource(R.string.surah_prefix)} ${surah.name}",
+                text = "${stringResource(R.string.surah_prefix)} $localizedName",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -292,6 +302,7 @@ fun BufferingIndicator(modifier: Modifier = Modifier) {
 @Composable
 fun BottomPlayerBar(
     surah: Surah,
+    localizedName: String,
     isPlaying: Boolean,
     isBuffering: Boolean,
     onPlayPauseClick: () -> Unit,
@@ -313,7 +324,7 @@ fun BottomPlayerBar(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${stringResource(R.string.surah_prefix)} ${surah.name}",
+                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -344,7 +355,7 @@ fun BottomPlayerBar(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FullScreenPlayer(surah: Surah, viewModel: PlayerViewModel) {
+fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewModel) {
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
     val currentPos by viewModel.currentPosition.collectAsState()
@@ -380,7 +391,7 @@ fun FullScreenPlayer(surah: Surah, viewModel: PlayerViewModel) {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "${stringResource(R.string.surah_prefix)} ${surah.name}",
+            text = "${stringResource(R.string.surah_prefix)} $localizedName",
             fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.onSurface
