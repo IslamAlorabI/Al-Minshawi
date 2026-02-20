@@ -84,8 +84,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         )
                         .build()
                     
-                    exo.setMediaItem(mediaItem)
-                    exo.seekTo(lastPos)
+                    exo.setMediaItem(mediaItem, lastPos)
                     exo.prepare()
                     
                     _currentPlayingSurahId.value = lastSurahId
