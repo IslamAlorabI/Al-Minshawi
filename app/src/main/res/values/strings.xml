@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">المنشاوي</string>
-    <string name="sheikh_name">الشيخ محمد صديق المنشاوي</string>
+    <string name="sheikh_name">محمد صديق المنشاوي</string>
     <string name="sheikh_short">الشيخ المنشاوي - مرتل</string>
     <string name="surah_prefix">سورة</string>
     <string name="search_surahs">ابحث في السور…</string>

@@ -43,6 +43,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
@@ -119,8 +125,9 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             TopAppBar(
                 title = { Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
                     IconButton(onClick = {
@@ -129,7 +136,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
                             contentDescription = stringResource(R.string.settings),
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -156,6 +163,8 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            WavyTopDecor()
+
             SearchBarSection(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
@@ -185,12 +194,18 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 
 @Composable
 fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: Boolean, onActiveChange: (Boolean) -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val borderColor = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent
+
     TextField(
         value = query,
         onValueChange = onQueryChange,
+        interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(2.dp, borderColor, MaterialTheme.shapes.medium),
         placeholder = { Text(stringResource(R.string.search_surahs)) },
         leadingIcon = {
             Icon(Icons.Rounded.Search, contentDescription = null)
@@ -212,6 +227,35 @@ fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: B
 }
 
 @Composable
+fun WavyTopDecor() {
+    val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .padding(vertical = 8.dp)
+    ) {
+        val width = size.width
+        val height = size.height
+        val waveWidth = 40.dp.toPx()
+        val path = Path().apply {
+            moveTo(0f, height / 2)
+            var currentX = 0f
+            while (currentX < width) {
+                relativeQuadraticBezierTo(waveWidth / 4, -height / 2, waveWidth / 2, 0f)
+                relativeQuadraticBezierTo(waveWidth / 4, height / 2, waveWidth / 2, 0f)
+                currentX += waveWidth
+            }
+        }
+        drawPath(
+            path = path,
+            color = waveColor,
+            style = Stroke(width = 2.dp.toPx())
+        )
+    }
+}
+
+@Composable
 fun SurahItem(
     surah: Surah,
     localizedName: String,
@@ -221,7 +265,11 @@ fun SurahItem(
     onPauseClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (isPlayingHere) onPauseClick() else onPlayClick()
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isPlayingHere) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
