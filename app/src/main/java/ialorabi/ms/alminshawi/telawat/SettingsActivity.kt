@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
+import android.content.Context
 
 class SettingsActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -29,8 +32,13 @@ class SettingsActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             AlMinshawiTheme {
+                val sharedPrefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+
                 var currentLang by remember {
                     mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags())
+                }
+                var currentTheme by remember {
+                    mutableStateOf(sharedPrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM))
                 }
 
                 Scaffold(
@@ -62,7 +70,7 @@ class SettingsActivity : AppCompatActivity() {
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
 
-                        LanguageOption(
+                        SettingOption(
                             label = stringResource(R.string.system_default),
                             icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = currentLang.isEmpty(),
@@ -72,7 +80,7 @@ class SettingsActivity : AppCompatActivity() {
                             }
                         )
 
-                        LanguageOption(
+                        SettingOption(
                             label = stringResource(R.string.arabic),
                             isSelected = currentLang.startsWith("ar"),
                             onClick = {
@@ -81,12 +89,53 @@ class SettingsActivity : AppCompatActivity() {
                             }
                         )
 
-                        LanguageOption(
+                        SettingOption(
                             label = stringResource(R.string.english),
                             isSelected = currentLang.startsWith("en"),
                             onClick = {
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
                                 currentLang = "en"
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = stringResource(R.string.app_theme),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        SettingOption(
+                            label = stringResource(R.string.system_default),
+                            icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                            onClick = {
+                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                                currentTheme = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                            }
+                        )
+
+                        SettingOption(
+                            label = stringResource(R.string.theme_dark),
+                            icon = { Icon(Icons.Rounded.DarkMode, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_YES,
+                            onClick = {
+                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES).apply()
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                                currentTheme = AppCompatDelegate.MODE_NIGHT_YES
+                            }
+                        )
+
+                        SettingOption(
+                            label = stringResource(R.string.theme_light),
+                            icon = { Icon(Icons.Rounded.LightMode, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_NO,
+                            onClick = {
+                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO).apply()
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                                currentTheme = AppCompatDelegate.MODE_NIGHT_NO
                             }
                         )
                     }
@@ -97,7 +146,7 @@ class SettingsActivity : AppCompatActivity() {
 }
 
 @Composable
-fun LanguageOption(
+fun SettingOption(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,

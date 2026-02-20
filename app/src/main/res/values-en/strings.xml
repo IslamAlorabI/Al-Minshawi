@@ -9,6 +9,9 @@
     <string name="language">Language</string>
     <string name="arabic">العربية</string>
     <string name="english">English</string>
+    <string name="app_theme">App Theme</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
     <string name="rewind">Rewind 10s</string>
