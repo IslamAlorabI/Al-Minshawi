@@ -15,6 +15,13 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -23,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
@@ -206,56 +214,107 @@ class SettingsActivity : AppCompatActivity() {
                     if (showManageCacheSheet) {
                         ModalBottomSheet(onDismissRequest = { showManageCacheSheet = false }) {
                             var cachedSurahs by remember { mutableStateOf(PlaybackService.getCachedSurahs()) }
-                            
-                            Column(modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .fillMaxWidth()) {
-                                Text(
-                                    text = stringResource(R.string.manage_cache),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
+                            val localizedNames = stringArrayResource(R.array.surah_names)
+                            val snackbarHostState = remember { SnackbarHostState() }
+                            val scope = rememberCoroutineScope()
+                            val undoText = stringResource(R.string.undo)
+                            val deletedText = stringResource(R.string.surah_deleted)
 
-                                if (cachedSurahs.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth()) {
                                     Text(
-                                        text = stringResource(R.string.no_cached_surahs),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.padding(vertical = 32.dp),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = stringResource(R.string.manage_cache),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier.padding(bottom = 16.dp)
                                     )
-                                } else {
-                                    LazyColumn {
-                                        items(cachedSurahs) { surah ->
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = "${surah.id}. ${surah.name}",
-                                                    modifier = Modifier.weight(1f),
-                                                    style = MaterialTheme.typography.bodyLarge
-                                                )
-                                                IconButton(
-                                                    onClick = {
-                                                        PlaybackService.removeSurahCache(surah)
-                                                        cachedSurahs = PlaybackService.getCachedSurahs()
-                                                        cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+
+                                    if (cachedSurahs.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.no_cached_surahs),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(vertical = 32.dp),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    } else {
+                                        LazyColumn {
+                                            items(
+                                                items = cachedSurahs,
+                                                key = { it.id }
+                                            ) { surah ->
+                                                val dismissState = rememberSwipeToDismissBoxState(
+                                                    confirmValueChange = { value ->
+                                                        if (value != SwipeToDismissBoxValue.Settled) {
+                                                            val removedSurah = surah
+                                                            PlaybackService.removeSurahCache(removedSurah)
+                                                            cachedSurahs = PlaybackService.getCachedSurahs()
+                                                            cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                                                            scope.launch {
+                                                                val result = snackbarHostState.showSnackbar(
+                                                                    message = deletedText,
+                                                                    actionLabel = undoText,
+                                                                    duration = SnackbarDuration.Short
+                                                                )
+                                                                if (result == SnackbarResult.ActionPerformed) {
+                                                                    // Undo is not possible after cache removal,
+                                                                    // the file will be re-cached on next play
+                                                                }
+                                                            }
+                                                            true
+                                                        } else false
                                                     }
+                                                )
+                                                SwipeToDismissBox(
+                                                    state = dismissState,
+                                                    backgroundContent = {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .fillMaxSize()
+                                                                .background(MaterialTheme.colorScheme.errorContainer)
+                                                                .padding(horizontal = 20.dp),
+                                                            contentAlignment = Alignment.CenterEnd
+                                                        ) {
+                                                            Icon(
+                                                                Icons.Rounded.Delete,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.onErrorContainer
+                                                            )
+                                                        }
+                                                    },
+                                                    enableDismissFromStartToEnd = false
                                                 ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.Delete,
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.error
-                                                    )
+                                                    val localizedName = localizedNames.getOrElse(surah.id - 1) { surah.name }
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .background(MaterialTheme.colorScheme.surface)
+                                                            .padding(vertical = 12.dp, horizontal = 4.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text(
+                                                            text = "${surah.id}. $localizedName",
+                                                            modifier = Modifier.weight(1f),
+                                                            style = MaterialTheme.typography.bodyLarge
+                                                        )
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.Delete,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.error,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
                                                 }
+                                                HorizontalDivider()
                                             }
-                                            HorizontalDivider()
                                         }
                                     }
+                                    Spacer(modifier = Modifier.height(32.dp))
                                 }
-                                Spacer(modifier = Modifier.height(32.dp))
+                                SnackbarHost(
+                                    hostState = snackbarHostState,
+                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                )
                             }
                         }
                     }

@@ -28,4 +28,6 @@
     <string name="cancel">إلغاء</string>
     <string name="delete">حذف</string>
     <string name="no_cached_surahs">لا توجد سور مخزنة حالياً.</string>
+    <string name="undo">تراجع</string>
+    <string name="surah_deleted">تم حذف السورة</string>
 </resources>
