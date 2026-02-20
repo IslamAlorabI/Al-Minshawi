@@ -22,4 +22,10 @@
     <string name="system_default_mode">حسب النظام</string>
     <string name="storage">التخزين</string>
     <string name="clear_cache">مسح الملفات الصوتية المخزنة</string>
+    <string name="manage_cache">إدارة السور المخزنة</string>
+    <string name="clear_cache_confirm_title">مسح جميع الملفات؟</string>
+    <string name="clear_cache_confirm_message">هل أنت متأكد من مسح جميع الملفات الصوتية المخزنة؟ لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+    <string name="no_cached_surahs">لا توجد سور مخزنة حالياً.</string>
 </resources>

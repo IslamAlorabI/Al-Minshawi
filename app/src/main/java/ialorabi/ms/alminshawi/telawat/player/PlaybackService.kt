@@ -12,6 +12,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import ialorabi.ms.alminshawi.telawat.data.Surah
+import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import java.io.File
 import android.content.Context
 class PlaybackService : MediaSessionService() {
@@ -33,6 +35,15 @@ class PlaybackService : MediaSessionService() {
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
             }
+        }
+
+        fun getCachedSurahs(): List<Surah> {
+            val cachedKeys = cache?.keys ?: emptySet()
+            return SurahRepository.surahs.filter { surah -> cachedKeys.contains(surah.url) }
+        }
+
+        fun removeSurahCache(surah: Surah) {
+            cache?.removeResource(surah.url)
         }
 
         private fun getFolderSize(file: File): Long {

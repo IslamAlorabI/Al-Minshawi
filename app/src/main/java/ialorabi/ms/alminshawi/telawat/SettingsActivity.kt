@@ -14,6 +14,9 @@ import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +49,8 @@ class SettingsActivity : AppCompatActivity() {
                 var cacheSizeBytes by remember {
                     mutableStateOf(0L)
                 }
+                var showClearAllDialog by remember { mutableStateOf(false) }
+                var showManageCacheSheet by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
                     cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
@@ -160,14 +165,99 @@ class SettingsActivity : AppCompatActivity() {
                         val cacheText = String.format(Locale.US, "%.1f MB", cacheSizeBytes / (1024f * 1024f))
 
                         SettingOption(
+                            label = stringResource(R.string.manage_cache),
+                            icon = { Icon(Icons.Rounded.Folder, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = false,
+                            onClick = { showManageCacheSheet = true }
+                        )
+
+                        SettingOption(
                             label = "${stringResource(R.string.clear_cache)} ($cacheText)",
                             icon = { Icon(Icons.Rounded.Delete, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = false,
-                            onClick = {
-                                PlaybackService.clearCache(this@SettingsActivity)
-                                cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                            onClick = { showClearAllDialog = true }
+                        )
+                    }
+
+                    if (showClearAllDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showClearAllDialog = false },
+                            title = { Text(stringResource(R.string.clear_cache_confirm_title)) },
+                            text = { Text(stringResource(R.string.clear_cache_confirm_message)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        PlaybackService.clearCache(this@SettingsActivity)
+                                        cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                                        showClearAllDialog = false
+                                    }
+                                ) {
+                                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showClearAllDialog = false }) {
+                                    Text(stringResource(R.string.cancel))
+                                }
                             }
                         )
+                    }
+
+                    if (showManageCacheSheet) {
+                        ModalBottomSheet(onDismissRequest = { showManageCacheSheet = false }) {
+                            var cachedSurahs by remember { mutableStateOf(PlaybackService.getCachedSurahs()) }
+                            
+                            Column(modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth()) {
+                                Text(
+                                    text = stringResource(R.string.manage_cache),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                if (cachedSurahs.isEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.no_cached_surahs),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(vertical = 32.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    LazyColumn {
+                                        items(cachedSurahs) { surah ->
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "${surah.id}. ${surah.name}",
+                                                    modifier = Modifier.weight(1f),
+                                                    style = MaterialTheme.typography.bodyLarge
+                                                )
+                                                IconButton(
+                                                    onClick = {
+                                                        PlaybackService.removeSurahCache(surah)
+                                                        cachedSurahs = PlaybackService.getCachedSurahs()
+                                                        cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Delete,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.error
+                                                    )
+                                                }
+                                            }
+                                            HorizontalDivider()
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(32.dp))
+                            }
+                        }
                     }
                 }
             }
