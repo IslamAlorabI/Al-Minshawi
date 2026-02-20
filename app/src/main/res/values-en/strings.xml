@@ -14,4 +14,5 @@
     <string name="forward">Forward 30s</string>
     <string name="app_language">App Language</string>
     <string name="close">Close</string>
+    <string name="system_default">System Default</string>
 </resources>

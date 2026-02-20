@@ -14,4 +14,5 @@
     <string name="forward">تقديم 30 ثانية</string>
     <string name="app_language">لغة التطبيق</string>
     <string name="close">إغلاق</string>
+    <string name="system_default">حسب النظام</string>
 </resources>

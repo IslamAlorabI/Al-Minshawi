@@ -2,7 +2,7 @@ package ialorabi.ms.alminshawi.telawat
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
@@ -46,7 +46,7 @@ import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val playerViewModel: PlayerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -181,7 +181,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 @Composable
 fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: Boolean, onActiveChange: (Boolean) -> Unit) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        OutlinedTextField(
+        TextField(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier
@@ -199,7 +199,11 @@ fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: B
                 }
             },
             singleLine = true,
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.medium,
+            colors = TextFieldDefaults.colors(
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            )
         )
     }
 }
