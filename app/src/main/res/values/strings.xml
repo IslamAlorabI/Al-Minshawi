@@ -16,7 +16,10 @@
     <string name="pause">إيقاف</string>
     <string name="rewind">إرجاع 10 ثواني</string>
     <string name="forward">تقديم 30 ثانية</string>
-    <string name="app_language">لغة التطبيق</string>
     <string name="close">إغلاق</string>
+    <string name="app_language">لغة التطبيق</string>
     <string name="system_default">حسب النظام</string>
+    <string name="system_default_mode">حسب النظام</string>
+    <string name="storage">التخزين</string>
+    <string name="clear_cache">مسح الملفات الصوتية المخزنة</string>
 </resources>

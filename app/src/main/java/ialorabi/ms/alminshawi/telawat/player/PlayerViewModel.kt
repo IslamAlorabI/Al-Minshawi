@@ -2,7 +2,8 @@ package ialorabi.ms.alminshawi.telawat.player
 
 import android.content.ComponentName
 import android.content.Context
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class PlayerViewModel : ViewModel() {
+class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+    private val prefs = application.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
     var player: Player? = null
@@ -55,9 +57,48 @@ class PlayerViewModel : ViewModel() {
             {
                 player = mediaControllerFuture?.get()
                 setupPlayerListeners()
+                restoreLastState()
             },
             MoreExecutors.directExecutor()
         )
+    }
+
+    private fun restoreLastState() {
+        val exo = player ?: return
+        if (exo.mediaItemCount == 0) {
+            val lastSurahId = prefs.getInt("last_surah_id", -1)
+            val lastPos = prefs.getLong("last_pos", 0L)
+            
+            if (lastSurahId != -1) {
+                val surahs = SurahRepository.surahs
+                val surah = surahs.find { it.id == lastSurahId }
+                if (surah != null) {
+                    val mediaItem = MediaItem.Builder()
+                        .setMediaId(surah.id.toString())
+                        .setUri(surah.url)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(surah.name)
+                                .setArtist("الشيخ محمد صديق المنشاوي")
+                                .build()
+                        )
+                        .build()
+                    
+                    exo.setMediaItem(mediaItem)
+                    exo.seekTo(lastPos)
+                    exo.prepare()
+                    
+                    _currentPlayingSurahId.value = lastSurahId
+                    _currentPosition.value = lastPos
+                }
+            }
+        } else {
+             _currentPlayingSurahId.value = exo.currentMediaItem?.mediaId?.toIntOrNull()
+             _currentPosition.value = exo.currentPosition
+             _duration.value = exo.duration.coerceAtLeast(0L)
+             _isPlaying.value = exo.isPlaying
+             _isBuffering.value = exo.playbackState == Player.STATE_BUFFERING
+        }
     }
 
     private fun setupPlayerListeners() {
@@ -68,6 +109,7 @@ class PlayerViewModel : ViewModel() {
                     startTrackingProgress()
                 } else {
                     stopTrackingProgress()
+                    saveCurrentState()
                 }
             }
 
@@ -91,8 +133,20 @@ class PlayerViewModel : ViewModel() {
         progressJob = viewModelScope.launch {
             while (isActive) {
                 _currentPosition.value = player?.currentPosition ?: 0L
+                saveCurrentState()
                 delay(1000L)
             }
+        }
+    }
+
+    private fun saveCurrentState() {
+        val surahId = _currentPlayingSurahId.value
+        val pos = player?.currentPosition ?: 0L
+        if (surahId != null && pos > 0) {
+            prefs.edit()
+                .putInt("last_surah_id", surahId)
+                .putLong("last_pos", pos)
+                .apply()
         }
     }
 

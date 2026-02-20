@@ -16,7 +16,10 @@
     <string name="pause">Pause</string>
     <string name="rewind">Rewind 10s</string>
     <string name="forward">Forward 30s</string>
-    <string name="app_language">App Language</string>
     <string name="close">Close</string>
+    <string name="app_language">App Language</string>
     <string name="system_default">System Default</string>
+    <string name="system_default_mode">System Default</string>
+    <string name="storage">Storage</string>
+    <string name="clear_cache">Clear Cached Audio</string>
 </resources>

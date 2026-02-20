@@ -13,6 +13,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,7 +24,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
+import ialorabi.ms.alminshawi.telawat.player.PlaybackService
 import android.content.Context
+import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -39,6 +42,13 @@ class SettingsActivity : AppCompatActivity() {
                 }
                 var currentTheme by remember {
                     mutableStateOf(sharedPrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM))
+                }
+                var cacheSizeBytes by remember {
+                    mutableStateOf(0L)
+                }
+
+                LaunchedEffect(Unit) {
+                    cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
                 }
 
                 Scaffold(
@@ -107,7 +117,7 @@ class SettingsActivity : AppCompatActivity() {
                         )
 
                         SettingOption(
-                            label = stringResource(R.string.system_default),
+                            label = stringResource(R.string.system_default_mode),
                             icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
                             onClick = {
@@ -136,6 +146,26 @@ class SettingsActivity : AppCompatActivity() {
                                 sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO).apply()
                                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                                 currentTheme = AppCompatDelegate.MODE_NIGHT_NO
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = stringResource(R.string.storage),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        val cacheText = String.format(Locale.US, "%.1f MB", cacheSizeBytes / (1024f * 1024f))
+
+                        SettingOption(
+                            label = "${stringResource(R.string.clear_cache)} ($cacheText)",
+                            icon = { Icon(Icons.Rounded.Delete, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                            isSelected = false,
+                            onClick = {
+                                PlaybackService.clearCache(this@SettingsActivity)
+                                cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
                             }
                         )
                     }
