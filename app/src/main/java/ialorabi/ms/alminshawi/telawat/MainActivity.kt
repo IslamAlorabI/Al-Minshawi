@@ -218,13 +218,10 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = downloadFilter == DownloadFilter.ALL,
-                    onClick = { downloadFilter = DownloadFilter.ALL },
-                    label = { Text(stringResource(R.string.filter_all)) }
-                )
-                FilterChip(
                     selected = downloadFilter == DownloadFilter.DOWNLOADED,
-                    onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
+                    onClick = { 
+                        downloadFilter = if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED 
+                    },
                     label = { Text(stringResource(R.string.filter_downloaded)) },
                     leadingIcon = {
                         Icon(
@@ -236,7 +233,9 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 )
                 FilterChip(
                     selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
-                    onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
+                    onClick = { 
+                        downloadFilter = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED 
+                    },
                     label = { Text(stringResource(R.string.filter_not_downloaded)) },
                     leadingIcon = {
                         Icon(
