@@ -209,63 +209,60 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 onActiveChange = { isSearchActive = it }
             )
 
-            Row(
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                @OptIn(ExperimentalLayoutApi::class)
-                FlowRow(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    FilterChip(
-                        selected = downloadFilter == DownloadFilter.ALL,
-                        onClick = { downloadFilter = DownloadFilter.ALL },
-                        label = { Text(stringResource(R.string.filter_all)) }
-                    )
-                    FilterChip(
-                        selected = downloadFilter == DownloadFilter.DOWNLOADED,
-                        onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
-                        label = { Text(stringResource(R.string.filter_downloaded)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.CloudDone,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                    FilterChip(
-                        selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
-                        onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
-                        label = { Text(stringResource(R.string.filter_not_downloaded)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.CloudOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    )
-                }
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.ALL,
+                    onClick = { downloadFilter = DownloadFilter.ALL },
+                    label = { Text(stringResource(R.string.filter_all)) }
+                )
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.DOWNLOADED,
+                    onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
+                    label = { Text(stringResource(R.string.filter_downloaded)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudDone,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    }
+                )
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
+                    onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
+                    label = { Text(stringResource(R.string.filter_not_downloaded)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    }
+                )
                 Surface(
-                    shape = CircleShape,
+                    shape = MaterialTheme.shapes.small,
                     color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier
-                        .padding(start = 8.dp)
-                        .clip(CircleShape)
+                        .height(32.dp)
+                        .weight(1f)
+                        .clip(MaterialTheme.shapes.small)
                         .clickable { showHelpDialog = true }
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Info,
-                        contentDescription = stringResource(R.string.help_title),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.Info,
+                            contentDescription = stringResource(R.string.help_title),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
