@@ -46,5 +46,8 @@
     <string name="sleep_timer_minutes">%d د</string>
     <string name="sleep_timer_active">متبقي %s</string>
     <string name="repeat_surah">تكرار السورة</string>
+    <string name="copyright">© ٢٠٢٦ إسلام العرابي</string>
+    <string name="rights_notice">جميع التلاوات ملك لأصحابها</string>
+    <string name="made_with_love">صُنع بحب لخدمة كتاب الله</string>
 
 </resources>

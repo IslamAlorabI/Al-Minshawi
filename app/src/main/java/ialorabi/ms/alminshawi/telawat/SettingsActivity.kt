@@ -6,7 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.layout.layout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
@@ -40,6 +43,13 @@ import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
 import ialorabi.ms.alminshawi.telawat.player.PlaybackService
 import android.content.Context
 import java.util.Locale
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.sp
 
 class SettingsActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -87,8 +97,9 @@ class SettingsActivity : AppCompatActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding)
-                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
+                      Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = stringResource(R.string.app_language),
                             style = MaterialTheme.typography.titleMedium,
@@ -187,6 +198,79 @@ class SettingsActivity : AppCompatActivity() {
                             isSelected = false,
                             onClick = { showClearAllDialog = true }
                         )
+                      }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(24.dp)
+                                .padding(vertical = 8.dp)
+                        ) {
+                            val width = size.width
+                            val height = size.height
+                            val waveWidth = 40.dp.toPx()
+                            val path = Path().apply {
+                                moveTo(0f, height / 2)
+                                var currentX = 0f
+                                while (currentX < width) {
+                                    relativeQuadraticTo(waveWidth / 4, -height / 2, waveWidth / 2, 0f)
+                                    relativeQuadraticTo(waveWidth / 4, height / 2, waveWidth / 2, 0f)
+                                    currentX += waveWidth
+                                }
+                            }
+                            drawPath(
+                                path = path,
+                                color = waveColor,
+                                style = Stroke(width = 2.dp.toPx())
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_about_logo),
+                                contentDescription = null,
+                                modifier = Modifier.size(100.dp),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = stringResource(R.string.copyright),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = stringResource(R.string.rights_notice),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = stringResource(R.string.made_with_love),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                textAlign = TextAlign.Center,
+                                fontSize = 13.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
 
                     if (showClearAllDialog) {
