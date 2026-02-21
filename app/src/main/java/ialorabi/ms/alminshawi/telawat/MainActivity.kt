@@ -218,7 +218,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             ) {
                 val scrollState = rememberScrollState()
                 Row(
-                    modifier = Modifier.weight(1f).horizontalScroll(scrollState),
+                    modifier = Modifier.weight(1f, fill = false).horizontalScroll(scrollState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -259,7 +259,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                     color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier
                         .height(32.dp)
-                        .widthIn(min = 48.dp)
+                        .weight(1f)
                         .clip(MaterialTheme.shapes.small)
                         .clickable { showHelpDialog = true }
                 ) {
