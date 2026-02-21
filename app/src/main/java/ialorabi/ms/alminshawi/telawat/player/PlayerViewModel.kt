@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import android.os.CountDownTimer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -62,6 +63,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val downloadingProgress: StateFlow<Map<Int, Float>> = _downloadingProgress.asStateFlow()
 
     private var progressJob: Job? = null
+
+    private val _repeatMode = MutableStateFlow(false)
+    val repeatMode: StateFlow<Boolean> = _repeatMode.asStateFlow()
+
+    private val _sleepTimerRemainingMs = MutableStateFlow(0L)
+    val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
+
+    private var sleepTimerJob: Job? = null
     
     init {
         refreshCachedSurahs()
@@ -279,6 +288,36 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val surahs = SurahRepository.surahs
         if (currentId > 1) {
             playSurah(surahs[currentId - 2]) // currentId - 1 gives current, so - 2 gives previous index
+        }
+    }
+
+    fun toggleRepeat() {
+        val newRepeat = !_repeatMode.value
+        _repeatMode.value = newRepeat
+        player?.repeatMode = if (newRepeat) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+    }
+
+    fun setSleepTimer(minutes: Int?) {
+        sleepTimerJob?.cancel()
+        if (minutes == null || minutes <= 0) {
+            _sleepTimerRemainingMs.value = 0L
+            return
+        }
+        val totalMs = minutes * 60 * 1000L
+        _sleepTimerRemainingMs.value = totalMs
+        sleepTimerJob = viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            while (isActive) {
+                val elapsed = System.currentTimeMillis() - startTime
+                val remaining = (totalMs - elapsed).coerceAtLeast(0L)
+                _sleepTimerRemainingMs.value = remaining
+                if (remaining <= 0L) {
+                    player?.pause()
+                    _sleepTimerRemainingMs.value = 0L
+                    break
+                }
+                delay(1000L)
+            }
         }
     }
 

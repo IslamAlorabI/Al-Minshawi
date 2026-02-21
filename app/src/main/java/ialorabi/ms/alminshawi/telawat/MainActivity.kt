@@ -38,6 +38,10 @@ import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
+import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.RepeatOne
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -274,7 +278,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = stringResource(R.string.help_filter_desc))
-                    Divider()
+                    HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Rounded.Download,
@@ -626,8 +630,11 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
     val isBuffering by viewModel.isBuffering.collectAsState()
     val currentPos by viewModel.currentPosition.collectAsState()
     val duration by viewModel.duration.collectAsState()
+    val isRepeatOn by viewModel.repeatMode.collectAsState()
+    val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
 
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
+    var showSleepTimerMenu by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
@@ -637,23 +644,33 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 .statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.PlayArrow,
-                contentDescription = null,
-                modifier = Modifier.size(120.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
             )
-        }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -672,7 +689,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.Person,
@@ -690,25 +707,25 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
 
             Spacer(modifier = Modifier.height(32.dp))
 
-        Slider(
-            value = progress,
-            onValueChange = { newProgress ->
-                viewModel.seekTo((newProgress * duration).toLong())
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
+            Slider(
+                value = progress,
+                onValueChange = { newProgress ->
+                    viewModel.seekTo((newProgress * duration).toLong())
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
-            Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
-        }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
+                Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
+            }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -764,6 +781,68 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(imageVector = Icons.Rounded.SkipNext, contentDescription = "Next Surah", modifier = Modifier.size(32.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box {
+                    IconButton(onClick = { showSleepTimerMenu = true }) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Rounded.Bedtime,
+                                contentDescription = stringResource(R.string.sleep_timer),
+                                tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showSleepTimerMenu,
+                        onDismissRequest = { showSleepTimerMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.sleep_timer_off)) },
+                            onClick = {
+                                viewModel.setSleepTimer(null)
+                                showSleepTimerMenu = false
+                            },
+                            leadingIcon = if (sleepTimerMs == 0L) {{ Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null
+                        )
+                        listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
+                            DropdownMenuItem(
+                                text = { Text(String.format(stringResource(R.string.sleep_timer_minutes), minutes)) },
+                                onClick = {
+                                    viewModel.setSleepTimer(minutes)
+                                    showSleepTimerMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                if (sleepTimerMs > 0) {
+                    val remainMin = (sleepTimerMs / 60000).toInt()
+                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                    Text(
+                        text = String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec)),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 13.sp
+                    )
+                }
+
+                IconButton(onClick = { viewModel.toggleRepeat() }) {
+                    Icon(
+                        imageVector = if (isRepeatOn) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                        contentDescription = stringResource(R.string.repeat_surah),
+                        tint = if (isRepeatOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
