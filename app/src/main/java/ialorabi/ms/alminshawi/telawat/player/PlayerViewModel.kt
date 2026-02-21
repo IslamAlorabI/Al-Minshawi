@@ -70,6 +70,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _autoPlayNext = MutableStateFlow(true)
     val autoPlayNext: StateFlow<Boolean> = _autoPlayNext.asStateFlow()
 
+    private val _autoPlayReversed = MutableStateFlow(false)
+    val autoPlayReversed: StateFlow<Boolean> = _autoPlayReversed.asStateFlow()
+
     private val _sleepTimerRemainingMs = MutableStateFlow(0L)
     val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
 
@@ -201,7 +204,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         player?.play()
                     } else if (_autoPlayNext.value) {
                         isTransitioning = true
-                        playNextSurah()
+                        if (_autoPlayReversed.value) playPreviousSurah() else playNextSurah()
                     }
                 }
             }
@@ -314,6 +317,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun toggleAutoPlayNext() {
         _autoPlayNext.value = !_autoPlayNext.value
         if (_autoPlayNext.value) _repeatMode.value = false
+    }
+
+    fun toggleAutoPlayReversed() {
+        _autoPlayReversed.value = !_autoPlayReversed.value
     }
 
     fun setSleepTimer(minutes: Int?) {

@@ -13,8 +13,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +45,7 @@ import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +53,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -378,6 +384,18 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(text = stringResource(R.string.help_auto_play_desc))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.Sort,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = stringResource(R.string.help_auto_play_reverse_desc))
                     }
                     HorizontalDivider()
                     Text(
@@ -709,6 +727,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val duration by viewModel.duration.collectAsState()
     val isRepeatOn by viewModel.repeatMode.collectAsState()
     val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
+    val isAutoPlayReversed by viewModel.autoPlayReversed.collectAsState()
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
 
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
@@ -915,12 +934,26 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val haptic = LocalHapticFeedback.current
                     FilledTonalIconButton(
                         onClick = { viewModel.toggleAutoPlayNext() },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier
+                            .size(48.dp)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        viewModel.toggleAutoPlayReversed()
+                                    },
+                                    onTap = {
+                                        viewModel.toggleAutoPlayNext()
+                                    }
+                                )
+                            },
+                        interactionSource = remember { MutableInteractionSource() }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
+                            imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
                             contentDescription = stringResource(R.string.auto_play_next),
                             tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
@@ -973,7 +1006,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         )
                     }
                 } else {
-                    Spacer(modifier = Modifier.width(1.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Text(
+                            text = "•",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
                 Canvas(
@@ -1018,7 +1062,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         )
                     }
                 } else {
-                    Spacer(modifier = Modifier.width(1.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Text(
+                            text = "•",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
