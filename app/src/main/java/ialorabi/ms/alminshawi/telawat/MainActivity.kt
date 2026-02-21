@@ -936,7 +936,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val haptic = LocalHapticFeedback.current
                     FilledTonalIconButton(
-                        onClick = { viewModel.toggleAutoPlayNext() },
+                        onClick = {},
                         modifier = Modifier
                             .size(48.dp)
                             .pointerInput(Unit) {
