@@ -42,6 +42,7 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -692,10 +693,11 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
     val currentPos by viewModel.currentPosition.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val isRepeatOn by viewModel.repeatMode.collectAsState()
+    val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
 
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
-    var showSleepTimerMenu by remember { mutableStateOf(false) }
+    var showSleepTimerSheet by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
@@ -845,16 +847,27 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (sleepTimerMs > 0) {
+                val remainMin = (sleepTimerMs / 60000).toInt()
+                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                Text(
+                    text = String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec)),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 13.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     FilledTonalIconButton(
-                        onClick = { showSleepTimerMenu = true },
+                        onClick = { showSleepTimerSheet = true },
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
@@ -864,50 +877,93 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    DropdownMenu(
-                        expanded = showSleepTimerMenu,
-                        onDismissRequest = { showSleepTimerMenu = false }
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    FilledTonalIconButton(
+                        onClick = { viewModel.toggleAutoPlayNext() },
+                        modifier = Modifier.size(48.dp)
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sleep_timer_off)) },
-                            onClick = {
-                                viewModel.setSleepTimer(null)
-                                showSleepTimerMenu = false
-                            },
-                            leadingIcon = if (sleepTimerMs == 0L) {{ Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(20.dp)) }} else null
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
+                            contentDescription = stringResource(R.string.auto_play_next),
+                            tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
                         )
-                        listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
-                            DropdownMenuItem(
-                                text = { Text(String.format(stringResource(R.string.sleep_timer_minutes), minutes)) },
-                                onClick = {
-                                    viewModel.setSleepTimer(minutes)
-                                    showSleepTimerMenu = false
-                                }
-                            )
-                        }
                     }
                 }
 
-                if (sleepTimerMs > 0) {
-                    val remainMin = (sleepTimerMs / 60000).toInt()
-                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                    Text(
-                        text = String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec)),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 13.sp
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    FilledTonalIconButton(
+                        onClick = { viewModel.toggleRepeat() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isRepeatOn) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                            contentDescription = stringResource(R.string.repeat_surah),
+                            tint = if (isRepeatOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
+            }
+        }
+    }
 
-                FilledTonalIconButton(
-                    onClick = { viewModel.toggleRepeat() },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isRepeatOn) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                        contentDescription = stringResource(R.string.repeat_surah),
-                        tint = if (isRepeatOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
+    if (showSleepTimerSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSleepTimerSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.sleep_timer),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+                )
+
+                val options = listOf<Int?>(null, 10, 15, 20, 30, 45, 60)
+                options.forEach { minutes ->
+                    val label = if (minutes == null) stringResource(R.string.sleep_timer_off)
+                                else String.format(stringResource(R.string.sleep_timer_minutes), minutes)
+                    val isSelected = if (minutes == null) sleepTimerMs == 0L else false
+
+                    Surface(
+                        onClick = {
+                            viewModel.setSleepTimer(minutes)
+                            showSleepTimerSheet = false
+                        },
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

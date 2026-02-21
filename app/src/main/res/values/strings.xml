@@ -43,9 +43,10 @@
     <string name="help_streaming_note">الاستماع المباشر لا يحفظ السورة كاملة. لتحميلها للاستماع بدون إنترنت، اضغط على زر التحميل.</string>
     <string name="sleep_timer">مؤقت النوم</string>
     <string name="sleep_timer_off">إيقاف</string>
-    <string name="sleep_timer_minutes">%d د</string>
+    <string name="sleep_timer_minutes">%d دقيقة</string>
     <string name="sleep_timer_active">متبقي %s</string>
     <string name="repeat_surah">تكرار السورة</string>
+    <string name="auto_play_next">تشغيل تلقائي</string>
     <string name="copyright">© ٢٠٢٦ إسلام العرابي</string>
     <string name="rights_notice">جميع التلاوات ملك لأصحابها</string>
     <string name="made_with_love">صُنع بحب لخدمة كتاب الله</string>

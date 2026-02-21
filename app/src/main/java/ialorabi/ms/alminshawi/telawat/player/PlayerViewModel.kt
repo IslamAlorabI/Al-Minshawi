@@ -67,6 +67,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _repeatMode = MutableStateFlow(false)
     val repeatMode: StateFlow<Boolean> = _repeatMode.asStateFlow()
 
+    private val _autoPlayNext = MutableStateFlow(true)
+    val autoPlayNext: StateFlow<Boolean> = _autoPlayNext.asStateFlow()
+
     private val _sleepTimerRemainingMs = MutableStateFlow(0L)
     val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
 
@@ -190,9 +193,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (playbackState == Player.STATE_READY) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                 }
-                if (playbackState == Player.STATE_ENDED && _repeatMode.value) {
-                    player?.seekTo(0)
-                    player?.play()
+                if (playbackState == Player.STATE_ENDED) {
+                    if (_repeatMode.value) {
+                        player?.seekTo(0)
+                        player?.play()
+                    } else if (_autoPlayNext.value) {
+                        playNextSurah()
+                    }
                 }
             }
 
@@ -298,6 +305,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun toggleRepeat() {
         _repeatMode.value = !_repeatMode.value
+    }
+
+    fun toggleAutoPlayNext() {
+        _autoPlayNext.value = !_autoPlayNext.value
     }
 
     fun setSleepTimer(minutes: Int?) {
