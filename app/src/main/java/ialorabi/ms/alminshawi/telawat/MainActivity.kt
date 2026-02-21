@@ -216,10 +216,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val scrollState = rememberScrollState()
-                Row(
-                    modifier = Modifier.weight(1f).horizontalScroll(scrollState),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     FilterChip(
                         selected = downloadFilter == DownloadFilter.ALL,
