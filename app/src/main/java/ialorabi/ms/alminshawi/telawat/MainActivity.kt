@@ -201,6 +201,56 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         onBarClick = { showBottomSheet = true }
                     )
                 }
+            } else if (currentSurahId == null && downloadingSurahs.isNotEmpty()) {
+                val dlSurahId = downloadingSurahs.first()
+                val dlSurah = surahs.find { it.id == dlSurahId }
+                dlSurah?.let {
+                    val dlName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name }
+                    val dlProgress = downloadingProgress[dlSurahId] ?: 0f
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        tonalElevation = 8.dp
+                    ) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            LinearProgressIndicator(
+                                progress = { dlProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(2.dp)
+                                    .align(Alignment.TopCenter),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Download,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${stringResource(R.string.surah_prefix)} $dlName",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                    Text(
+                                        text = "${(dlProgress * 100).toInt()}%",
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     ) { padding ->
@@ -803,15 +853,16 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box {
-                    IconButton(onClick = { showSleepTimerMenu = true }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Rounded.Bedtime,
-                                contentDescription = stringResource(R.string.sleep_timer),
-                                tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                    FilledTonalIconButton(
+                        onClick = { showSleepTimerMenu = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Bedtime,
+                            contentDescription = stringResource(R.string.sleep_timer),
+                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                     DropdownMenu(
                         expanded = showSleepTimerMenu,
@@ -847,7 +898,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                     )
                 }
 
-                IconButton(onClick = { viewModel.toggleRepeat() }) {
+                FilledTonalIconButton(
+                    onClick = { viewModel.toggleRepeat() },
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(
                         imageVector = if (isRepeatOn) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
                         contentDescription = stringResource(R.string.repeat_surah),
