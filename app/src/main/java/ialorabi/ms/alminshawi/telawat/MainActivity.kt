@@ -85,6 +85,11 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         playerViewModel.releaseController()
     }
+
+    override fun onResume() {
+        super.onResume()
+        playerViewModel.refreshCachedSurahs()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)

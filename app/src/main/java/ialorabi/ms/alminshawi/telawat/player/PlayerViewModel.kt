@@ -235,11 +235,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 .setMediaMetadata(
                     MediaMetadata.Builder()
                         .setTitle(surah.name)
-                        .setArtist("الشيخ محمد صديق المنشاوي")
+                        .setArtist("\u0627\u0644\u0634\u064A\u062E \u0645\u062D\u0645\u062F \u0635\u062F\u064A\u0642 \u0627\u0644\u0645\u0646\u0634\u0627\u0648\u064A")
                         .build()
                 )
                 .build()
 
+            exoPlayer.stop()
             exoPlayer.setMediaItem(mediaItem)
             exoPlayer.prepare()
             exoPlayer.play()
