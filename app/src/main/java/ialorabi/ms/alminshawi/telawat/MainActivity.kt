@@ -18,11 +18,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.CloudDone
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -102,6 +105,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
     var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
@@ -208,23 +212,37 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                FilterChip(
-                    selected = downloadFilter == DownloadFilter.ALL,
-                    onClick = { downloadFilter = DownloadFilter.ALL },
-                    label = { Text(stringResource(R.string.filter_all)) }
-                )
-                FilterChip(
-                    selected = downloadFilter == DownloadFilter.DOWNLOADED,
-                    onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
-                    label = { Text(stringResource(R.string.filter_downloaded)) }
-                )
-                FilterChip(
-                    selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
-                    onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
-                    label = { Text(stringResource(R.string.filter_not_downloaded)) }
-                )
+                val scrollState = rememberScrollState()
+                Row(
+                    modifier = Modifier.weight(1f).horizontalScroll(scrollState),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = downloadFilter == DownloadFilter.ALL,
+                        onClick = { downloadFilter = DownloadFilter.ALL },
+                        label = { Text(stringResource(R.string.filter_all)) }
+                    )
+                    FilterChip(
+                        selected = downloadFilter == DownloadFilter.DOWNLOADED,
+                        onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
+                        label = { Text(stringResource(R.string.filter_downloaded)) }
+                    )
+                    FilterChip(
+                        selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
+                        onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
+                        label = { Text(stringResource(R.string.filter_not_downloaded)) }
+                    )
+                }
+                IconButton(onClick = { showHelpDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Info,
+                        contentDescription = stringResource(R.string.help_title),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             LazyColumn(
@@ -248,6 +266,57 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 }
             }
         }
+    }
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.help_title),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(text = stringResource(R.string.help_filter_desc))
+                    Divider()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = stringResource(R.string.help_download_desc))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp).padding(2.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = stringResource(R.string.help_downloading_desc))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudDone,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = stringResource(R.string.help_downloaded_desc))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHelpDialog = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            }
+        )
     }
 }
 
