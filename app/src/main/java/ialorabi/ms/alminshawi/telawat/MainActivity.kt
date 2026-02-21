@@ -332,7 +332,6 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 )
             },
             text = {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = stringResource(R.string.help_filter_desc))
                     HorizontalDivider()
@@ -367,12 +366,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                     }
                     HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
-                        )
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(text = stringResource(R.string.help_auto_play_desc))
                     }
@@ -382,7 +383,6 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
                 }
             },
             confirmButton = {
