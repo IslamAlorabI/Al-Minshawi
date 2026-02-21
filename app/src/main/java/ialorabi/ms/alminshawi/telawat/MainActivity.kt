@@ -206,71 +206,37 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
                 isActive = isSearchActive,
-                onActiveChange = { isSearchActive = it }
+                onActiveChange = { isSearchActive = it },
+                downloadFilter = downloadFilter,
+                onFilterChange = { downloadFilter = it }
             )
 
-            Row(
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable { showHelpDialog = true }
             ) {
-                val scrollState = rememberScrollState()
                 Row(
-                    modifier = Modifier.weight(1f, fill = false).horizontalScroll(scrollState),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterChip(
-                        selected = downloadFilter == DownloadFilter.DOWNLOADED,
-                        onClick = { 
-                            downloadFilter = if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED 
-                        },
-                        label = { Text(stringResource(R.string.filter_downloaded)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.CloudDone,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
+                    Icon(
+                        imageVector = Icons.Rounded.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(18.dp)
                     )
-                    FilterChip(
-                        selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
-                        onClick = { 
-                            downloadFilter = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED 
-                        },
-                        label = { Text(stringResource(R.string.filter_not_downloaded)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.CloudOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.help_title),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.labelLarge
                     )
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier
-                        .height(32.dp)
-                        .weight(1f)
-                        .clip(MaterialTheme.shapes.small)
-                        .clickable { showHelpDialog = true }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.Info,
-                            contentDescription = stringResource(R.string.help_title),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
                 }
             }
 
@@ -350,7 +316,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 }
 
 @Composable
-fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: Boolean, onActiveChange: (Boolean) -> Unit) {
+fun SearchBarSection(
+    query: String, 
+    onQueryChange: (String) -> Unit, 
+    isActive: Boolean, 
+    onActiveChange: (Boolean) -> Unit,
+    downloadFilter: DownloadFilter,
+    onFilterChange: (DownloadFilter) -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val borderColor = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent
@@ -368,9 +341,49 @@ fun SearchBarSection(query: String, onQueryChange: (String) -> Unit, isActive: B
             Icon(Icons.Rounded.Search, contentDescription = null)
         },
         trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Rounded.Close, contentDescription = null)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
+                Surface(
+                    shape = CircleShape,
+                    color = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED) }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudDone,
+                            contentDescription = stringResource(R.string.filter_downloaded),
+                            tint = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                
+                Surface(
+                    shape = CircleShape,
+                    color = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED) }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Rounded.CloudOff,
+                            contentDescription = stringResource(R.string.filter_not_downloaded),
+                            tint = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(Icons.Rounded.Close, contentDescription = null)
+                    }
                 }
             }
         },
