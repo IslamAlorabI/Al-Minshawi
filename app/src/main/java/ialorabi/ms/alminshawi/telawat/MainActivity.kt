@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -959,16 +960,16 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
             ) {
                 if (prevSurah != null) {
                     Surface(
-                        onClick = { viewModel.playPreviousSurah() },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     ) {
                         Text(
                             text = prevName ?: "",
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            maxLines = 1
+                            maxLines = 1,
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {
@@ -1004,16 +1005,16 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 if (nextSurah != null) {
                     Surface(
-                        onClick = { viewModel.playNextSurah() },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     ) {
                         Text(
                             text = nextName ?: "",
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            maxLines = 1
+                            maxLines = 1,
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {
