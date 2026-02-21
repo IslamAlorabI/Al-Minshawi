@@ -332,6 +332,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 )
             },
             text = {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = stringResource(R.string.help_filter_desc))
                     HorizontalDivider()
@@ -381,6 +382,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
                 }
             },
             confirmButton = {
@@ -732,7 +734,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.75f)
+                    .fillMaxWidth()
                     .aspectRatio(1f)
                     .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.primaryContainer),
@@ -784,7 +786,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
-                    shape = MaterialTheme.shapes.small,
+                    shape = CircleShape,
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Row(
