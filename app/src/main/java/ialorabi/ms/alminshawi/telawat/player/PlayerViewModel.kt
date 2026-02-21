@@ -190,6 +190,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (playbackState == Player.STATE_READY) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                 }
+                if (playbackState == Player.STATE_ENDED && _repeatMode.value) {
+                    player?.seekTo(0)
+                    player?.play()
+                }
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -293,9 +297,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun toggleRepeat() {
-        val newRepeat = !_repeatMode.value
-        _repeatMode.value = newRepeat
-        player?.repeatMode = if (newRepeat) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+        _repeatMode.value = !_repeatMode.value
     }
 
     fun setSleepTimer(minutes: Int?) {

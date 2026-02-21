@@ -313,6 +313,12 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(text = stringResource(R.string.help_downloaded_desc))
                     }
+                    HorizontalDivider()
+                    Text(
+                        text = stringResource(R.string.help_streaming_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             },
             confirmButton = {

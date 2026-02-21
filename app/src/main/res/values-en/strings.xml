@@ -40,6 +40,7 @@
     <string name="help_downloading_desc">Surah is currently downloading...</string>
     <string name="help_downloaded_desc">Surah is downloaded and ready for offline listening.</string>
     <string name="help_filter_desc">Use the filters above to toggle between all Surahs, only downloaded, or not downloaded ones.</string>
+    <string name="help_streaming_note">Streaming does not fully save the Surah. To download it for offline listening, tap the download button.</string>
     <string name="sleep_timer">Sleep Timer</string>
     <string name="sleep_timer_off">Off</string>
     <string name="sleep_timer_minutes">%d min</string>
