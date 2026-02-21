@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.CloudDone
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.Pause
@@ -228,19 +229,41 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                     FilterChip(
                         selected = downloadFilter == DownloadFilter.DOWNLOADED,
                         onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
-                        label = { Text(stringResource(R.string.filter_downloaded)) }
+                        label = { Text(stringResource(R.string.filter_downloaded)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudDone,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
                     )
                     FilterChip(
                         selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
                         onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
-                        label = { Text(stringResource(R.string.filter_not_downloaded)) }
+                        label = { Text(stringResource(R.string.filter_not_downloaded)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
                     )
                 }
-                IconButton(onClick = { showHelpDialog = true }) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .clip(CircleShape)
+                        .clickable { showHelpDialog = true }
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.Info,
                         contentDescription = stringResource(R.string.help_title),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
             }
