@@ -47,6 +47,7 @@
     <string name="sleep_timer_active">%s left</string>
     <string name="repeat_surah">Repeat Surah</string>
     <string name="auto_play_next">Auto Play Next</string>
+    <string name="help_auto_play_desc">When enabled, playback automatically moves to the next Surah after the current one ends.</string>
     <string name="copyright">© 2026 إسلام العرابي</string>
     <string name="rights_notice">All recitations belong to their respective owners</string>
     <string name="made_with_love">Made with love to serve the Holy Quran</string>

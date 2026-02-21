@@ -365,6 +365,17 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         Text(text = stringResource(R.string.help_downloaded_desc))
                     }
                     HorizontalDivider()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = stringResource(R.string.help_auto_play_desc))
+                    }
+                    HorizontalDivider()
                     Text(
                         text = stringResource(R.string.help_streaming_note),
                         style = MaterialTheme.typography.bodySmall,
@@ -721,7 +732,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.75f)
                     .aspectRatio(1f)
                     .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.primaryContainer),
@@ -735,7 +746,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -768,7 +779,36 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            if (sleepTimerMs > 0) {
+                val remainMin = (sleepTimerMs / 60000).toInt()
+                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Bedtime,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec)),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Slider(
                 value = progress,
@@ -848,17 +888,6 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            if (sleepTimerMs > 0) {
-                val remainMin = (sleepTimerMs / 60000).toInt()
-                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                Text(
-                    text = String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec)),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 13.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
