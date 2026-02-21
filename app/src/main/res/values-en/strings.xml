@@ -31,4 +31,5 @@
     <string name="undo">Undo</string>
     <string name="surah_deleted">Surah deleted</string>
     <string name="confirm_delete_surah">Confirm delete?</string>
+    <string name="downloading_to_storage">Saving to Downloads folder...</string>
 </resources>

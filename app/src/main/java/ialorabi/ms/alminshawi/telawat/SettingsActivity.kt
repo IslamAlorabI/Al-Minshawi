@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
+import android.widget.Toast
+import android.app.DownloadManager
+import android.net.Uri
+import android.os.Environment
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
@@ -294,6 +299,23 @@ class SettingsActivity : AppCompatActivity() {
                                                                         modifier = Modifier.weight(1f),
                                                                         style = MaterialTheme.typography.bodyLarge
                                                                     )
+                                                                    IconButton(
+                                                                        onClick = {
+                                                                            val request = DownloadManager.Request(Uri.parse(surah.url))
+                                                                            request.setTitle("${surah.id}. $localizedName - ${getString(R.string.app_name)}.mp3")
+                                                                            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                                                                            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${surah.id}_${localizedName}_Minshawi.mp3")
+                                                                            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                                                                            dm.enqueue(request)
+                                                                            Toast.makeText(this@SettingsActivity, getString(R.string.downloading_to_storage), Toast.LENGTH_SHORT).show()
+                                                                        }
+                                                                    ) {
+                                                                        Icon(
+                                                                            imageVector = Icons.Rounded.SaveAlt,
+                                                                            contentDescription = "Save to device",
+                                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                                        )
+                                                                    }
                                                                     IconButton(
                                                                         onClick = { showInlineConfirm = true }
                                                                     ) {

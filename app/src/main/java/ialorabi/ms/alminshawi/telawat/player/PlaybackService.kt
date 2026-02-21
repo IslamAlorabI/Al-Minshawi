@@ -20,6 +20,9 @@ class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
 
     companion object {
+        var instance: PlaybackService? = null
+            private set
+        
         var cache: SimpleCache? = null
             private set
         private const val CACHE_SIZE = 500L * 1024 * 1024
@@ -29,8 +32,10 @@ class PlaybackService : MediaSessionService() {
         }
 
         fun clearCache(context: Context) {
+            val player = instance?.mediaSession?.player
+            player?.stop()
+            player?.clearMediaItems()
             cache?.keys?.toSet()?.forEach { cache?.removeResource(it) }
-            // If cache was null but exists on disk, we can delete the folder contents
             val cacheFolder = File(context.cacheDir, "audio_cache")
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
@@ -43,6 +48,11 @@ class PlaybackService : MediaSessionService() {
         }
 
         fun removeSurahCache(surah: Surah) {
+            val player = instance?.mediaSession?.player
+            if (player?.currentMediaItem?.mediaId == surah.id.toString()) {
+                player.stop()
+                player.clearMediaItems()
+            }
             cache?.removeResource(surah.url)
         }
 
@@ -61,6 +71,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
 
         if (cache == null) {
             val cacheDir = File(cacheDir, "audio_cache")
@@ -103,6 +114,7 @@ class PlaybackService : MediaSessionService() {
             release()
             mediaSession = null
         }
+        instance = null
         super.onDestroy()
     }
 }

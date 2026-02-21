@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.CloudDone
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -84,6 +86,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     val currentSurahId by viewModel.currentPlayingSurahId.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
+    val downloadingSurahs by viewModel.downloadingSurahs.collectAsState()
+    val cachedSurahIds by viewModel.cachedSurahIds.collectAsState()
+    val downloadingProgress by viewModel.downloadingProgress.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        viewModel.refreshCachedSurahs()
+    }
+    
     val context = LocalContext.current
 
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -160,6 +170,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
+                        downloadProgress = downloadingProgress[it.id],
                         onPlayPauseClick = { viewModel.togglePlayPause() },
                         onBarClick = { showBottomSheet = true }
                     )
@@ -186,15 +197,18 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredSurahs) { surah ->
+                items(filteredSurahs, key = { it.id }) { surah ->
                     SurahItem(
                         surah = surah,
                         localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
                         isCurrentSelected = currentSurahId == surah.id,
                         isPlaying = isPlaying,
                         isBuffering = isBuffering && currentSurahId == surah.id,
+                        isDownloading = downloadingSurahs.contains(surah.id),
+                        isDownloaded = cachedSurahIds.contains(surah.id),
                         onPlayClick = { viewModel.playSurah(surah) },
-                        onPauseClick = { viewModel.togglePlayPause() }
+                        onPauseClick = { viewModel.togglePlayPause() },
+                        onDownloadClick = { viewModel.downloadSurah(surah) }
                     )
                 }
             }
@@ -272,8 +286,11 @@ fun SurahItem(
     isCurrentSelected: Boolean,
     isPlaying: Boolean,
     isBuffering: Boolean,
+    isDownloading: Boolean,
+    isDownloaded: Boolean,
     onPlayClick: () -> Unit,
-    onPauseClick: () -> Unit
+    onPauseClick: () -> Unit,
+    onDownloadClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -316,6 +333,36 @@ fun SurahItem(
             )
 
             Spacer(modifier = Modifier.width(8.dp))
+
+            if (!isCurrentSelected) {
+                if (isDownloading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp).padding(2.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (isDownloaded) {
+                    Icon(
+                        imageVector = Icons.Rounded.CloudDone,
+                        contentDescription = "Downloaded",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    IconButton(
+                        onClick = onDownloadClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = "Download",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
 
             if (isBuffering) {
                 BufferingIndicator(modifier = Modifier.size(40.dp))
@@ -366,6 +413,7 @@ fun BottomPlayerBar(
     localizedName: String,
     isPlaying: Boolean,
     isBuffering: Boolean,
+    downloadProgress: Float?,
     onPlayPauseClick: () -> Unit,
     onBarClick: () -> Unit
 ) {
@@ -376,38 +424,51 @@ fun BottomPlayerBar(
         color = MaterialTheme.colorScheme.secondaryContainer,
         tonalElevation = 8.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = stringResource(R.string.sheikh_short),
-                    fontSize = 14.sp,
-                    color = Color.Gray
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (downloadProgress != null) {
+                LinearProgressIndicator(
+                    progress = { downloadProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .align(Alignment.TopCenter),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 )
             }
-
-            if (isBuffering) {
-                BufferingIndicator(modifier = Modifier.size(50.dp))
-            } else {
-                FilledIconButton(
-                    onClick = onPlayPauseClick,
-                    modifier = Modifier.size(50.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                        modifier = Modifier.size(28.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
                     )
+                    Text(
+                        text = stringResource(R.string.sheikh_short),
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                if (isBuffering) {
+                    BufferingIndicator(modifier = Modifier.size(50.dp))
+                } else {
+                    FilledIconButton(
+                        onClick = onPlayPauseClick,
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
         }

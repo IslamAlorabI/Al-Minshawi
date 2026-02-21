@@ -11,7 +11,15 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.MoreExecutors
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.CacheWriter
+import android.net.Uri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import kotlinx.coroutines.Job
@@ -44,7 +52,60 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
+    private val _downloadingSurahs = MutableStateFlow<Set<Int>>(emptySet())
+    val downloadingSurahs: StateFlow<Set<Int>> = _downloadingSurahs.asStateFlow()
+
+    private val _cachedSurahIds = MutableStateFlow<Set<Int>>(emptySet())
+    val cachedSurahIds: StateFlow<Set<Int>> = _cachedSurahIds.asStateFlow()
+
+    private val _downloadingProgress = MutableStateFlow<Map<Int, Float>>(emptyMap())
+    val downloadingProgress: StateFlow<Map<Int, Float>> = _downloadingProgress.asStateFlow()
+
     private var progressJob: Job? = null
+    
+    init {
+        refreshCachedSurahs()
+    }
+    
+    fun refreshCachedSurahs() {
+        _cachedSurahIds.value = PlaybackService.getCachedSurahs().map { it.id }.toSet()
+    }
+
+    fun downloadSurah(surah: Surah) {
+        val cache = PlaybackService.cache ?: return
+        viewModelScope.launch {
+            _downloadingSurahs.value += surah.id
+            withContext(Dispatchers.IO) {
+                try {
+                    val dataSource = CacheDataSource.Factory()
+                        .setCache(cache)
+                        .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
+                        .createDataSource()
+                    val dataSpec = DataSpec(Uri.parse(surah.url))
+                    
+                    val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                        if (requestLength > 0) {
+                            val progress = bytesCached.toFloat() / requestLength.toFloat()
+                            _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                                put(surah.id, progress)
+                            }
+                        }
+                    }
+
+                    val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
+                    writer.cache()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    _downloadingSurahs.value -= surah.id
+                    _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                        remove(surah.id)
+                    }
+                    refreshCachedSurahs()
+                }
+            }
+        }
+    }
 
     fun initializeController(context: Context) {
         val sessionToken = SessionToken(

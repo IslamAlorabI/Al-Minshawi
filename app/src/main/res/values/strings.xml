@@ -31,4 +31,5 @@
     <string name="undo">تراجع</string>
     <string name="surah_deleted">تم حذف السورة</string>
     <string name="confirm_delete_surah">تأكيد مسح السورة؟</string>
+    <string name="downloading_to_storage">جارِ الحفظ في مجلد التنزيلات...</string>
 </resources>
