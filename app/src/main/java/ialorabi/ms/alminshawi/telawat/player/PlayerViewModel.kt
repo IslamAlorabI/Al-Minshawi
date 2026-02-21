@@ -74,6 +74,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
 
     private var sleepTimerJob: Job? = null
+    private var isTransitioning = false
     
     init {
         refreshCachedSurahs()
@@ -192,12 +193,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 _isBuffering.value = playbackState == Player.STATE_BUFFERING
                 if (playbackState == Player.STATE_READY) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
+                    isTransitioning = false
                 }
-                if (playbackState == Player.STATE_ENDED) {
+                if (playbackState == Player.STATE_ENDED && !isTransitioning) {
                     if (_repeatMode.value) {
                         player?.seekTo(0)
                         player?.play()
                     } else if (_autoPlayNext.value) {
+                        isTransitioning = true
                         playNextSurah()
                     }
                 }
