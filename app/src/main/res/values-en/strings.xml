@@ -43,6 +43,7 @@
     <string name="help_streaming_note">Streaming does not fully save the Surah. To download it for offline listening, tap the download button.</string>
     <string name="sleep_timer">Sleep Timer</string>
     <string name="sleep_timer_off">Off</string>
+    <string name="sleep_timer_off_label">Sleep Timer is off</string>
     <string name="sleep_timer_minutes">%d Minutes</string>
     <string name="sleep_timer_active">%s left</string>
     <string name="repeat_surah">Repeat Surah</string>

@@ -43,6 +43,7 @@
     <string name="help_streaming_note">الاستماع المباشر لا يحفظ السورة كاملة. لتحميلها للاستماع بدون إنترنت، اضغط على زر التحميل.</string>
     <string name="sleep_timer">مؤقت النوم</string>
     <string name="sleep_timer_off">إيقاف</string>
+    <string name="sleep_timer_off_label">مؤقت النوم متوقف</string>
     <string name="sleep_timer_minutes">%d دقيقة</string>
     <string name="sleep_timer_active">متبقي %s</string>
     <string name="repeat_surah">تكرار السورة</string>
