@@ -101,7 +101,7 @@ class PlaybackService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
-        if (player != null && !player.playWhenReady || player?.mediaItemCount == 0) {
+        if (player != null && (!player.playWhenReady || player.mediaItemCount == 0)) {
             stopSelf()
         }
     }

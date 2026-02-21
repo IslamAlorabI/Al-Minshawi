@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import android.os.CountDownTimer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -297,7 +296,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val currentId = _currentPlayingSurahId.value ?: return
         val surahs = SurahRepository.surahs
         if (currentId < surahs.size) {
-            playSurah(surahs[currentId]) // currentId is 1-based, so surahs[currentId] naturally points to index currentId (which is the next item)
+            playSurah(surahs[currentId])
+        } else {
+            isTransitioning = false
         }
     }
 
@@ -305,7 +306,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val currentId = _currentPlayingSurahId.value ?: return
         val surahs = SurahRepository.surahs
         if (currentId > 1) {
-            playSurah(surahs[currentId - 2]) // currentId - 1 gives current, so - 2 gives previous index
+            playSurah(surahs[currentId - 2])
+        } else {
+            isTransitioning = false
         }
     }
 
