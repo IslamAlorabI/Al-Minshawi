@@ -170,7 +170,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
-                        downloadProgress = downloadingProgress[it.id],
+                        downloadProgress = downloadingProgress.values.maxOrNull(),
                         onPlayPauseClick = { viewModel.togglePlayPause() },
                         onBarClick = { showBottomSheet = true }
                     )

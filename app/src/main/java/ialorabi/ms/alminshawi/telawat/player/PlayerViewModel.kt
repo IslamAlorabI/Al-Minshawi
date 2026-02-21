@@ -77,6 +77,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             _downloadingSurahs.value += surah.id
             withContext(Dispatchers.IO) {
                 try {
+                    _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                        put(surah.id, 0.001f) // Immediately show a tiny bar
+                    }
                     val dataSource = CacheDataSource.Factory()
                         .setCache(cache)
                         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
