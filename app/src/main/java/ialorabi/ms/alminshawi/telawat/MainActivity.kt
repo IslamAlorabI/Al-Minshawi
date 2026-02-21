@@ -151,6 +151,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 FullScreenPlayer(
                     surah = surah,
                     localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
+                    localizedSurahNames = localizedSurahNames,
                     viewModel = viewModel
                 )
             }
@@ -700,7 +701,7 @@ fun BottomPlayerBar(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewModel) {
+fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: Array<String>, viewModel: PlayerViewModel) {
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
     val currentPos by viewModel.currentPosition.collectAsState()
@@ -938,6 +939,85 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, viewModel: PlayerViewM
                             modifier = Modifier.size(24.dp)
                         )
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            val surahs = SurahRepository.surahs
+            val prevSurah = if (surah.id > 1) surahs.getOrNull(surah.id - 2) else null
+            val nextSurah = if (surah.id < surahs.size) surahs.getOrNull(surah.id) else null
+            val prevName = prevSurah?.let { localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name } }
+            val nextName = nextSurah?.let { localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name } }
+            val waveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (prevSurah != null) {
+                    Surface(
+                        onClick = { viewModel.playPreviousSurah() },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Text(
+                            text = prevName ?: "",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            maxLines = 1
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
+                Canvas(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(20.dp)
+                ) {
+                    val w = size.width
+                    val h = size.height
+                    val midY = h / 2
+                    val amplitude = h * 0.35f
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(0f, midY)
+                        val waves = 4
+                        val segW = w / (waves * 2)
+                        for (i in 0 until waves * 2) {
+                            val cpX = segW * i + segW / 2
+                            val cpY = if (i % 2 == 0) midY - amplitude else midY + amplitude
+                            val endX = segW * (i + 1)
+                            quadraticTo(cpX, cpY, endX, midY)
+                        }
+                    }
+                    drawPath(
+                        path = path,
+                        color = waveColor,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                    )
+                }
+
+                if (nextSurah != null) {
+                    Surface(
+                        onClick = { viewModel.playNextSurah() },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Text(
+                            text = nextName ?: "",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            maxLines = 1
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
                 }
             }
         }
