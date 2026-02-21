@@ -209,48 +209,57 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 onActiveChange = { isSearchActive = it }
             )
 
-            @OptIn(ExperimentalLayoutApi::class)
-            FlowRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                FilterChip(
-                    selected = downloadFilter == DownloadFilter.DOWNLOADED,
-                    onClick = { 
-                        downloadFilter = if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED 
-                    },
-                    label = { Text(stringResource(R.string.filter_downloaded)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.CloudDone,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                )
-                FilterChip(
-                    selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
-                    onClick = { 
-                        downloadFilter = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED 
-                    },
-                    label = { Text(stringResource(R.string.filter_not_downloaded)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.CloudOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                )
+                val scrollState = rememberScrollState()
+                Row(
+                    modifier = Modifier.weight(1f).horizontalScroll(scrollState),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = downloadFilter == DownloadFilter.DOWNLOADED,
+                        onClick = { 
+                            downloadFilter = if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED 
+                        },
+                        label = { Text(stringResource(R.string.filter_downloaded)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudDone,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
+                    )
+                    FilterChip(
+                        selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
+                        onClick = { 
+                            downloadFilter = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED 
+                        },
+                        label = { Text(stringResource(R.string.filter_not_downloaded)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
                 Surface(
                     shape = MaterialTheme.shapes.small,
                     color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier
                         .height(32.dp)
-                        .weight(1f)
+                        .widthIn(min = 48.dp)
                         .clip(MaterialTheme.shapes.small)
                         .clickable { showHelpDialog = true }
                 ) {
