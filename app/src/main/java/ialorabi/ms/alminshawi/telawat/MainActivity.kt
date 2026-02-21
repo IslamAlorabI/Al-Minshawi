@@ -334,35 +334,33 @@ fun SurahItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (!isCurrentSelected) {
-                if (isDownloading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp).padding(2.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else if (isDownloaded) {
+            if (isDownloading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp).padding(2.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            } else if (isDownloaded) {
+                Icon(
+                    imageVector = Icons.Rounded.CloudDone,
+                    contentDescription = "Downloaded",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                IconButton(
+                    onClick = onDownloadClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Rounded.CloudDone,
-                        contentDescription = "Downloaded",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        imageVector = Icons.Rounded.Download,
+                        contentDescription = "Download",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.size(24.dp)
                     )
-                } else {
-                    IconButton(
-                        onClick = onDownloadClick,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Download,
-                            contentDescription = "Download",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
             }
+            Spacer(modifier = Modifier.width(8.dp))
 
             if (isBuffering) {
                 BufferingIndicator(modifier = Modifier.size(40.dp))
