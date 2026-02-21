@@ -305,10 +305,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun toggleRepeat() {
         _repeatMode.value = !_repeatMode.value
+        if (_repeatMode.value) _autoPlayNext.value = false
     }
 
     fun toggleAutoPlayNext() {
         _autoPlayNext.value = !_autoPlayNext.value
+        if (_autoPlayNext.value) _repeatMode.value = false
     }
 
     fun setSleepTimer(minutes: Int?) {
