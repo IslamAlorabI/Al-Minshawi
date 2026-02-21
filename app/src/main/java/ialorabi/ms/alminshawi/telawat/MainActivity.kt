@@ -101,13 +101,25 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
+    var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
-    val filteredSurahs = if (searchQuery.isEmpty()) surahs
-    else surahs.filter { surah ->
-        val locName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name }
-        locName.contains(searchQuery, ignoreCase = true) || surah.name.contains(searchQuery, ignoreCase = true) || surah.id.toString().contains(searchQuery) 
+    val filteredSurahs = surahs.filter { surah ->
+        val matchesSearch = if (searchQuery.isEmpty()) {
+            true
+        } else {
+            val locName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name }
+            locName.contains(searchQuery, ignoreCase = true) || surah.name.contains(searchQuery, ignoreCase = true) || surah.id.toString().contains(searchQuery)
+        }
+        
+        val matchesDownload = when (downloadFilter) {
+            DownloadFilter.ALL -> true
+            DownloadFilter.DOWNLOADED -> cachedSurahIds.contains(surah.id)
+            DownloadFilter.NOT_DOWNLOADED -> !cachedSurahIds.contains(surah.id)
+        }
+        
+        matchesSearch && matchesDownload
     }
 
     if (showBottomSheet && currentSurahId != null) {
@@ -191,6 +203,29 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 isActive = isSearchActive,
                 onActiveChange = { isSearchActive = it }
             )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.ALL,
+                    onClick = { downloadFilter = DownloadFilter.ALL },
+                    label = { Text(stringResource(R.string.filter_all)) }
+                )
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.DOWNLOADED,
+                    onClick = { downloadFilter = DownloadFilter.DOWNLOADED },
+                    label = { Text(stringResource(R.string.filter_downloaded)) }
+                )
+                FilterChip(
+                    selected = downloadFilter == DownloadFilter.NOT_DOWNLOADED,
+                    onClick = { downloadFilter = DownloadFilter.NOT_DOWNLOADED },
+                    label = { Text(stringResource(R.string.filter_not_downloaded)) }
+                )
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -629,4 +664,10 @@ private fun formatTime(ms: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
+}
+
+enum class DownloadFilter {
+    ALL,
+    DOWNLOADED,
+    NOT_DOWNLOADED
 }
