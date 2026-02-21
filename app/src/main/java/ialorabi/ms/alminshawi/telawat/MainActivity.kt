@@ -347,7 +347,7 @@ fun SurahItem(
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                     modifier = Modifier.size(24.dp)
                 )
-            } else {
+            } else if (!isCurrentSelected) {
                 IconButton(
                     onClick = onDownloadClick,
                     modifier = Modifier.size(32.dp)
