@@ -223,7 +223,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             var tickCount = 0
             while (isActive) {
                 if (!isSeeking) {
-                    _currentPosition.value = player?.currentPosition ?: 0L
+                    val pos = player?.currentPosition ?: 0L
+                    if (pos >= _currentPosition.value || pos == 0L) {
+                        _currentPosition.value = pos
+                    }
                 }
                 tickCount++
                 if (tickCount % 4 == 0) saveCurrentState()
