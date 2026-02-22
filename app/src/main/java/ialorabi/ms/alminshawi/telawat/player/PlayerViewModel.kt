@@ -317,7 +317,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         refreshCachedSurahs()
                     }
                 }
-                if (surah.id in _cachedSurahIds.value) {
+                if (surah.id in _cachedSurahIds.value && _currentPlayingSurahId.value == surah.id) {
                     playFromCache(surah)
                 }
             }
