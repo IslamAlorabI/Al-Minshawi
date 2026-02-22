@@ -94,6 +94,8 @@ class PlaybackService : MediaSessionService() {
                     .build(),
                 true
             )
+            .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
         mediaSession = MediaSession.Builder(this, player).build()

@@ -311,14 +311,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun seekForward() {
         player?.let {
             val nextPosition = (it.currentPosition + 30_000).coerceAtMost(it.duration)
-            seekTo(nextPosition)
+            it.seekTo(nextPosition)
+            _currentPosition.value = nextPosition
         }
     }
 
     fun seekBackward() {
         player?.let {
             val previousPosition = (it.currentPosition - 10_000).coerceAtLeast(0L)
-            seekTo(previousPosition)
+            it.seekTo(previousPosition)
+            _currentPosition.value = previousPosition
         }
     }
 
