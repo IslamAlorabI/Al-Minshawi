@@ -232,6 +232,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 super.onMediaItemTransition(mediaItem, reason)
                 val surahId = mediaItem?.mediaId?.toIntOrNull()
                 _currentPlayingSurahId.value = surahId
+                _currentPosition.value = 0L
             }
         })
     }
@@ -242,10 +243,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             var tickCount = 0
             while (isActive) {
                 if (!isSeeking) {
-                    val pos = player?.currentPosition ?: 0L
-                    if (pos >= _currentPosition.value || pos == 0L) {
-                        _currentPosition.value = pos
-                    }
+                    _currentPosition.value = player?.currentPosition ?: 0L
                 }
                 tickCount++
                 if (tickCount % 4 == 0) saveCurrentState()
