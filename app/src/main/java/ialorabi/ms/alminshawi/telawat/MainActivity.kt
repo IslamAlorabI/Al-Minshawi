@@ -57,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -128,6 +129,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
     var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
+    var showFavoritesOnly by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
@@ -144,10 +146,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             DownloadFilter.ALL -> true
             DownloadFilter.DOWNLOADED -> cachedSurahIds.contains(surah.id)
             DownloadFilter.NOT_DOWNLOADED -> !cachedSurahIds.contains(surah.id)
-            DownloadFilter.FAVORITES -> favoriteSurahIds.contains(surah.id)
         }
+
+        val matchesFavorite = if (showFavoritesOnly) favoriteSurahIds.contains(surah.id) else true
         
-        matchesSearch && matchesDownload
+        matchesSearch && matchesDownload && matchesFavorite
     }
 
     if (showBottomSheet && currentSurahId != null) {
@@ -282,7 +285,9 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 isActive = isSearchActive,
                 onActiveChange = { isSearchActive = it },
                 downloadFilter = downloadFilter,
-                onFilterChange = { downloadFilter = it }
+                onFilterChange = { downloadFilter = it },
+                showFavoritesOnly = showFavoritesOnly,
+                onFavoritesToggle = { showFavoritesOnly = it }
             )
 
             Surface(
@@ -449,7 +454,9 @@ fun SearchBarSection(
     isActive: Boolean, 
     onActiveChange: (Boolean) -> Unit,
     downloadFilter: DownloadFilter,
-    onFilterChange: (DownloadFilter) -> Unit
+    onFilterChange: (DownloadFilter) -> Unit,
+    showFavoritesOnly: Boolean,
+    onFavoritesToggle: (Boolean) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -509,18 +516,18 @@ fun SearchBarSection(
 
                 Surface(
                     shape = CircleShape,
-                    color = if (downloadFilter == DownloadFilter.FAVORITES) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    color = if (showFavoritesOnly) MaterialTheme.colorScheme.primary else Color.Transparent,
                     modifier = Modifier
                         .padding(end = 4.dp)
                         .size(36.dp)
                         .clip(CircleShape)
-                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.FAVORITES) DownloadFilter.ALL else DownloadFilter.FAVORITES) }
+                        .clickable { onFavoritesToggle(!showFavoritesOnly) }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = if (downloadFilter == DownloadFilter.FAVORITES) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            imageVector = if (showFavoritesOnly) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                             contentDescription = stringResource(R.string.filter_favorites),
-                            tint = if (downloadFilter == DownloadFilter.FAVORITES) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            tint = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -631,31 +638,22 @@ fun SurahItem(
                     text = "${stringResource(R.string.surah_prefix)} $localizedName",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                if (isFavorite) {
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(6.dp)
-                    ) {
-                        val waveWidth = 20f.dp.toPx()
+                    maxLines = 1,
+                    modifier = if (isFavorite) Modifier.drawBehind {
+                        val waveWidth = 20.dp.toPx()
+                        val waveHeight = 3.dp.toPx()
                         val path = Path().apply {
-                            moveTo(0f, size.height / 2)
+                            moveTo(0f, size.height + waveHeight)
                             var currentX = 0f
                             while (currentX < size.width) {
-                                relativeQuadraticTo(waveWidth / 4, -size.height / 2, waveWidth / 2, 0f)
-                                relativeQuadraticTo(waveWidth / 4, size.height / 2, waveWidth / 2, 0f)
+                                relativeQuadraticTo(waveWidth / 4, -waveHeight, waveWidth / 2, 0f)
+                                relativeQuadraticTo(waveWidth / 4, waveHeight, waveWidth / 2, 0f)
                                 currentX += waveWidth
                             }
                         }
-                        drawPath(
-                            path = path,
-                            color = waveColor,
-                            style = Stroke(width = 1.5f.dp.toPx())
-                        )
-                    }
-                }
+                        drawPath(path, waveColor, style = Stroke(width = 1.5.dp.toPx()))
+                    } else Modifier
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -1248,5 +1246,5 @@ private fun formatTime(ms: Long): String {
 }
 
 enum class DownloadFilter {
-    ALL, DOWNLOADED, NOT_DOWNLOADED, FAVORITES
+    ALL, DOWNLOADED, NOT_DOWNLOADED
 }
