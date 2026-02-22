@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Download
@@ -1099,42 +1100,57 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
                 )
 
-                val options = listOf<Int?>(null, 10, 15, 20, 30, 45, 60)
-                options.forEach { minutes ->
-                    val label = if (minutes == null) stringResource(R.string.sleep_timer_off)
-                                else String.format(stringResource(R.string.sleep_timer_minutes), minutes)
-                    val isSelected = if (minutes == null) sleepTimerMs == 0L else false
+                val isOff = sleepTimerMs == 0L
+                Surface(
+                    onClick = {
+                        viewModel.setSleepTimer(null)
+                        showSleepTimerSheet = false
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isOff) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.sleep_timer_off),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isOff) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        fontWeight = if (isOff) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier.padding(vertical = 14.dp)
+                    )
+                }
 
-                    Surface(
-                        onClick = {
-                            viewModel.setSleepTimer(minutes)
-                            showSleepTimerSheet = false
-                        },
-                        color = Color.Transparent,
-                        modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val timeOptions = listOf(10, 15, 20, 30, 45, 60)
+                val rows = timeOptions.chunked(2)
+                rows.forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                        row.forEach { minutes ->
+                            val label = String.format(stringResource(R.string.sleep_timer_minutes), minutes)
+                            Surface(
+                                onClick = {
+                                    viewModel.setSleepTimer(minutes)
+                                    showSleepTimerSheet = false
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(vertical = 14.dp)
                                 )
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
