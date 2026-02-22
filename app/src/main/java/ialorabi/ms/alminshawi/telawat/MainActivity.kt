@@ -840,6 +840,9 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 onValueChange = { newProgress ->
                     viewModel.seekTo((newProgress * duration).toLong())
                 },
+                onValueChangeFinished = {
+                    viewModel.finishSeek()
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 

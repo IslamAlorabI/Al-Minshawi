@@ -77,6 +77,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private var sleepTimerJob: Job? = null
     private var isTransitioning = false
+    private var isSeeking = false
     
     init {
         refreshCachedSurahs()
@@ -221,7 +222,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob = viewModelScope.launch {
             var tickCount = 0
             while (isActive) {
-                _currentPosition.value = player?.currentPosition ?: 0L
+                if (!isSeeking) {
+                    _currentPosition.value = player?.currentPosition ?: 0L
+                }
                 tickCount++
                 if (tickCount % 4 == 0) saveCurrentState()
                 delay(250L)
@@ -276,8 +279,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun seekTo(positionMs: Long) {
+        isSeeking = true
         player?.seekTo(positionMs)
         _currentPosition.value = positionMs
+    }
+
+    fun finishSeek() {
+        isSeeking = false
     }
 
     fun seekForward() {
