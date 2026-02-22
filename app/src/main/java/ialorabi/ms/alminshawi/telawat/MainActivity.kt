@@ -350,7 +350,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(text = stringResource(R.string.help_tap_play_desc), style = MaterialTheme.typography.bodyMedium)
                     Text(text = stringResource(R.string.help_long_press_favorite_desc), style = MaterialTheme.typography.bodyMedium)
