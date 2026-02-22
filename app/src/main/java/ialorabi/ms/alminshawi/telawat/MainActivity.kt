@@ -600,7 +600,13 @@ fun SurahItem(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() },
+                onClick = { 
+                    if (!isCurrentSelected) {
+                        onPlayClick()
+                    } else if (!isPlaying) {
+                        onPauseClick() // togglePlayPause inside will resume it
+                    }
+                },
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onToggleFavorite()
