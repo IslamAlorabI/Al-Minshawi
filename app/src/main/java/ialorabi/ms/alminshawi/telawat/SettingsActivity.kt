@@ -269,6 +269,16 @@ class SettingsActivity : AppCompatActivity() {
                                 fontSize = 13.sp
                             )
 
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+                            Text(
+                                text = "v$versionName",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                textAlign = TextAlign.Center
+                            )
+
                             Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
