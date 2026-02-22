@@ -46,6 +46,8 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.*
@@ -110,6 +112,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
     val isBuffering by viewModel.isBuffering.collectAsState()
     val downloadingSurahs by viewModel.downloadingSurahs.collectAsState()
     val cachedSurahIds by viewModel.cachedSurahIds.collectAsState()
+    val favoriteSurahIds by viewModel.favoriteSurahIds.collectAsState()
     val downloadingProgress by viewModel.downloadingProgress.collectAsState()
     
     LaunchedEffect(Unit) {
@@ -140,6 +143,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             DownloadFilter.ALL -> true
             DownloadFilter.DOWNLOADED -> cachedSurahIds.contains(surah.id)
             DownloadFilter.NOT_DOWNLOADED -> !cachedSurahIds.contains(surah.id)
+            DownloadFilter.FAVORITES -> favoriteSurahIds.contains(surah.id)
         }
         
         matchesSearch && matchesDownload
@@ -323,9 +327,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         isBuffering = isBuffering && currentSurahId == surah.id,
                         isDownloading = downloadingSurahs.contains(surah.id),
                         isDownloaded = cachedSurahIds.contains(surah.id),
+                        isFavorite = favoriteSurahIds.contains(surah.id),
                         onPlayClick = { viewModel.playSurah(surah) },
                         onPauseClick = { viewModel.togglePlayPause() },
-                        onDownloadClick = { viewModel.downloadSurah(surah) }
+                        onDownloadClick = { viewModel.downloadSurah(surah) },
+                        onToggleFavorite = { viewModel.toggleFavorite(surah.id) }
                     )
                 }
             }
@@ -342,8 +348,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = stringResource(R.string.help_filter_desc))
+                    Text(text = stringResource(R.string.help_tap_play_desc))
+                    Text(text = stringResource(R.string.help_long_press_favorite_desc))
+                    Text(text = stringResource(R.string.help_favorite_wave_desc))
                     HorizontalDivider()
+                    Text(
+                        text = stringResource(R.string.help_icons_title),
+                        fontWeight = FontWeight.Bold
+                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Rounded.Download,
@@ -373,6 +385,8 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(text = stringResource(R.string.help_downloaded_desc))
                     }
+                    HorizontalDivider()
+                    Text(text = stringResource(R.string.help_filter_desc))
                     HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -480,6 +494,25 @@ fun SearchBarSection(
                     }
                 }
 
+                Surface(
+                    shape = CircleShape,
+                    color = if (downloadFilter == DownloadFilter.FAVORITES) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.FAVORITES) DownloadFilter.ALL else DownloadFilter.FAVORITES) }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (downloadFilter == DownloadFilter.FAVORITES) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            contentDescription = stringResource(R.string.filter_favorites),
+                            tint = if (downloadFilter == DownloadFilter.FAVORITES) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(Icons.Rounded.Close, contentDescription = null)
@@ -525,6 +558,7 @@ fun WavyTopDecor() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SurahItem(
     surah: Surah,
@@ -534,16 +568,24 @@ fun SurahItem(
     isBuffering: Boolean,
     isDownloading: Boolean,
     isDownloaded: Boolean,
+    isFavorite: Boolean,
     onPlayClick: () -> Unit,
     onPauseClick: () -> Unit,
-    onDownloadClick: () -> Unit
+    onDownloadClick: () -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
+    val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                if (isCurrentSelected) onPauseClick() else onPlayClick()
-            },
+            .combinedClickable(
+                onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onToggleFavorite()
+                }
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isCurrentSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
@@ -571,12 +613,37 @@ fun SurahItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                if (isFavorite) {
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .height(6.dp)
+                    ) {
+                        val waveWidth = 20f.dp.toPx()
+                        val path = Path().apply {
+                            moveTo(0f, size.height / 2)
+                            var currentX = 0f
+                            while (currentX < size.width) {
+                                relativeQuadraticTo(waveWidth / 4, -size.height / 2, waveWidth / 2, 0f)
+                                relativeQuadraticTo(waveWidth / 4, size.height / 2, waveWidth / 2, 0f)
+                                currentX += waveWidth
+                            }
+                        }
+                        drawPath(
+                            path = path,
+                            color = waveColor,
+                            style = Stroke(width = 1.5f.dp.toPx())
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.width(8.dp))
 
@@ -1168,7 +1235,5 @@ private fun formatTime(ms: Long): String {
 }
 
 enum class DownloadFilter {
-    ALL,
-    DOWNLOADED,
-    NOT_DOWNLOADED
+    ALL, DOWNLOADED, NOT_DOWNLOADED, FAVORITES
 }

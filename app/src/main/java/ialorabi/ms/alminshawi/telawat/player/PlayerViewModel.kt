@@ -78,16 +78,32 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _sleepTimerSelectedMinutes = MutableStateFlow<Int?>(null)
     val sleepTimerSelectedMinutes: StateFlow<Int?> = _sleepTimerSelectedMinutes.asStateFlow()
 
+    private val _favoriteSurahIds = MutableStateFlow<Set<Int>>(emptySet())
+    val favoriteSurahIds: StateFlow<Set<Int>> = _favoriteSurahIds.asStateFlow()
+
     private var sleepTimerJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
     
     init {
         refreshCachedSurahs()
+        loadFavorites()
     }
     
     fun refreshCachedSurahs() {
         _cachedSurahIds.value = PlaybackService.getCachedSurahs().map { it.id }.toSet()
+    }
+
+    private fun loadFavorites() {
+        val ids = prefs.getStringSet("favorite_surahs", emptySet()) ?: emptySet()
+        _favoriteSurahIds.value = ids.mapNotNull { it.toIntOrNull() }.toSet()
+    }
+
+    fun toggleFavorite(surahId: Int) {
+        val current = _favoriteSurahIds.value.toMutableSet()
+        if (current.contains(surahId)) current.remove(surahId) else current.add(surahId)
+        _favoriteSurahIds.value = current
+        prefs.edit().putStringSet("favorite_surahs", current.map { it.toString() }.toSet()).apply()
     }
 
     fun downloadSurah(surah: Surah) {
