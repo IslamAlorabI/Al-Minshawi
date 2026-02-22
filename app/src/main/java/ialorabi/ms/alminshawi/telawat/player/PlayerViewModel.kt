@@ -82,6 +82,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val favoriteSurahIds: StateFlow<Set<Int>> = _favoriteSurahIds.asStateFlow()
 
     private var sleepTimerJob: Job? = null
+    private var bufferingJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
     
@@ -212,7 +213,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                _isBuffering.value = playbackState == Player.STATE_BUFFERING
+                bufferingJob?.cancel()
+                if (playbackState == Player.STATE_BUFFERING) {
+                    bufferingJob = viewModelScope.launch {
+                        delay(500L)
+                        _isBuffering.value = true
+                    }
+                } else {
+                    _isBuffering.value = false
+                }
                 if (playbackState == Player.STATE_READY) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                     isTransitioning = false
@@ -269,6 +278,53 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun playSurah(surah: Surah) {
+        if (surah.id in _cachedSurahIds.value) {
+            playFromCache(surah)
+        } else if (surah.id !in _downloadingSurahs.value) {
+            _currentPlayingSurahId.value = surah.id
+            val cache = PlaybackService.cache ?: return
+            viewModelScope.launch {
+                _downloadingSurahs.value += surah.id
+                withContext(Dispatchers.IO) {
+                    try {
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            put(surah.id, 0.001f)
+                        }
+                        val dataSource = CacheDataSource.Factory()
+                            .setCache(cache)
+                            .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
+                            .createDataSource()
+                        val dataSpec = DataSpec(Uri.parse(surah.url))
+
+                        val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                            if (requestLength > 0) {
+                                val progress = bytesCached.toFloat() / requestLength.toFloat()
+                                _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                                    put(surah.id, progress)
+                                }
+                            }
+                        }
+
+                        val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
+                        writer.cache()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    } finally {
+                        _downloadingSurahs.value -= surah.id
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            remove(surah.id)
+                        }
+                        refreshCachedSurahs()
+                    }
+                }
+                if (surah.id in _cachedSurahIds.value) {
+                    playFromCache(surah)
+                }
+            }
+        }
+    }
+
+    private fun playFromCache(surah: Surah) {
         player?.let { exoPlayer ->
             val mediaItem = MediaItem.Builder()
                 .setMediaId(surah.id.toString())
@@ -300,11 +356,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun seekTo(positionMs: Long) {
         isSeeking = true
-        player?.seekTo(positionMs)
         _currentPosition.value = positionMs
     }
 
     fun finishSeek() {
+        player?.seekTo(_currentPosition.value)
         isSeeking = false
     }
 
