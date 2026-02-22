@@ -851,7 +851,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 Icon(
                     painter = painterResource(id = R.drawable.player_logo),
                     contentDescription = null,
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.fillMaxSize(0.65f),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
                 )
             }
