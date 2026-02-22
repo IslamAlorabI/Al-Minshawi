@@ -426,7 +426,15 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showHelpDialog = false }) {
+                Button(
+                    onClick = { showHelpDialog = false },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Text(stringResource(android.R.string.ok))
                 }
             }
