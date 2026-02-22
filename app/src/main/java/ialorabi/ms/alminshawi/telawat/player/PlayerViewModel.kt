@@ -75,6 +75,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _sleepTimerRemainingMs = MutableStateFlow(0L)
     val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
 
+    private val _sleepTimerSelectedMinutes = MutableStateFlow<Int?>(null)
+    val sleepTimerSelectedMinutes: StateFlow<Int?> = _sleepTimerSelectedMinutes.asStateFlow()
+
     private var sleepTimerJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
@@ -343,8 +346,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         sleepTimerJob?.cancel()
         if (minutes == null || minutes <= 0) {
             _sleepTimerRemainingMs.value = 0L
+            _sleepTimerSelectedMinutes.value = null
             return
         }
+        _sleepTimerSelectedMinutes.value = minutes
         val totalMs = minutes * 60 * 1000L
         _sleepTimerRemainingMs.value = totalMs
         sleepTimerJob = viewModelScope.launch {

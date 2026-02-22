@@ -730,6 +730,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
     val isAutoPlayReversed by viewModel.autoPlayReversed.collectAsState()
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
+    val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
 
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
     var showSleepTimerSheet by remember { mutableStateOf(false) }
@@ -1131,20 +1132,22 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     ) {
                         row.forEach { minutes ->
                             val label = String.format(stringResource(R.string.sleep_timer_minutes), minutes)
+                            val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
                             Surface(
                                 onClick = {
                                     viewModel.setSleepTimer(minutes)
                                     showSleepTimerSheet = false
                                 },
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
                                     text = label,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center,
+                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                                     modifier = Modifier.padding(vertical = 14.dp)
                                 )
                             }
