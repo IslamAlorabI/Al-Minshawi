@@ -849,7 +849,8 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     .padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
+                val displayPos = if (duration > 0 && duration - currentPos < 1000) duration else currentPos
+                Text(text = formatTime(displayPos), color = Color.Gray, fontSize = 12.sp)
                 Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
             }
 
