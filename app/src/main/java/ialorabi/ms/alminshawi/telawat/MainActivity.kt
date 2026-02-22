@@ -350,47 +350,48 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(text = stringResource(R.string.help_tap_play_desc))
-                    Text(text = stringResource(R.string.help_long_press_favorite_desc))
-                    Text(text = stringResource(R.string.help_favorite_wave_desc))
+                    Text(text = stringResource(R.string.help_tap_play_desc), style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stringResource(R.string.help_long_press_favorite_desc), style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stringResource(R.string.help_favorite_wave_desc), style = MaterialTheme.typography.bodyMedium)
                     HorizontalDivider()
                     Text(
                         text = stringResource(R.string.help_icons_title),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Rounded.Download,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = stringResource(R.string.help_download_desc))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.help_download_desc), style = MaterialTheme.typography.bodyMedium)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp).padding(2.dp),
+                            modifier = Modifier.size(20.dp).padding(2.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = stringResource(R.string.help_downloading_desc))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.help_downloading_desc), style = MaterialTheme.typography.bodyMedium)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Rounded.CloudDone,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = stringResource(R.string.help_downloaded_desc))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.help_downloaded_desc), style = MaterialTheme.typography.bodyMedium)
                     }
                     HorizontalDivider()
-                    Text(text = stringResource(R.string.help_filter_desc))
+                    Text(text = stringResource(R.string.help_filter_desc), style = MaterialTheme.typography.bodyMedium)
                     HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -398,11 +399,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                                 imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = stringResource(R.string.help_auto_play_desc))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.help_auto_play_desc), style = MaterialTheme.typography.bodyMedium)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -410,11 +411,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                                 imageVector = Icons.AutoMirrored.Rounded.Sort,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = stringResource(R.string.help_auto_play_reverse_desc))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.help_auto_play_reverse_desc), style = MaterialTheme.typography.bodyMedium)
                     }
                     HorizontalDivider()
                     Text(
