@@ -219,10 +219,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private fun startTrackingProgress() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
+            var tickCount = 0
             while (isActive) {
                 _currentPosition.value = player?.currentPosition ?: 0L
-                saveCurrentState()
-                delay(1000L)
+                tickCount++
+                if (tickCount % 4 == 0) saveCurrentState()
+                delay(250L)
             }
         }
     }
