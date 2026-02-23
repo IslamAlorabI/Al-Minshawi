@@ -761,62 +761,15 @@ fun BottomPlayerBar(
         tonalElevation = 8.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                if (downloadProgress != null) {
-                    LinearProgressIndicator(
-                        progress = { downloadProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .align(Alignment.TopCenter),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    )
-                }
-                Row(
+            if (downloadProgress != null) {
+                LinearProgressIndicator(
+                    progress = { downloadProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        Text(
-                            text = stringResource(R.string.sheikh_short),
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-
-                    if (duration > 0) {
-                        Text(
-                            text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
-
-                    if (isBuffering) {
-                        BufferingIndicator(modifier = Modifier.size(50.dp))
-                    } else {
-                        FilledIconButton(
-                            onClick = onPlayPauseClick,
-                            modifier = Modifier.size(50.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-                }
+                        .height(2.dp),
+                    color = MaterialTheme.colorScheme.tertiary,
+                    trackColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                )
             }
             LinearProgressIndicator(
                 progress = { playbackProgress.coerceIn(0f, 1f) },
@@ -826,6 +779,50 @@ fun BottomPlayerBar(
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Text(
+                        text = stringResource(R.string.sheikh_short),
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                if (duration > 0) {
+                    Text(
+                        text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+
+                if (isBuffering) {
+                    BufferingIndicator(modifier = Modifier.size(50.dp))
+                } else {
+                    FilledIconButton(
+                        onClick = onPlayPauseClick,
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
