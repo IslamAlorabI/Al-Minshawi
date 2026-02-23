@@ -75,8 +75,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.text.TextLayoutResult
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
@@ -217,62 +220,11 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
-                        downloadProgress = downloadingProgress.values.maxOrNull(),
                         currentPosition = currentPosition,
                         duration = duration,
                         onPlayPauseClick = { viewModel.togglePlayPause() },
                         onBarClick = { showBottomSheet = true }
                     )
-                }
-            } else if (currentSurahId == null && downloadingSurahs.isNotEmpty()) {
-                val dlSurahId = downloadingSurahs.first()
-                val dlSurah = surahs.find { it.id == dlSurahId }
-                dlSurah?.let {
-                    val dlName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name }
-                    val dlProgress = downloadingProgress[dlSurahId] ?: 0f
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        tonalElevation = 8.dp
-                    ) {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            LinearProgressIndicator(
-                                progress = { dlProgress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .align(Alignment.TopCenter),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Download,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "${stringResource(R.string.surah_prefix)} $dlName",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
-                                    Text(
-                                        text = "${(dlProgress * 100).toInt()}%",
-                                        fontSize = 13.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -337,6 +289,7 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         isPlaying = isPlaying,
                         isBuffering = isBuffering && currentSurahId == surah.id,
                         isDownloading = downloadingSurahs.contains(surah.id),
+                        downloadProgress = downloadingProgress[surah.id] ?: 0f,
                         isDownloaded = cachedSurahIds.contains(surah.id),
                         isFavorite = favoriteSurahIds.contains(surah.id),
                         onPlayClick = { viewModel.playSurah(surah) },
@@ -592,6 +545,7 @@ fun SurahItem(
     isPlaying: Boolean,
     isBuffering: Boolean,
     isDownloading: Boolean,
+    downloadProgress: Float,
     isDownloaded: Boolean,
     isFavorite: Boolean,
     onPlayClick: () -> Unit,
@@ -645,24 +599,39 @@ fun SurahItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
                 Text(
                     text = "${stringResource(R.string.surah_prefix)} $localizedName",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    modifier = if (isFavorite) Modifier.drawBehind {
+                    onTextLayout = { textLayoutResult = it },
+                    modifier = if (isFavorite) Modifier
+                        .padding(bottom = 8.dp)
+                        .drawBehind {
+                        val result = textLayoutResult ?: return@drawBehind
+                        val lineLeft = result.getLineLeft(0)
+                        val lineRight = result.getLineRight(0)
                         val waveWidth = 20.dp.toPx()
                         val waveHeight = 3.dp.toPx()
-                        val path = Path().apply {
-                            moveTo(0f, size.height + waveHeight)
-                            var currentX = 0f
-                            while (currentX < size.width) {
-                                relativeQuadraticTo(waveWidth / 4, -waveHeight, waveWidth / 2, 0f)
-                                relativeQuadraticTo(waveWidth / 4, waveHeight, waveWidth / 2, 0f)
-                                currentX += waveWidth
+                        val strokeW = 1.5.dp.toPx()
+                        val dotRadius = strokeW
+                        val waveY = size.height - 2.dp.toPx()
+                        val textWidth = lineRight - lineLeft
+                        clipRect(left = lineLeft, right = lineRight) {
+                            val path = Path().apply {
+                                moveTo(lineLeft, waveY)
+                                var currentX = 0f
+                                while (currentX < textWidth) {
+                                    relativeQuadraticTo(waveWidth / 4, -waveHeight, waveWidth / 2, 0f)
+                                    relativeQuadraticTo(waveWidth / 4, waveHeight, waveWidth / 2, 0f)
+                                    currentX += waveWidth
+                                }
                             }
+                            drawPath(path, waveColor, style = Stroke(width = strokeW))
                         }
-                        drawPath(path, waveColor, style = Stroke(width = 1.5.dp.toPx()))
+                        drawCircle(waveColor, radius = dotRadius, center = Offset(lineLeft, waveY))
+                        drawCircle(waveColor, radius = dotRadius, center = Offset(lineRight, waveY))
                     } else Modifier
                 )
             }
@@ -714,6 +683,16 @@ fun SurahItem(
                 }
             }
         }
+        if (isDownloading) {
+            LinearProgressIndicator(
+                progress = { downloadProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+            )
+        }
     }
 }
 
@@ -746,7 +725,6 @@ fun BottomPlayerBar(
     localizedName: String,
     isPlaying: Boolean,
     isBuffering: Boolean,
-    downloadProgress: Float?,
     currentPosition: Long,
     duration: Long,
     onPlayPauseClick: () -> Unit,
@@ -761,16 +739,6 @@ fun BottomPlayerBar(
         tonalElevation = 8.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            if (downloadProgress != null) {
-                LinearProgressIndicator(
-                    progress = { downloadProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp),
-                    color = MaterialTheme.colorScheme.tertiary,
-                    trackColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
-                )
-            }
             LinearProgressIndicator(
                 progress = { playbackProgress.coerceIn(0f, 1f) },
                 modifier = Modifier
