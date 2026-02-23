@@ -307,7 +307,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 tickCount++
                 if (tickCount % 4 == 0) saveCurrentState()
-                delay(250L)
+                delay(500L)
             }
         }
     }
