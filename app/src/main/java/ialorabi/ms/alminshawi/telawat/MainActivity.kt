@@ -207,6 +207,8 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
             )
         },
         bottomBar = {
+            val currentPosition by viewModel.currentPosition.collectAsState()
+            val duration by viewModel.duration.collectAsState()
             if (currentSurahId != null && !showBottomSheet) {
                 val currentSurah = surahs.find { it.id == currentSurahId }
                 currentSurah?.let {
@@ -216,6 +218,8 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
                         downloadProgress = downloadingProgress.values.maxOrNull(),
+                        currentPosition = currentPosition,
+                        duration = duration,
                         onPlayPauseClick = { viewModel.togglePlayPause() },
                         onBarClick = { showBottomSheet = true }
                     )
@@ -743,9 +747,12 @@ fun BottomPlayerBar(
     isPlaying: Boolean,
     isBuffering: Boolean,
     downloadProgress: Float?,
+    currentPosition: Long,
+    duration: Long,
     onPlayPauseClick: () -> Unit,
     onBarClick: () -> Unit
 ) {
+    val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -753,53 +760,72 @@ fun BottomPlayerBar(
         color = MaterialTheme.colorScheme.secondaryContainer,
         tonalElevation = 8.dp
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (downloadProgress != null) {
-                LinearProgressIndicator(
-                    progress = { downloadProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .align(Alignment.TopCenter),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        text = stringResource(R.string.sheikh_short),
-                        fontSize = 14.sp,
-                        color = Color.Gray
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                if (downloadProgress != null) {
+                    LinearProgressIndicator(
+                        progress = { downloadProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .align(Alignment.TopCenter),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                     )
                 }
-
-                if (isBuffering) {
-                    BufferingIndicator(modifier = Modifier.size(50.dp))
-                } else {
-                    FilledIconButton(
-                        onClick = onPlayPauseClick,
-                        modifier = Modifier.size(50.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                            modifier = Modifier.size(28.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
                         )
+                        Text(
+                            text = stringResource(R.string.sheikh_short),
+                            fontSize = 14.sp,
+                            color = Color.Gray
+                        )
+                    }
+
+                    if (duration > 0) {
+                        Text(
+                            text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
+
+                    if (isBuffering) {
+                        BufferingIndicator(modifier = Modifier.size(50.dp))
+                    } else {
+                        FilledIconButton(
+                            onClick = onPlayPauseClick,
+                            modifier = Modifier.size(50.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
             }
+            LinearProgressIndicator(
+                progress = { playbackProgress.coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+            )
         }
     }
 }
