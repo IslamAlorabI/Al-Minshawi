@@ -52,6 +52,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.sp
 
 class SettingsActivity : AppCompatActivity() {
+    private val cacheSizeBytes = mutableLongStateOf(0L)
+
+    override fun onResume() {
+        super.onResume()
+        cacheSizeBytes.longValue = PlaybackService.getCacheSize(this)
+    }
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,15 +72,9 @@ class SettingsActivity : AppCompatActivity() {
                 var currentTheme by remember {
                     mutableStateOf(sharedPrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM))
                 }
-                var cacheSizeBytes by remember {
-                    mutableStateOf(0L)
-                }
+                var cacheSizeBytes by cacheSizeBytes
                 var showClearAllDialog by remember { mutableStateOf(false) }
                 var showManageCacheSheet by remember { mutableStateOf(false) }
-
-                LaunchedEffect(Unit) {
-                    cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
-                }
 
                 Scaffold(
                     topBar = {
