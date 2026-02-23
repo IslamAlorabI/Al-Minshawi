@@ -3,6 +3,12 @@ package ialorabi.ms.alminshawi.telawat.player
 import android.content.ComponentName
 import android.content.Context
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -18,6 +24,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
 import android.net.Uri
+import ialorabi.ms.alminshawi.telawat.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ialorabi.ms.alminshawi.telawat.data.Surah
@@ -29,9 +36,52 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
+
+    private var _artworkData: ByteArray? = null
+
+    private fun getArtworkData(): ByteArray? {
+        _artworkData?.let { return it }
+        val context = getApplication<Application>()
+        val isDark = (context.resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val primaryContainer = if (isDark) {
+            context.getColor(android.R.color.system_accent1_700)
+        } else {
+            context.getColor(android.R.color.system_accent1_100)
+        }
+        val primary = if (isDark) {
+            context.getColor(android.R.color.system_accent1_200)
+        } else {
+            context.getColor(android.R.color.system_accent1_600)
+        }
+        val size = 512
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(primaryContainer)
+        val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.player_logo)
+        val logoSize = (size * 0.65f).toInt()
+        val scaled = Bitmap.createScaledBitmap(logoBitmap, logoSize, logoSize, true)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
+        val left = (size - logoSize) / 2f
+        val top = (size - logoSize) / 2f
+        canvas.drawBitmap(scaled, left, top, paint)
+        logoBitmap.recycle()
+        scaled.recycle()
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        bitmap.recycle()
+        _artworkData = stream.toByteArray()
+        return _artworkData
+    }
+
+    fun refreshArtwork() {
+        _artworkData = null
+    }
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
     var player: Player? = null
@@ -180,6 +230,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                             MediaMetadata.Builder()
                                 .setTitle(surah.name)
                                 .setArtist("الشيخ محمد صديق المنشاوي")
+                                .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                                 .build()
                         )
                         .build()
@@ -333,6 +384,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     MediaMetadata.Builder()
                         .setTitle(surah.name)
                         .setArtist("\u0627\u0644\u0634\u064A\u062E \u0645\u062D\u0645\u062F \u0635\u062F\u064A\u0642 \u0627\u0644\u0645\u0646\u0634\u0627\u0648\u064A")
+                        .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                         .build()
                 )
                 .build()
