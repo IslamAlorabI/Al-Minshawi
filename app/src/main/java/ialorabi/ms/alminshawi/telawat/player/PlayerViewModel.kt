@@ -113,13 +113,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private var progressJob: Job? = null
 
-    private val _repeatMode = MutableStateFlow(false)
+    private val _repeatMode = MutableStateFlow(prefs.getBoolean("repeat_mode", false))
     val repeatMode: StateFlow<Boolean> = _repeatMode.asStateFlow()
 
-    private val _autoPlayNext = MutableStateFlow(true)
+    private val _autoPlayNext = MutableStateFlow(prefs.getBoolean("auto_play_next", true))
     val autoPlayNext: StateFlow<Boolean> = _autoPlayNext.asStateFlow()
 
-    private val _autoPlayReversed = MutableStateFlow(false)
+    private val _autoPlayReversed = MutableStateFlow(prefs.getBoolean("auto_play_reversed", false))
     val autoPlayReversed: StateFlow<Boolean> = _autoPlayReversed.asStateFlow()
 
     private val _sleepTimerRemainingMs = MutableStateFlow(0L)
@@ -236,6 +236,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         .build()
                     
                     exo.setMediaItem(mediaItem, lastPos)
+                    exo.playWhenReady = false
                     exo.prepare()
                     
                     _currentPlayingSurahId.value = lastSurahId
@@ -278,6 +279,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     isTransitioning = false
                 }
                 if (playbackState == Player.STATE_ENDED && !isTransitioning) {
+                    _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
+                    
                     if (_repeatMode.value) {
                         player?.seekTo(0)
                         player?.play()
@@ -314,8 +317,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun saveCurrentState() {
         val surahId = _currentPlayingSurahId.value
-        val pos = player?.currentPosition ?: 0L
-        if (surahId != null && pos > 0) {
+        val isEnded = player?.playbackState == Player.STATE_ENDED
+        val pos = if (isEnded) 0L else (player?.currentPosition ?: 0L)
+        if (surahId != null) {
             prefs.edit()
                 .putInt("last_surah_id", surahId)
                 .putLong("last_pos", pos)
@@ -401,6 +405,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             if (it.isPlaying) {
                 it.pause()
             } else {
+                if (it.playbackState == Player.STATE_ENDED) {
+                    it.seekTo(0)
+                    _currentPosition.value = 0L
+                }
                 it.play()
             }
         }
@@ -453,17 +461,29 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun toggleRepeat() {
-        _repeatMode.value = !_repeatMode.value
-        if (_repeatMode.value) _autoPlayNext.value = false
+        val newState = !_repeatMode.value
+        _repeatMode.value = newState
+        prefs.edit().putBoolean("repeat_mode", newState).apply()
+        if (newState) {
+            _autoPlayNext.value = false
+            prefs.edit().putBoolean("auto_play_next", false).apply()
+        }
     }
 
     fun toggleAutoPlayNext() {
-        _autoPlayNext.value = !_autoPlayNext.value
-        if (_autoPlayNext.value) _repeatMode.value = false
+        val newState = !_autoPlayNext.value
+        _autoPlayNext.value = newState
+        prefs.edit().putBoolean("auto_play_next", newState).apply()
+        if (newState) {
+            _repeatMode.value = false
+            prefs.edit().putBoolean("repeat_mode", false).apply()
+        }
     }
 
     fun toggleAutoPlayReversed() {
-        _autoPlayReversed.value = !_autoPlayReversed.value
+        val newState = !_autoPlayReversed.value
+        _autoPlayReversed.value = newState
+        prefs.edit().putBoolean("auto_play_reversed", newState).apply()
     }
 
     fun setSleepTimer(minutes: Int?) {
