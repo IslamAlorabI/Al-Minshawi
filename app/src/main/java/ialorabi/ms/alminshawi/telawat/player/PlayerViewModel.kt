@@ -338,6 +338,19 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 _currentPlayingSurahId.value = surahId
                 _currentPosition.value = 0L
             }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT) {
+                    if (!isSeeking) {
+                        _currentPosition.value = player?.currentPosition ?: 0L
+                    }
+                    saveCurrentState()
+                }
+            }
         })
     }
 
