@@ -148,6 +148,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private var bufferingJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
+    private val _pendingDownloadSurahId = MutableStateFlow<Int?>(null)
+    val pendingDownloadSurahId: StateFlow<Int?> = _pendingDownloadSurahId.asStateFlow()
     
     private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
@@ -230,6 +232,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 player = mediaControllerFuture?.get()
                 setupPlayerListeners()
                 restoreLastState()
+                PlaybackService.instance?.onWidgetDownloadStateChanged = { surahId, downloading, progress ->
+                    if (downloading) {
+                        _downloadingSurahs.value += surahId
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            put(surahId, progress)
+                        }
+                    } else {
+                        _downloadingSurahs.value -= surahId
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            remove(surahId)
+                        }
+                        refreshCachedSurahs()
+                    }
+                }
             },
             MoreExecutors.directExecutor()
         )
@@ -361,7 +377,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
         } else if (surah.id !in _downloadingSurahs.value) {
-            _currentPlayingSurahId.value = surah.id
+            _pendingDownloadSurahId.value = surah.id
             val cache = PlaybackService.cache ?: return
             viewModelScope.launch {
                 _downloadingSurahs.value += surah.id
@@ -397,7 +413,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         refreshCachedSurahs()
                     }
                 }
-                if (surah.id in _cachedSurahIds.value && _currentPlayingSurahId.value == surah.id) {
+                if (surah.id in _cachedSurahIds.value && _pendingDownloadSurahId.value == surah.id) {
+                    _pendingDownloadSurahId.value = null
                     playFromCache(surah)
                 }
             }
@@ -405,6 +422,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun playFromCache(surah: Surah) {
+        _pendingDownloadSurahId.value = null
         player?.let { exoPlayer ->
             val mediaItem = MediaItem.Builder()
                 .setMediaId(surah.id.toString())

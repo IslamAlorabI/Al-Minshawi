@@ -80,6 +80,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.graphics.Brush
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
@@ -827,8 +828,23 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
     val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
 
+    val pendingDownloadId by viewModel.pendingDownloadSurahId.collectAsState()
+    val downloadingProgressMap by viewModel.downloadingProgress.collectAsState()
+    val isDownloadingForPlay = pendingDownloadId != null
+    val dlProgress = pendingDownloadId?.let { downloadingProgressMap[it] } ?: 0f
+
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
     var showSleepTimerSheet by remember { mutableStateOf(false) }
+
+    val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
+    val shimmerOffset by shimmerTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing)
+        ),
+        label = "shimmerOffset"
+    )
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
@@ -932,16 +948,53 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Slider(
-                value = progress,
-                onValueChange = { newProgress ->
-                    viewModel.seekTo((newProgress * duration).toLong())
-                },
-                onValueChangeFinished = {
-                    viewModel.finishSeek()
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (isDownloadingForPlay) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                ) {
+                    val trackColor = MaterialTheme.colorScheme.primary
+                    val shimmerHighlight = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(dlProgress.coerceIn(0.01f, 1f))
+                            .drawBehind {
+                                val w = size.width
+                                val h = size.height
+                                drawRect(trackColor.copy(alpha = 0.4f))
+                                val shimmerW = w * 0.4f
+                                val start = shimmerOffset * w
+                                drawRect(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            shimmerHighlight,
+                                            Color.Transparent
+                                        ),
+                                        startX = start,
+                                        endX = start + shimmerW
+                                    )
+                                )
+                            }
+                    )
+                }
+            } else {
+                Slider(
+                    value = progress,
+                    onValueChange = { newProgress ->
+                        viewModel.seekTo((newProgress * duration).toLong())
+                    },
+                    onValueChangeFinished = {
+                        viewModel.finishSeek()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Row(
                 modifier = Modifier

@@ -4,14 +4,32 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
-    <attribution android:tag="MediaPlayback" android:label="@string/app_name" />
+    <attribution
+        android:tag="MediaPlayback"
+        android:label="@string/app_name" />
 
-    <application android:name=".QuranApp" android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:localeConfig="@xml/locales_config" tools:targetApi="tiramisu" android:theme="@style/Theme.AlMinshawi">
+    <application
+        android:name=".QuranApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config"
+        android:theme="@style/Theme.AlMinshawi"
+        tools:targetApi="tiramisu">
 
-        <activity android:name=".MainActivity" android:exported="true" android:theme="@style/Theme.AlMinshawi">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AlMinshawi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -19,9 +37,16 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SettingsActivity" android:exported="false" android:theme="@style/Theme.AlMinshawi" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AlMinshawi" />
 
-        <service android:name=".player.PlaybackService" android:foregroundServiceType="mediaPlayback" android:exported="true" android:permission="android.permission.MEDIA_CONTENT_CONTROL">
+        <service
+            android:name=".player.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback"
+            android:permission="android.permission.MEDIA_CONTENT_CONTROL">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>

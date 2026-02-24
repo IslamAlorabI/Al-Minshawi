@@ -58,5 +58,6 @@
     <string name="help_tap_play_desc">اضغط على السورة لتشغيلها أو إيقافها.</string>
     <string name="help_long_press_favorite_desc">اضغط مطولاً على السورة لإضافتها أو إزالتها من المفضلة.</string>
     <string name="help_favorite_wave_desc">الخط المتموج تحت الاسم يعني أن السورة مضافة للمفضلة.</string>
+    <string name="widget_downloading">⏳ جارِ تحميل %s…</string>
 
 </resources>

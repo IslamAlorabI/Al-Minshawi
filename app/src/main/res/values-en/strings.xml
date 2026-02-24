@@ -58,4 +58,6 @@
     <string name="help_tap_play_desc">Tap a Surah to play or pause it.</string>
     <string name="help_long_press_favorite_desc">Long-press a Surah to add or remove it from favorites.</string>
     <string name="help_favorite_wave_desc">The wavy line under the name means the Surah is favorited.</string>
+    <string name="widget_downloading">⏳ Downloading %s…</string>
+
 </resources>
