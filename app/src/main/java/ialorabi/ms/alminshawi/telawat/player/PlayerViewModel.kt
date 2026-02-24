@@ -46,7 +46,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val localizedNames = context.resources.getStringArray(R.array.surah_names)
         val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
         val prefix = context.getString(R.string.surah_prefix)
-        return "$prefix $name"
+        return "$prefix $name (${surah.id})"
     }
 
     private fun getLocalizedArtist(): String {
@@ -149,9 +149,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private var isTransitioning = false
     private var isSeeking = false
     
+    private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        when (key) {
+            "repeat_mode" -> _repeatMode.value = prefs.getBoolean("repeat_mode", false)
+            "auto_play_next" -> _autoPlayNext.value = prefs.getBoolean("auto_play_next", true)
+            "auto_play_reversed" -> _autoPlayReversed.value = prefs.getBoolean("auto_play_reversed", false)
+        }
+    }
+
     init {
         refreshCachedSurahs()
         loadFavorites()
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
     }
     
     fun refreshCachedSurahs() {

@@ -2,9 +2,19 @@ package ialorabi.ms.alminshawi.telawat.player
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -23,13 +33,14 @@ import androidx.media3.session.SessionResult
 import ialorabi.ms.alminshawi.telawat.R
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
+import java.io.ByteArrayOutputStream
 import java.io.File
-import android.content.Context
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 
 class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
+    private var _artworkData: ByteArray? = null
 
     companion object {
         var instance: PlaybackService? = null
@@ -41,8 +52,8 @@ class PlaybackService : MediaSessionService() {
 
         const val ACTION_REPEAT = "action_repeat"
         const val ACTION_AUTO_NEXT = "action_auto_next"
-        const val ACTION_SEEK_FORWARD = "action_seek_forward"
-        const val ACTION_SEEK_BACKWARD = "action_seek_backward"
+        const val ACTION_PREV_SURAH = "action_prev_surah"
+        const val ACTION_NEXT_SURAH = "action_next_surah"
 
         fun getCacheSize(context: Context): Long {
             return cache?.cacheSpace ?: getFolderSize(File(context.cacheDir, "audio_cache"))
@@ -88,32 +99,118 @@ class PlaybackService : MediaSessionService() {
 
     private val prefs by lazy { getSharedPreferences("player_prefs", Context.MODE_PRIVATE) }
 
+    private fun getArtworkData(): ByteArray? {
+        _artworkData?.let { return it }
+        val isDark = (resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val primaryContainer = if (isDark) {
+            getColor(android.R.color.system_accent1_700)
+        } else {
+            getColor(android.R.color.system_accent1_100)
+        }
+        val primary = if (isDark) {
+            getColor(android.R.color.system_accent1_200)
+        } else {
+            getColor(android.R.color.system_accent1_600)
+        }
+        val size = 512
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(primaryContainer)
+        val logoBitmap = BitmapFactory.decodeResource(resources, R.drawable.player_logo)
+        val logoSize = (size * 0.65f).toInt()
+        val scaled = Bitmap.createScaledBitmap(logoBitmap, logoSize, logoSize, true)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
+        val left = (size - logoSize) / 2f
+        val top = (size - logoSize) / 2f
+        canvas.drawBitmap(scaled, left, top, paint)
+        logoBitmap.recycle()
+        scaled.recycle()
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        bitmap.recycle()
+        _artworkData = stream.toByteArray()
+        return _artworkData
+    }
+
+    private fun buildMediaItem(surah: Surah): MediaItem {
+        val localizedNames = resources.getStringArray(R.array.surah_names)
+        val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
+        val prefix = getString(R.string.surah_prefix)
+        val title = "$prefix $name (${surah.id})"
+        val artist = getString(R.string.sheikh_name)
+
+        return MediaItem.Builder()
+            .setMediaId(surah.id.toString())
+            .setUri(surah.url)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setArtist(artist)
+                    .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                    .build()
+            )
+            .build()
+    }
+
+    private fun playNextSurah(player: Player) {
+        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: return
+        val surahs = SurahRepository.surahs
+        if (currentId < surahs.size) {
+            val nextSurah = surahs[currentId]
+            player.stop()
+            player.setMediaItem(buildMediaItem(nextSurah))
+            player.prepare()
+            player.play()
+        }
+    }
+
+    private fun playPreviousSurah(player: Player) {
+        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: return
+        val surahs = SurahRepository.surahs
+        if (currentId > 1) {
+            val prevSurah = surahs[currentId - 2]
+            player.stop()
+            player.setMediaItem(buildMediaItem(prevSurah))
+            player.prepare()
+            player.play()
+        }
+    }
+
+    @androidx.media3.common.util.UnstableApi
     private fun buildCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
         val autoNextOn = prefs.getBoolean("auto_play_next", true)
 
+        val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
+        val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
+
         return listOf(
-            CommandButton.Builder(CommandButton.ICON_REPEAT_ONE)
+            CommandButton.Builder(CommandButton.ICON_PREVIOUS)
+                .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
+                .setDisplayName(getString(R.string.rewind))
+                .setSlots(CommandButton.SLOT_BACK_SECONDARY)
+                .build(),
+            CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
-                .setEnabled(repeatOn)
+                .setSlots(CommandButton.SLOT_BACK)
                 .build(),
-            CommandButton.Builder(CommandButton.ICON_SKIP_BACK_10)
-                .setSessionCommand(SessionCommand(ACTION_SEEK_BACKWARD, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.rewind))
-                .build(),
-            CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD_30)
-                .setSessionCommand(SessionCommand(ACTION_SEEK_FORWARD, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.forward))
-                .build(),
-            CommandButton.Builder(CommandButton.ICON_NEXT)
+            CommandButton.Builder(autoNextIcon)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.auto_play_next))
-                .setEnabled(autoNextOn)
+                .setSlots(CommandButton.SLOT_FORWARD)
+                .build(),
+            CommandButton.Builder(CommandButton.ICON_NEXT)
+                .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
+                .setDisplayName(getString(R.string.forward))
+                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY)
                 .build()
         )
     }
 
+    @androidx.media3.common.util.UnstableApi
     fun refreshCustomLayout() {
         mediaSession?.let { session ->
             val layout = buildCustomLayout()
@@ -150,7 +247,7 @@ class PlaybackService : MediaSessionService() {
             )
             .build()
 
-        val player = ExoPlayer.Builder(this)
+        val exoPlayer = ExoPlayer.Builder(this)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
             .setLoadControl(loadControl)
             .setAudioAttributes(
@@ -164,7 +261,26 @@ class PlaybackService : MediaSessionService() {
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
-        val customCommands = listOf(ACTION_REPEAT, ACTION_AUTO_NEXT, ACTION_SEEK_FORWARD, ACTION_SEEK_BACKWARD)
+        val player = object : ForwardingPlayer(exoPlayer) {
+            override fun getAvailableCommands(): Player.Commands {
+                return super.getAvailableCommands().buildUpon()
+                    .remove(COMMAND_SEEK_TO_PREVIOUS)
+                    .remove(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .remove(COMMAND_SEEK_TO_NEXT)
+                    .remove(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .build()
+            }
+
+            override fun isCommandAvailable(command: Int): Boolean {
+                return when (command) {
+                    COMMAND_SEEK_TO_PREVIOUS, COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+                    COMMAND_SEEK_TO_NEXT, COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> false
+                    else -> super.isCommandAvailable(command)
+                }
+            }
+        }
+
+        val customCommands = listOf(ACTION_REPEAT, ACTION_AUTO_NEXT, ACTION_PREV_SURAH, ACTION_NEXT_SURAH)
             .map { SessionCommand(it, Bundle.EMPTY) }
 
         val callback = object : MediaSession.Callback {
@@ -174,8 +290,15 @@ class PlaybackService : MediaSessionService() {
             ): MediaSession.ConnectionResult {
                 val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 customCommands.forEach { sessionCommands.add(it) }
+                val playerCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
+                    .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
+                    .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .remove(Player.COMMAND_SEEK_TO_NEXT)
+                    .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .build()
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(sessionCommands.build())
+                    .setAvailablePlayerCommands(playerCommands)
                     .setCustomLayout(buildCustomLayout())
                     .build()
             }
@@ -203,15 +326,11 @@ class PlaybackService : MediaSessionService() {
                         }
                         refreshCustomLayout()
                     }
-                    ACTION_SEEK_FORWARD -> {
-                        val p = session.player
-                        val nextPos = (p.currentPosition + 30_000).coerceAtMost(p.duration)
-                        p.seekTo(nextPos)
+                    ACTION_PREV_SURAH -> {
+                        playPreviousSurah(session.player)
                     }
-                    ACTION_SEEK_BACKWARD -> {
-                        val p = session.player
-                        val prevPos = (p.currentPosition - 10_000).coerceAtLeast(0L)
-                        p.seekTo(prevPos)
+                    ACTION_NEXT_SURAH -> {
+                        playNextSurah(session.player)
                     }
                 }
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
