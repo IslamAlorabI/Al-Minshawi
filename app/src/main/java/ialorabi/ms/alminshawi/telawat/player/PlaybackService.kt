@@ -1,5 +1,6 @@
 package ialorabi.ms.alminshawi.telawat.player
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import androidx.media3.common.AudioAttributes
@@ -14,6 +15,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
+import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
@@ -123,6 +125,10 @@ class PlaybackService : MediaSessionService() {
         super.onCreate()
         instance = this
 
+        val notificationProvider = DefaultMediaNotificationProvider.Builder(this).build()
+        notificationProvider.setSmallIcon(R.drawable.player_logo)
+        setMediaNotificationProvider(notificationProvider)
+
         if (cache == null) {
             val cacheDir = File(cacheDir, "audio_cache")
             val evictor = LeastRecentlyUsedCacheEvictor(CACHE_SIZE)
@@ -212,8 +218,18 @@ class PlaybackService : MediaSessionService() {
             }
         }
 
+        val sessionActivityIntent = Intent(this, ialorabi.ms.alminshawi.telawat.MainActivity::class.java).apply {
+            putExtra("OPEN_PLAYER", true)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val sessionActivityPendingIntent = PendingIntent.getActivity(
+            this, 0, sessionActivityIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         mediaSession = MediaSession.Builder(this, player)
             .setCallback(callback)
+            .setSessionActivity(sessionActivityPendingIntent)
             .build()
     }
 

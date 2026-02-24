@@ -86,16 +86,27 @@ import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
 
 class MainActivity : AppCompatActivity() {
     private val playerViewModel: PlayerViewModel by viewModels()
+    val openPlayerRequest = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (intent?.getBooleanExtra("OPEN_PLAYER", false) == true) {
+            openPlayerRequest.value = true
+        }
         setContent {
             AlMinshawiTheme {
-                QuranAppUi(playerViewModel)
+                QuranAppUi(playerViewModel, openPlayerRequest)
             }
         }
         playerViewModel.initializeController(this)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra("OPEN_PLAYER", false)) {
+            openPlayerRequest.value = true
+        }
     }
 
     override fun onDestroy() {
@@ -111,7 +122,7 @@ class MainActivity : AppCompatActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun QuranAppUi(viewModel: PlayerViewModel) {
+fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines.flow.MutableStateFlow<Boolean>) {
     val surahs = SurahRepository.surahs
     val currentSurahId by viewModel.currentPlayingSurahId.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
@@ -129,6 +140,14 @@ fun QuranAppUi(viewModel: PlayerViewModel) {
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val shouldOpenPlayer by openPlayerRequest.collectAsState()
+    LaunchedEffect(shouldOpenPlayer, currentSurahId) {
+        if (shouldOpenPlayer && currentSurahId != null) {
+            showBottomSheet = true
+            openPlayerRequest.value = false
+        }
+    }
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
