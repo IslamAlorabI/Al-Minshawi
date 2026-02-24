@@ -21,6 +21,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import android.content.Context
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -138,6 +142,22 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
     
     val context = LocalContext.current
+
+    val sharedPref = remember { context.getSharedPreferences("AppConfig", Context.MODE_PRIVATE) }
+    val initialScrollIndex = remember { sharedPref.getInt("scroll_index", 0) }
+    val initialScrollOffset = remember { sharedPref.getInt("scroll_offset", 0) }
+    val listState = rememberLazyListState(initialScrollIndex, initialScrollOffset)
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collectLatest { (index, offset) ->
+                delay(500)
+                sharedPref.edit()
+                    .putInt("scroll_index", index)
+                    .putInt("scroll_offset", offset)
+                    .apply()
+            }
+    }
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -298,6 +318,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
