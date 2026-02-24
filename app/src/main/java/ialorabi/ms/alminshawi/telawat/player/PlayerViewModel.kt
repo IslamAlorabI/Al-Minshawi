@@ -41,6 +41,19 @@ import java.io.ByteArrayOutputStream
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
 
+    private fun getLocalizedTitle(surah: Surah): String {
+        val context = getApplication<Application>()
+        val localizedNames = context.resources.getStringArray(R.array.surah_names)
+        val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
+        val prefix = context.getString(R.string.surah_prefix)
+        return "$prefix $name"
+    }
+
+    private fun getLocalizedArtist(): String {
+        val context = getApplication<Application>()
+        return context.getString(R.string.sheikh_name)
+    }
+
     private var _artworkData: ByteArray? = null
 
     private fun getArtworkData(): ByteArray? {
@@ -228,8 +241,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         .setUri(surah.url)
                         .setMediaMetadata(
                             MediaMetadata.Builder()
-                                .setTitle(surah.name)
-                                .setArtist("الشيخ محمد صديق المنشاوي")
+                                .setTitle(getLocalizedTitle(surah))
+                                .setArtist(getLocalizedArtist())
                                 .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                                 .build()
                         )
@@ -280,6 +293,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 if (playbackState == Player.STATE_ENDED && !isTransitioning) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
+                    _repeatMode.value = prefs.getBoolean("repeat_mode", false)
+                    _autoPlayNext.value = prefs.getBoolean("auto_play_next", true)
+                    _autoPlayReversed.value = prefs.getBoolean("auto_play_reversed", false)
                     
                     if (_repeatMode.value) {
                         player?.seekTo(0)
@@ -386,8 +402,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 .setUri(surah.url)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle(surah.name)
-                        .setArtist("\u0627\u0644\u0634\u064A\u062E \u0645\u062D\u0645\u062F \u0635\u062F\u064A\u0642 \u0627\u0644\u0645\u0646\u0634\u0627\u0648\u064A")
+                        .setTitle(getLocalizedTitle(surah))
+                        .setArtist(getLocalizedArtist())
                         .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                         .build()
                 )
@@ -468,6 +484,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             _autoPlayNext.value = false
             prefs.edit().putBoolean("auto_play_next", false).apply()
         }
+        PlaybackService.instance?.refreshCustomLayout()
     }
 
     fun toggleAutoPlayNext() {
@@ -478,6 +495,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             _repeatMode.value = false
             prefs.edit().putBoolean("repeat_mode", false).apply()
         }
+        PlaybackService.instance?.refreshCustomLayout()
     }
 
     fun toggleAutoPlayReversed() {
