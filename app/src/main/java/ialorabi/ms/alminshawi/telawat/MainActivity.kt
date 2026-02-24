@@ -836,14 +836,15 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
     var showSleepTimerSheet by remember { mutableStateOf(false) }
 
-    val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerOffset by shimmerTransition.animateFloat(
-        initialValue = -1f,
-        targetValue = 2f,
+    val pulseTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by pulseTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing)
+            animation = tween(800, easing = LinearEasing),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
         ),
-        label = "shimmerOffset"
+        label = "pulseAlpha"
     )
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -948,62 +949,55 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (isDownloadingForPlay) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(16.dp)
-                        .padding(vertical = 4.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                ) {
-                    val trackColor = MaterialTheme.colorScheme.primary
-                    val shimmerHighlight = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(dlProgress.coerceIn(0.01f, 1f))
-                            .drawBehind {
-                                val w = size.width
-                                val h = size.height
-                                drawRect(trackColor.copy(alpha = 0.4f))
-                                val shimmerW = w * 0.4f
-                                val start = shimmerOffset * w
-                                drawRect(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            shimmerHighlight,
-                                            Color.Transparent
-                                        ),
-                                        startX = start,
-                                        endX = start + shimmerW
-                                    )
-                                )
-                            }
-                    )
-                }
-            } else {
-                Slider(
-                    value = progress,
-                    onValueChange = { newProgress ->
-                        viewModel.seekTo((newProgress * duration).toLong())
-                    },
-                    onValueChangeFinished = {
-                        viewModel.finishSeek()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            Slider(
+                value = if (isDownloadingForPlay) dlProgress else progress,
+                onValueChange = { newProgress ->
+                    if (!isDownloadingForPlay) viewModel.seekTo((newProgress * duration).toLong())
+                },
+                onValueChangeFinished = {
+                    if (!isDownloadingForPlay) viewModel.finishSeek()
+                },
+                enabled = !isDownloadingForPlay,
+                modifier = Modifier.fillMaxWidth(),
+                colors = if (isDownloadingForPlay) SliderDefaults.colors(
+                    disabledActiveTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha),
+                    disabledInactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                    disabledThumbColor = MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha)
+                ) else SliderDefaults.colors()
+            )
 
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = 4.dp)
             ) {
-                Text(text = formatTime(currentPos), color = Color.Gray, fontSize = 12.sp)
-                Text(text = formatTime(duration), color = Color.Gray, fontSize = 12.sp)
+                Text(
+                    text = formatTime(currentPos), 
+                    color = Color.Gray, 
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
+
+                if (isDownloadingForPlay && pendingDownloadId != null) {
+                    val pendingSurah = SurahRepository.surahs.find { it.id == pendingDownloadId }
+                    val pendingSurahName = pendingSurah?.let { s -> localizedSurahNames.getOrElse(s.id - 1) { s.name } } ?: ""
+                    val percent = (dlProgress * 100).toInt()
+                    
+                    Text(
+                        text = stringResource(R.string.downloading_for_play_progress, pendingSurahName, percent),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                Text(
+                    text = formatTime(duration), 
+                    color = Color.Gray, 
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
