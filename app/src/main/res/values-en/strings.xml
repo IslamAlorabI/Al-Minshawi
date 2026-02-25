@@ -6,7 +6,6 @@
     <string name="surah_prefix">Surah</string>
     <string name="search_surahs">Search surahs…</string>
     <string name="settings">Settings</string>
-    <string name="language">Language</string>
     <string name="arabic">العربية</string>
     <string name="english">English</string>
     <string name="app_theme">App Theme</string>
@@ -31,13 +30,12 @@
     <string name="undo">Undo</string>
     <string name="surah_deleted">Surah deleted</string>
     <string name="confirm_delete_surah">Confirm delete?</string>
-    <string name="downloading_to_storage">Saving to Downloads folder...</string>
-    <string name="filter_all">All</string>
+    <string name="downloading_to_storage">Saving to Downloads folder…</string>
     <string name="filter_downloaded">Downloaded</string>
     <string name="filter_not_downloaded">Not Downloaded</string>
     <string name="help_title">How it works</string>
     <string name="help_download_desc">Tap to start downloading the Surah for offline listening.</string>
-    <string name="help_downloading_desc">Surah is currently downloading...</string>
+    <string name="help_downloading_desc">Surah is currently downloading…</string>
     <string name="help_downloaded_desc">Surah is downloaded and ready for offline listening.</string>
     <string name="help_filter_desc">Use the filters above to toggle between all Surahs, only downloaded, or not downloaded ones.</string>
     <string name="help_streaming_note">Streaming does not fully save the Surah. To download it for offline listening, tap the download button.</string>

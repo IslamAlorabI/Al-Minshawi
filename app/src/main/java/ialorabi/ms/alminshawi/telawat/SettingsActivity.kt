@@ -70,7 +70,7 @@ class SettingsActivity : AppCompatActivity() {
                     mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags())
                 }
                 var currentTheme by remember {
-                    mutableStateOf(sharedPrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM))
+                    mutableIntStateOf(sharedPrefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM))
                 }
                 var cacheSizeBytes by cacheSizeBytes
                 var showClearAllDialog by remember { mutableStateOf(false) }
@@ -235,7 +235,7 @@ class SettingsActivity : AppCompatActivity() {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Image(
-                                painter = painterResource(R.drawable.ic_about_logo),
+                                painter = painterResource(R.drawable.player_logo),
                                 contentDescription = null,
                                 modifier = Modifier.size(100.dp),
                                 colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant)

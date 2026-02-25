@@ -75,7 +75,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -1171,7 +1170,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             val surahs = SurahRepository.surahs
             val prevSurah = if (surah.id > 1) surahs.getOrNull(surah.id - 2) else null

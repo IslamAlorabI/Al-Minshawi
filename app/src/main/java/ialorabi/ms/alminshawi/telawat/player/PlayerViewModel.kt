@@ -234,11 +234,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 restoreLastState()
                 PlaybackService.instance?.onWidgetDownloadStateChanged = { surahId, downloading, progress ->
                     if (downloading) {
+                        _pendingDownloadSurahId.value = surahId
                         _downloadingSurahs.value += surahId
                         _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
                             put(surahId, progress)
                         }
                     } else {
+                        _pendingDownloadSurahId.value = null
                         _downloadingSurahs.value -= surahId
                         _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
                             remove(surahId)
