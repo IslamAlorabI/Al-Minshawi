@@ -255,6 +255,18 @@ class PlaybackService : MediaSessionService() {
     }
 
     @androidx.media3.common.util.UnstableApi
+    fun refreshLanguage() {
+        refreshCustomLayout()
+        val player = mediaSession?.player ?: return
+        val currentItem = player.currentMediaItem ?: return
+        val surahId = currentItem.mediaId.toIntOrNull() ?: return
+        val currentSurah = SurahRepository.surahs.find { it.id == surahId } ?: return
+        
+        // This will update the metadata with the new localized strings without interrupting playback
+        player.replaceMediaItem(player.currentMediaItemIndex, buildMediaItem(currentSurah))
+    }
+
+    @androidx.media3.common.util.UnstableApi
     private fun buildCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
         val autoNextOn = prefs.getBoolean("auto_play_next", true)

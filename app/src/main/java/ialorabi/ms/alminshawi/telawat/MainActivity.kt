@@ -120,9 +120,11 @@ class MainActivity : AppCompatActivity() {
         playerViewModel.releaseController()
     }
 
+    @androidx.media3.common.util.UnstableApi
     override fun onResume() {
         super.onResume()
         playerViewModel.refreshCachedSurahs()
+        ialorabi.ms.alminshawi.telawat.player.PlaybackService.instance?.refreshLanguage()
     }
 }
 
