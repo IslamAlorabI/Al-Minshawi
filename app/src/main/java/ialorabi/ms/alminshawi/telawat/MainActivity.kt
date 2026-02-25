@@ -56,6 +56,7 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.*
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1033,14 +1034,15 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 if (isDownloadingForPlay && pendingDownloadId != null) {
                     val pendingSurah = SurahRepository.surahs.find { it.id == pendingDownloadId }
                     val pendingSurahName = pendingSurah?.let { s -> localizedSurahNames.getOrElse(s.id - 1) { s.name } } ?: ""
-                    val percent = (dlProgress * 100).toInt()
+                    val percent = "${(dlProgress * 100).toInt()}%"
                     
                     Text(
                         text = stringResource(R.string.downloading_for_play_progress, pendingSurahName, percent),
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
+                        style = LocalTextStyle.current.copy(textDirection = TextDirection.Content)
                     )
                 }
 
