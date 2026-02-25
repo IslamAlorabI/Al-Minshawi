@@ -86,6 +86,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.graphics.Brush
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
+import java.util.Locale
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -834,7 +835,7 @@ fun BottomPlayerBar(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = String.format("%02d:%02d", remainMin, remainSec),
+                                    text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium
@@ -984,7 +985,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         text = if (sleepTimerMs > 0) {
                             val remainMin = (sleepTimerMs / 60000).toInt()
                             val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                            String.format(stringResource(R.string.sleep_timer_active), String.format("%02d:%02d", remainMin, remainSec))
+                            String.format(Locale.US, stringResource(R.string.sleep_timer_active), String.format(Locale.US, "%02d:%02d", remainMin, remainSec))
                         } else {
                             stringResource(R.string.sleep_timer_off_label)
                         },
@@ -1354,7 +1355,7 @@ private fun formatTime(ms: Long): String {
     val totalSeconds = ms / 1000
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format("%02d:%02d", minutes, seconds)
+    return String.format(Locale.US, "%02d:%02d", minutes, seconds)
 }
 
 enum class DownloadFilter {
