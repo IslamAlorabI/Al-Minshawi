@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -23,8 +26,9 @@ android {
 
     val keystorePropertiesFile = rootProject.file("keystore.properties")
     if (keystorePropertiesFile.exists()) {
-        val keystoreProperties = java.util.Properties()
-        keystoreProperties.load(keystorePropertiesFile.inputStream())
+        val keystoreProperties = Properties().apply {
+            load(FileInputStream(keystorePropertiesFile))
+        }
         signingConfigs {
             create("release") {
                 storeFile = file(keystoreProperties["storeFile"] as String)

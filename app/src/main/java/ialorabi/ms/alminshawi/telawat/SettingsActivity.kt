@@ -34,7 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import android.widget.Toast
 import android.app.DownloadManager
-import android.net.Uri
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import android.os.Environment
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -147,7 +148,7 @@ class SettingsActivity : AppCompatActivity() {
                             icon = { Icon(Icons.Rounded.PhoneAndroid, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
                             onClick = {
-                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
+                                sharedPrefs.edit { putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) }
                                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                                 currentTheme = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                             }
@@ -158,7 +159,7 @@ class SettingsActivity : AppCompatActivity() {
                             icon = { Icon(Icons.Rounded.DarkMode, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_YES,
                             onClick = {
-                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES).apply()
+                                sharedPrefs.edit { putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES) }
                                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                                 currentTheme = AppCompatDelegate.MODE_NIGHT_YES
                             }
@@ -169,7 +170,7 @@ class SettingsActivity : AppCompatActivity() {
                             icon = { Icon(Icons.Rounded.LightMode, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             isSelected = currentTheme == AppCompatDelegate.MODE_NIGHT_NO,
                             onClick = {
-                                sharedPrefs.edit().putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO).apply()
+                                sharedPrefs.edit { putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO) }
                                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                                 currentTheme = AppCompatDelegate.MODE_NIGHT_NO
                             }
@@ -395,7 +396,7 @@ class SettingsActivity : AppCompatActivity() {
                                                                     )
                                                                     IconButton(
                                                                         onClick = {
-                                                                            val request = DownloadManager.Request(Uri.parse(surah.url))
+                                                                            val request = DownloadManager.Request(surah.url.toUri())
                                                                             request.setTitle("${surah.id}. $localizedName - ${getString(R.string.app_name)}.mp3")
                                                                             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                                                                             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${surah.id}_${localizedName}_Minshawi.mp3")

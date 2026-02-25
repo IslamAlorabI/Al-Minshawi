@@ -23,7 +23,10 @@ import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
-import android.net.Uri
+import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import ialorabi.ms.alminshawi.telawat.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -73,12 +76,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             context.getColor(android.R.color.system_accent1_600)
         }
         val size = 512
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
         canvas.drawColor(primaryContainer)
         val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.player_logo)
         val logoSize = (size * 0.65f).toInt()
-        val scaled = Bitmap.createScaledBitmap(logoBitmap, logoSize, logoSize, true)
+        val scaled = logoBitmap.scale(logoSize, logoSize)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
         val left = (size - logoSize) / 2f
@@ -179,7 +182,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val current = _favoriteSurahIds.value.toMutableSet()
         if (current.contains(surahId)) current.remove(surahId) else current.add(surahId)
         _favoriteSurahIds.value = current
-        prefs.edit().putStringSet("favorite_surahs", current.map { it.toString() }.toSet()).apply()
+        prefs.edit { putStringSet("favorite_surahs", current.map { it.toString() }.toSet()) }
     }
 
     fun downloadSurah(surah: Surah) {
@@ -195,7 +198,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         .setCache(cache)
                         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
                         .createDataSource()
-                    val dataSpec = DataSpec(Uri.parse(surah.url))
+                    val dataSpec = DataSpec(surah.url.toUri())
                     
                     val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
                         if (requestLength > 0) {
@@ -377,10 +380,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val isEnded = player?.playbackState == Player.STATE_ENDED
         val pos = if (isEnded) 0L else (player?.currentPosition ?: 0L)
         if (surahId != null) {
-            prefs.edit()
-                .putInt("last_surah_id", surahId)
-                .putLong("last_pos", pos)
-                .apply()
+            prefs.edit {
+                putInt("last_surah_id", surahId)
+                putLong("last_pos", pos)
+            }
         }
     }
 
@@ -406,7 +409,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                             .setCache(cache)
                             .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
                             .createDataSource()
-                        val dataSpec = DataSpec(Uri.parse(surah.url))
+                        val dataSpec = DataSpec(surah.url.toUri())
 
                         val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
                             if (requestLength > 0) {
@@ -522,10 +525,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun toggleRepeat() {
         val newState = !_repeatMode.value
         _repeatMode.value = newState
-        prefs.edit().putBoolean("repeat_mode", newState).apply()
+        prefs.edit { putBoolean("repeat_mode", newState) }
         if (newState) {
             _autoPlayNext.value = false
-            prefs.edit().putBoolean("auto_play_next", false).apply()
+            prefs.edit { putBoolean("auto_play_next", false) }
         }
         PlaybackService.instance?.refreshCustomLayout()
     }
@@ -533,10 +536,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun toggleAutoPlayNext() {
         val newState = !_autoPlayNext.value
         _autoPlayNext.value = newState
-        prefs.edit().putBoolean("auto_play_next", newState).apply()
+        prefs.edit { putBoolean("auto_play_next", newState) }
         if (newState) {
             _repeatMode.value = false
-            prefs.edit().putBoolean("repeat_mode", false).apply()
+            prefs.edit { putBoolean("repeat_mode", false) }
         }
         PlaybackService.instance?.refreshCustomLayout()
     }
@@ -544,7 +547,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun toggleAutoPlayReversed() {
         val newState = !_autoPlayReversed.value
         _autoPlayReversed.value = newState
-        prefs.edit().putBoolean("auto_play_reversed", newState).apply()
+        prefs.edit { putBoolean("auto_play_reversed", newState) }
     }
 
     fun setSleepTimer(minutes: Int?) {

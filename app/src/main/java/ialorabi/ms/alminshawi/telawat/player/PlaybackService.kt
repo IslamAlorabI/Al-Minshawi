@@ -9,7 +9,10 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.net.Uri
+import androidx.core.content.edit
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -131,12 +134,12 @@ class PlaybackService : MediaSessionService() {
             getColor(android.R.color.system_accent1_600)
         }
         val size = 512
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
         canvas.drawColor(primaryContainer)
         val logoBitmap = BitmapFactory.decodeResource(resources, R.drawable.player_logo)
         val logoSize = (size * 0.65f).toInt()
-        val scaled = Bitmap.createScaledBitmap(logoBitmap, logoSize, logoSize, true)
+        val scaled = logoBitmap.scale(logoSize, logoSize)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
         val left = (size - logoSize) / 2f
@@ -205,7 +208,7 @@ class PlaybackService : MediaSessionService() {
                         .setCache(c)
                         .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
                         .createDataSource()
-                    val dataSpec = DataSpec(Uri.parse(surah.url))
+                    val dataSpec = DataSpec(surah.url.toUri())
                     val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
                         if (requestLength > 0) {
                             val progress = bytesCached.toFloat() / requestLength.toFloat()
@@ -399,17 +402,17 @@ class PlaybackService : MediaSessionService() {
                 when (customCommand.customAction) {
                     ACTION_REPEAT -> {
                         val newState = !prefs.getBoolean("repeat_mode", false)
-                        prefs.edit().putBoolean("repeat_mode", newState).apply()
+                        prefs.edit { putBoolean("repeat_mode", newState) }
                         if (newState) {
-                            prefs.edit().putBoolean("auto_play_next", false).apply()
+                            prefs.edit { putBoolean("auto_play_next", false) }
                         }
                         refreshCustomLayout()
                     }
                     ACTION_AUTO_NEXT -> {
                         val newState = !prefs.getBoolean("auto_play_next", true)
-                        prefs.edit().putBoolean("auto_play_next", newState).apply()
+                        prefs.edit { putBoolean("auto_play_next", newState) }
                         if (newState) {
-                            prefs.edit().putBoolean("repeat_mode", false).apply()
+                            prefs.edit { putBoolean("repeat_mode", false) }
                         }
                         refreshCustomLayout()
                     }

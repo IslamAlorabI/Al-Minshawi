@@ -86,6 +86,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.graphics.Brush
 import ialorabi.ms.alminshawi.telawat.data.Surah
+import androidx.core.content.edit
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import java.util.Locale
 import ialorabi.ms.alminshawi.telawat.player.PlayerViewModel
@@ -155,10 +156,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collectLatest { (index, offset) ->
                 delay(500)
-                sharedPref.edit()
-                    .putInt("scroll_index", index)
-                    .putInt("scroll_offset", offset)
-                    .apply()
+                sharedPref.edit {
+                    putInt("scroll_index", index)
+                    putInt("scroll_offset", offset)
+                }
             }
     }
 
