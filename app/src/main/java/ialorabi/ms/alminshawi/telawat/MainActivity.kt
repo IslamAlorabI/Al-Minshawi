@@ -252,6 +252,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         bottomBar = {
             val currentPosition by viewModel.currentPosition.collectAsState()
             val duration by viewModel.duration.collectAsState()
+            val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
             if (currentSurahId != null && !showBottomSheet) {
                 val currentSurah = surahs.find { it.id == currentSurahId }
                 currentSurah?.let {
@@ -262,6 +263,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         isBuffering = isBuffering,
                         currentPosition = currentPosition,
                         duration = duration,
+                        sleepTimerMs = sleepTimerMs,
                         onPlayPauseClick = { viewModel.togglePlayPause() },
                         onBarClick = { showBottomSheet = true }
                     )
@@ -768,6 +770,7 @@ fun BottomPlayerBar(
     isBuffering: Boolean,
     currentPosition: Long,
     duration: Long,
+    sleepTimerMs: Long,
     onPlayPauseClick: () -> Unit,
     onBarClick: () -> Unit
 ) {
@@ -808,13 +811,38 @@ fun BottomPlayerBar(
                     )
                 }
 
-                if (duration > 0) {
-                    Text(
-                        text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                if (duration > 0 || sleepTimerMs > 0) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
                         modifier = Modifier.padding(horizontal = 8.dp)
-                    )
+                    ) {
+                        if (duration > 0) {
+                            Text(
+                                text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (sleepTimerMs > 0) {
+                            val remainMin = (sleepTimerMs / 60000).toInt()
+                            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Bedtime,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = String.format("%02d:%02d", remainMin, remainSec),
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
 
                 if (isBuffering) {
