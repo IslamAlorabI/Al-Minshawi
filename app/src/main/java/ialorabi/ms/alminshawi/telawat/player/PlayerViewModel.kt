@@ -38,6 +38,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
+@androidx.media3.common.util.UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
 

@@ -47,6 +47,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@androidx.media3.common.util.UnstableApi
 class PlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var _artworkData: ByteArray? = null
@@ -254,7 +255,7 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
-    @androidx.media3.common.util.UnstableApi
+
     fun refreshLanguage() {
         refreshCustomLayout()
         val player = mediaSession?.player ?: return
@@ -266,7 +267,6 @@ class PlaybackService : MediaSessionService() {
         player.replaceMediaItem(player.currentMediaItemIndex, buildMediaItem(currentSurah))
     }
 
-    @androidx.media3.common.util.UnstableApi
     private fun buildCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
         val autoNextOn = prefs.getBoolean("auto_play_next", true)
@@ -298,7 +298,6 @@ class PlaybackService : MediaSessionService() {
         )
     }
 
-    @androidx.media3.common.util.UnstableApi
     fun refreshCustomLayout() {
         mediaSession?.let { session ->
             val layout = buildCustomLayout()
