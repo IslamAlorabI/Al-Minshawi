@@ -272,7 +272,7 @@ class PlaybackService : MediaSessionService() {
 
     private fun buildCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
-        val autoNextOn = prefs.getBoolean("auto_play_next", true)
+        val autoNextOn = prefs.getBoolean("auto_play_next", false)
 
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
         val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
@@ -409,7 +409,7 @@ class PlaybackService : MediaSessionService() {
                         refreshCustomLayout()
                     }
                     ACTION_AUTO_NEXT -> {
-                        val newState = !prefs.getBoolean("auto_play_next", true)
+                        val newState = !prefs.getBoolean("auto_play_next", false)
                         prefs.edit { putBoolean("auto_play_next", newState) }
                         if (newState) {
                             prefs.edit { putBoolean("repeat_mode", false) }
@@ -453,11 +453,14 @@ class PlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         downloadJob?.cancel()
+        onWidgetDownloadStateChanged = null
         mediaSession?.run {
             player.release()
             release()
             mediaSession = null
         }
+        cache?.release()
+        cache = null
         instance = null
         super.onDestroy()
     }
