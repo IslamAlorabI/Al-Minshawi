@@ -295,7 +295,7 @@ class SettingsActivity : AppCompatActivity() {
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                     modifier = Modifier.clickable {
-                                        val intent = Intent(Intent.ACTION_VIEW, "https://example.com/privacy".toUri())
+                                        val intent = Intent(Intent.ACTION_VIEW, "https://islamalorabi.github.io/al-minshawi-privacy-policy.html".toUri())
                                         startActivity(intent)
                                     }
                                 ) {
