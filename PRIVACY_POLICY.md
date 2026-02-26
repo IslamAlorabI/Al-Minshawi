@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This Privacy Policy describes how the **Al-Minshawi Telawat** application ("the App") handles user information. The App is developed by **Islam Alorabi** and is available on the Google Play Store.
+This Privacy Policy describes how the **Al-Minshawi Telawat** application ("the App") handles user information. The App is developed by **Islam AlorabI** and is available on the Google Play Store.
 
 We are committed to protecting your privacy. The App is designed to operate with minimal data usage and does not collect, store, or share any personal information.
 
