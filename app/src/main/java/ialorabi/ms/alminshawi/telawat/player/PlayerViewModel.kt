@@ -3,12 +3,6 @@ package ialorabi.ms.alminshawi.telawat.player
 import android.content.ComponentName
 import android.content.Context
 import android.app.Application
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -24,8 +18,6 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
 import androidx.core.content.edit
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.scale
 import androidx.core.net.toUri
 import ialorabi.ms.alminshawi.telawat.R
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +34,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import java.io.ByteArrayOutputStream
 
 @androidx.media3.common.util.UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -65,37 +56,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun getArtworkData(): ByteArray? {
         _artworkData?.let { return it }
-        val context = getApplication<Application>()
-        val isDark = (context.resources.configuration.uiMode and
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val primaryContainer = if (isDark) {
-            context.getColor(android.R.color.system_accent1_700)
-        } else {
-            context.getColor(android.R.color.system_accent1_100)
-        }
-        val primary = if (isDark) {
-            context.getColor(android.R.color.system_accent1_200)
-        } else {
-            context.getColor(android.R.color.system_accent1_600)
-        }
-        val size = 512
-        val bitmap = createBitmap(size, size)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(primaryContainer)
-        val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.player_logo)
-        val logoSize = (size * 0.65f).toInt()
-        val scaled = logoBitmap.scale(logoSize, logoSize)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
-        val left = (size - logoSize) / 2f
-        val top = (size - logoSize) / 2f
-        canvas.drawBitmap(scaled, left, top, paint)
-        logoBitmap.recycle()
-        scaled.recycle()
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        bitmap.recycle()
-        _artworkData = stream.toByteArray()
+        _artworkData = ArtworkHelper.generate(getApplication())
         return _artworkData
     }
 

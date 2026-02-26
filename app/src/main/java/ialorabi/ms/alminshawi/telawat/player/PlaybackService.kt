@@ -3,17 +3,9 @@ package ialorabi.ms.alminshawi.telawat.player
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import androidx.core.content.edit
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.scale
-import androidx.core.net.toUri
 import android.os.Bundle
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer
@@ -39,7 +31,6 @@ import androidx.media3.session.SessionResult
 import ialorabi.ms.alminshawi.telawat.R
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
-import java.io.ByteArrayOutputStream
 import java.io.File
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -123,36 +114,7 @@ class PlaybackService : MediaSessionService() {
 
     private fun getArtworkData(): ByteArray? {
         _artworkData?.let { return it }
-        val isDark = (resources.configuration.uiMode and
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val primaryContainer = if (isDark) {
-            getColor(android.R.color.system_accent1_700)
-        } else {
-            getColor(android.R.color.system_accent1_100)
-        }
-        val primary = if (isDark) {
-            getColor(android.R.color.system_accent1_200)
-        } else {
-            getColor(android.R.color.system_accent1_600)
-        }
-        val size = 512
-        val bitmap = createBitmap(size, size)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(primaryContainer)
-        val logoBitmap = BitmapFactory.decodeResource(resources, R.drawable.player_logo)
-        val logoSize = (size * 0.65f).toInt()
-        val scaled = logoBitmap.scale(logoSize, logoSize)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
-        val left = (size - logoSize) / 2f
-        val top = (size - logoSize) / 2f
-        canvas.drawBitmap(scaled, left, top, paint)
-        logoBitmap.recycle()
-        scaled.recycle()
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        bitmap.recycle()
-        _artworkData = stream.toByteArray()
+        _artworkData = ArtworkHelper.generate(this)
         return _artworkData
     }
 
