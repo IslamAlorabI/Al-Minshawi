@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.SaveAlt
+import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,9 +35,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import android.widget.Toast
 import android.app.DownloadManager
+import android.content.Intent
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import android.os.Environment
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
@@ -273,12 +276,48 @@ class SettingsActivity : AppCompatActivity() {
                             Spacer(modifier = Modifier.height(8.dp))
 
                             val versionName = packageManager.getPackageInfo(packageName, 0).versionName
-                            Text(
-                                text = "v$versionName",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                textAlign = TextAlign.Center
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "v$versionName",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = " · ",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                    modifier = Modifier.clickable {
+                                        val intent = Intent(Intent.ACTION_VIEW, "https://example.com/privacy".toUri())
+                                        startActivity(intent)
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.PrivacyTip,
+                                            contentDescription = stringResource(R.string.privacy_policy),
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.privacy_policy),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
                         }

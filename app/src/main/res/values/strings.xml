@@ -59,5 +59,6 @@
     <string name="widget_downloading">⏳ جارِ تحميل %s…</string>
     <string name="downloading_for_play_progress">جارِ تحميل سورة %1$s، %2$s</string>
     <string name="download_limit_reached">لا يمكن تحميل أكثر من ٣ سور في نفس الوقت</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
 
 </resources>
