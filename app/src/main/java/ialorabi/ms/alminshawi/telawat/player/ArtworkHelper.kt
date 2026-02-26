@@ -16,7 +16,7 @@ object ArtworkHelper {
             context.getColor(android.R.color.system_accent1_100)
         }
         
-        val size = 512
+        val size = 64
         val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
         canvas.drawColor(primaryContainer)
