@@ -56,6 +56,8 @@ class PlaybackService : MediaSessionService() {
     private var _artworkData: ByteArray? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var downloadJob: Job? = null
+    private var currentDownloadingSurahId: Int? = null
+    private var isSkipping = false
     var onWidgetDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
 
     companion object {
@@ -175,12 +177,19 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun downloadAndPlay(player: Player, surah: Surah) {
+        val previousDownloadingSurahId = currentDownloadingSurahId
         downloadJob?.cancel()
+        if (previousDownloadingSurahId != null) {
+            onWidgetDownloadStateChanged?.invoke(previousDownloadingSurahId, false, 0f)
+        }
+        currentDownloadingSurahId = null
+
         if (isSurahCached(surah)) {
             player.stop()
             player.setMediaItem(buildMediaItem(surah))
             player.prepare()
             player.play()
+            isSkipping = false
             return
         }
 
@@ -198,6 +207,7 @@ class PlaybackService : MediaSessionService() {
             player.replaceMediaItem(0, indicatorItem)
         }
         player.pause()
+        currentDownloadingSurahId = surah.id
         onWidgetDownloadStateChanged?.invoke(surah.id, true, 0.001f)
 
         downloadJob = serviceScope.launch {
@@ -225,6 +235,7 @@ class PlaybackService : MediaSessionService() {
                     false
                 }
             }
+            currentDownloadingSurahId = null
             onWidgetDownloadStateChanged?.invoke(surah.id, false, 0f)
             if (success) {
                 player.stop()
@@ -232,6 +243,7 @@ class PlaybackService : MediaSessionService() {
                 player.prepare()
                 player.play()
             }
+            isSkipping = false
         }
     }
 
@@ -243,18 +255,26 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun playNextSurah(player: Player) {
-        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: return
+        if (isSkipping) return
+        isSkipping = true
+        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId < surahs.size) {
             downloadAndPlay(player, surahs[currentId])
+        } else {
+            isSkipping = false
         }
     }
 
     private fun playPreviousSurah(player: Player) {
-        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: return
+        if (isSkipping) return
+        isSkipping = true
+        val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId > 1) {
             downloadAndPlay(player, surahs[currentId - 2])
+        } else {
+            isSkipping = false
         }
     }
 

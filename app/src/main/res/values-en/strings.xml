@@ -58,5 +58,6 @@
     <string name="help_favorite_wave_desc">The wavy line under the name means the Surah is favorited.</string>
     <string name="widget_downloading">⏳ Downloading %s…</string>
     <string name="downloading_for_play_progress">Downloading %1$s, %2$s</string>
+    <string name="download_limit_reached">Cannot download more than 3 surahs at the same time</string>
 
 </resources>

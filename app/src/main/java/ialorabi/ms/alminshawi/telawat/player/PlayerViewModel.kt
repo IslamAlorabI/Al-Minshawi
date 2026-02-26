@@ -39,6 +39,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.ByteArrayOutputStream
 
 @androidx.media3.common.util.UnstableApi
@@ -152,8 +155,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private var bufferingJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
+    private var isSkipping = false
     private val _pendingDownloadSurahId = MutableStateFlow<Int?>(null)
     val pendingDownloadSurahId: StateFlow<Int?> = _pendingDownloadSurahId.asStateFlow()
+
+    private val _downloadLimitReached = MutableSharedFlow<Unit>()
+    val downloadLimitReached: SharedFlow<Unit> = _downloadLimitReached.asSharedFlow()
+
+    companion object {
+        private const val MAX_PARALLEL_DOWNLOADS = 3
+    }
     
     private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
@@ -192,6 +203,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun downloadSurah(surah: Surah) {
+        if (_downloadingSurahs.value.size >= MAX_PARALLEL_DOWNLOADS) {
+            viewModelScope.launch { _downloadLimitReached.emit(Unit) }
+            return
+        }
         val cache = PlaybackService.cache ?: return
         viewModelScope.launch {
             downloadSurahToCache(surah, cache)
@@ -331,6 +346,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (playbackState == Player.STATE_READY) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                     isTransitioning = false
+                    isSkipping = false
                 }
                 if (playbackState == Player.STATE_ENDED && !isTransitioning) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
@@ -406,6 +422,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
         } else if (surah.id !in _downloadingSurahs.value) {
+            val previousPendingId = _pendingDownloadSurahId.value
+            if (previousPendingId != null && previousPendingId != surah.id) {
+                _downloadingSurahs.value -= previousPendingId
+                _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                    remove(previousPendingId)
+                }
+            }
             _pendingDownloadSurahId.value = surah.id
             val cache = PlaybackService.cache ?: return
             viewModelScope.launch {
@@ -437,6 +460,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             exoPlayer.setMediaItem(mediaItem)
             exoPlayer.prepare()
             exoPlayer.play()
+            isSkipping = false
         }
     }
 
@@ -481,22 +505,28 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun playNextSurah() {
-        val currentId = _currentPlayingSurahId.value ?: return
+        if (isSkipping) return
+        isSkipping = true
+        val currentId = _currentPlayingSurahId.value ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId < surahs.size) {
             playSurah(surahs[currentId])
         } else {
             isTransitioning = false
+            isSkipping = false
         }
     }
 
     fun playPreviousSurah() {
-        val currentId = _currentPlayingSurahId.value ?: return
+        if (isSkipping) return
+        isSkipping = true
+        val currentId = _currentPlayingSurahId.value ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId > 1) {
             playSurah(surahs[currentId - 2])
         } else {
             isTransitioning = false
+            isSkipping = false
         }
     }
 
