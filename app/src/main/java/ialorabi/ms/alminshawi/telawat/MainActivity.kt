@@ -182,6 +182,12 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
+    val savedScrollIndex = remember { mutableIntStateOf(-1) }
+    val savedScrollOffset = remember { mutableIntStateOf(0) }
+
+    val isFilterActive = searchQuery.isNotEmpty() || downloadFilter != DownloadFilter.ALL || showFavoritesOnly
+    val wasFilterActive = remember { mutableStateOf(false) }
+
     val filteredSurahs = surahs.filter { surah ->
         val matchesSearch = if (searchQuery.isEmpty()) {
             true
@@ -199,6 +205,16 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         val matchesFavorite = if (showFavoritesOnly) favoriteSurahIds.contains(surah.id) else true
         
         matchesSearch && matchesDownload && matchesFavorite
+    }
+
+    LaunchedEffect(isFilterActive) {
+        if (isFilterActive && !wasFilterActive.value) {
+            savedScrollIndex.intValue = listState.firstVisibleItemIndex
+            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+        } else if (!isFilterActive && wasFilterActive.value && savedScrollIndex.intValue >= 0) {
+            listState.scrollToItem(savedScrollIndex.intValue, savedScrollOffset.intValue)
+        }
+        wasFilterActive.value = isFilterActive
     }
 
     if (showBottomSheet && currentSurahId != null) {
