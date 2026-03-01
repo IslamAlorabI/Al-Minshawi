@@ -65,6 +65,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -951,12 +952,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
         label = "pulseAlpha"
     )
 
+    val config = LocalConfiguration.current
+    val isTablet = config.screenWidthDp > 600
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .statusBarsPadding(),
+                .then(
+                    if (isTablet) Modifier.systemBarsPadding()
+                    else Modifier.statusBarsPadding()
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -971,12 +978,16 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                 )
 
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(4f / 3f)
+                        .then(
+                            if (isTablet) Modifier.height((config.screenHeightDp * 0.30f).dp)
+                            else Modifier.aspectRatio(4f / 3f)
+                        )
                         .clip(MaterialTheme.shapes.extraLarge)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
