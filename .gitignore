@@ -70,3 +70,7 @@ CTestTestfile.cmake
 
 # Build output
 app/release/
+
+# Kotlin compiler daemon
+*.salive
+.kotlin/
