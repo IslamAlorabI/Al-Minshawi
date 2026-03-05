@@ -62,6 +62,9 @@ class PlaybackService : MediaSessionService() {
             private set
         private const val CACHE_SIZE = 2L * 1024 * 1024 * 1024
         private const val MAX_PARALLEL_DOWNLOADS = 3
+        private const val MAX_DOWNLOAD_RETRIES = 3
+        private const val RETRY_DELAY_MS = 2000L
+        private const val HTTP_TIMEOUT_MS = 30_000
 
         const val ACTION_REPEAT = "action_repeat"
         const val ACTION_AUTO_NEXT = "action_auto_next"
@@ -182,28 +185,38 @@ class PlaybackService : MediaSessionService() {
 
         downloadJob = serviceScope.launch {
             val success = withContext(Dispatchers.IO) {
-                try {
-                    val c = cache ?: return@withContext false
-                    val dataSource = CacheDataSource.Factory()
-                        .setCache(c)
-                        .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
-                        .createDataSource()
-                    val dataSpec = DataSpec(surah.url.toUri())
-                    val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                        if (requestLength > 0) {
-                            val progress = bytesCached.toFloat() / requestLength.toFloat()
-                            serviceScope.launch {
-                                onWidgetDownloadStateChanged?.invoke(surah.id, true, progress)
-                            }
+                val c = cache ?: return@withContext false
+                val httpFactory = DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(HTTP_TIMEOUT_MS)
+                    .setReadTimeoutMs(HTTP_TIMEOUT_MS)
+                val dataSource = CacheDataSource.Factory()
+                    .setCache(c)
+                    .setUpstreamDataSourceFactory(httpFactory)
+                    .createDataSource()
+                val dataSpec = DataSpec(surah.url.toUri())
+                val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                    if (requestLength > 0) {
+                        val progress = bytesCached.toFloat() / requestLength.toFloat()
+                        serviceScope.launch {
+                            onWidgetDownloadStateChanged?.invoke(surah.id, true, progress)
                         }
                     }
-                    val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
-                    writer.cache()
-                    true
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    false
                 }
+                var lastError: Exception? = null
+                for (attempt in 1..MAX_DOWNLOAD_RETRIES) {
+                    try {
+                        val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
+                        writer.cache()
+                        return@withContext true
+                    } catch (e: Exception) {
+                        lastError = e
+                        if (attempt < MAX_DOWNLOAD_RETRIES) {
+                            Thread.sleep(RETRY_DELAY_MS)
+                        }
+                    }
+                }
+                lastError?.printStackTrace()
+                false
             }
             currentDownloadingSurahId = null
             onWidgetDownloadStateChanged?.invoke(surah.id, false, 0f)
@@ -224,27 +237,37 @@ class PlaybackService : MediaSessionService() {
         manualDownloadJobs[surah.id] = serviceScope.launch {
             onManualDownloadStateChanged?.invoke(surah.id, true, 0.001f)
             val success = withContext(Dispatchers.IO) {
-                try {
-                    val dataSource = CacheDataSource.Factory()
-                        .setCache(c)
-                        .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
-                        .createDataSource()
-                    val dataSpec = DataSpec(surah.url.toUri())
-                    val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                        if (requestLength > 0) {
-                            val progress = bytesCached.toFloat() / requestLength.toFloat()
-                            serviceScope.launch {
-                                onManualDownloadStateChanged?.invoke(surah.id, true, progress)
-                            }
+                val httpFactory = DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(HTTP_TIMEOUT_MS)
+                    .setReadTimeoutMs(HTTP_TIMEOUT_MS)
+                val dataSource = CacheDataSource.Factory()
+                    .setCache(c)
+                    .setUpstreamDataSourceFactory(httpFactory)
+                    .createDataSource()
+                val dataSpec = DataSpec(surah.url.toUri())
+                val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                    if (requestLength > 0) {
+                        val progress = bytesCached.toFloat() / requestLength.toFloat()
+                        serviceScope.launch {
+                            onManualDownloadStateChanged?.invoke(surah.id, true, progress)
                         }
                     }
-                    val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
-                    writer.cache()
-                    true
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    false
                 }
+                var lastError: Exception? = null
+                for (attempt in 1..MAX_DOWNLOAD_RETRIES) {
+                    try {
+                        val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
+                        writer.cache()
+                        return@withContext true
+                    } catch (e: Exception) {
+                        lastError = e
+                        if (attempt < MAX_DOWNLOAD_RETRIES) {
+                            Thread.sleep(RETRY_DELAY_MS)
+                        }
+                    }
+                }
+                lastError?.printStackTrace()
+                false
             }
             manualDownloadJobs.remove(surah.id)
             onManualDownloadStateChanged?.invoke(surah.id, false, 0f)

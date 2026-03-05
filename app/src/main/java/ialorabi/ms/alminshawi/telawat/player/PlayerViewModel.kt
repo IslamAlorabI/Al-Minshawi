@@ -13,15 +13,8 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.MoreExecutors
-import androidx.media3.datasource.DataSpec
-import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.datasource.cache.CacheDataSource
-import androidx.media3.datasource.cache.CacheWriter
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import ialorabi.ms.alminshawi.telawat.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import kotlinx.coroutines.Job
@@ -171,41 +164,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         PlaybackService.instance?.downloadSurahInBackground(surah)
     }
 
-    private suspend fun downloadSurahToCache(surah: Surah, cache: androidx.media3.datasource.cache.SimpleCache) {
-        _downloadingSurahs.value += surah.id
-        withContext(Dispatchers.IO) {
-            try {
-                _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                    put(surah.id, 0.001f)
-                }
-                val dataSource = CacheDataSource.Factory()
-                    .setCache(cache)
-                    .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
-                    .createDataSource()
-                val dataSpec = DataSpec(surah.url.toUri())
 
-                val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                    if (requestLength > 0) {
-                        val progress = bytesCached.toFloat() / requestLength.toFloat()
-                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                            put(surah.id, progress)
-                        }
-                    }
-                }
 
-                val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
-                writer.cache()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _downloadingSurahs.value -= surah.id
-                _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                    remove(surah.id)
-                }
-                refreshCachedSurahs()
-            }
-        }
-    }
 
     fun initializeController(context: Context) {
         val sessionToken = SessionToken(
@@ -285,14 +245,21 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
         } else {
-             _currentPlayingSurahId.value = exo.currentMediaItem?.mediaId?.toIntOrNull()
-             _currentPosition.value = exo.currentPosition
-             _duration.value = exo.duration.coerceAtLeast(0L)
-             _isPlaying.value = exo.isPlaying
-             _isBuffering.value = exo.playbackState == Player.STATE_BUFFERING
-             if (exo.isPlaying) {
-                 startTrackingProgress()
-             }
+            syncPlayerState()
+        }
+    }
+
+    fun syncPlayerState() {
+        val exo = player ?: return
+        _currentPlayingSurahId.value = exo.currentMediaItem?.mediaId?.toIntOrNull()
+        _currentPosition.value = exo.currentPosition
+        _duration.value = exo.duration.coerceAtLeast(0L)
+        _isPlaying.value = exo.isPlaying
+        _isBuffering.value = exo.playbackState == Player.STATE_BUFFERING
+        if (exo.isPlaying) {
+            startTrackingProgress()
+        } else {
+            stopTrackingProgress()
         }
     }
 

@@ -126,6 +126,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         playerViewModel.refreshCachedSurahs()
+        playerViewModel.syncPlayerState()
         ialorabi.ms.alminshawi.telawat.player.PlaybackService.instance?.refreshLanguage()
     }
 }
