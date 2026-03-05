@@ -57,7 +57,7 @@ class PlaybackService : MediaSessionService() {
         
         var cache: SimpleCache? = null
             private set
-        private const val CACHE_SIZE = 500L * 1024 * 1024
+        private const val CACHE_SIZE = 2L * 1024 * 1024 * 1024
 
         const val ACTION_REPEAT = "action_repeat"
         const val ACTION_AUTO_NEXT = "action_auto_next"
@@ -65,7 +65,7 @@ class PlaybackService : MediaSessionService() {
         const val ACTION_NEXT_SURAH = "action_next_surah"
 
         fun getCacheSize(context: Context): Long {
-            return cache?.cacheSpace ?: getFolderSize(File(context.cacheDir, "audio_cache"))
+            return cache?.cacheSpace ?: getFolderSize(File(context.filesDir, "audio_cache"))
         }
 
         fun clearCache(context: Context) {
@@ -73,7 +73,7 @@ class PlaybackService : MediaSessionService() {
             player?.stop()
             player?.clearMediaItems()
             cache?.keys?.toSet()?.forEach { cache?.removeResource(it) }
-            val cacheFolder = File(context.cacheDir, "audio_cache")
+            val cacheFolder = File(context.filesDir, "audio_cache")
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
             }
@@ -299,10 +299,16 @@ class PlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationProvider)
 
         if (cache == null) {
-            val cacheDir = File(cacheDir, "audio_cache")
+            val oldCacheDir = File(cacheDir, "audio_cache")
+            val newCacheDir = File(filesDir, "audio_cache")
+            if (oldCacheDir.exists() && !newCacheDir.exists()) {
+                oldCacheDir.renameTo(newCacheDir)
+            } else if (oldCacheDir.exists() && newCacheDir.exists()) {
+                oldCacheDir.deleteRecursively()
+            }
             val evictor = LeastRecentlyUsedCacheEvictor(CACHE_SIZE)
             val databaseProvider = StandaloneDatabaseProvider(this)
-            cache = SimpleCache(cacheDir, evictor, databaseProvider)
+            cache = SimpleCache(newCacheDir, evictor, databaseProvider)
         }
 
         val cacheDataSourceFactory = CacheDataSource.Factory()
