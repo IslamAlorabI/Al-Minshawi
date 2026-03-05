@@ -43,13 +43,16 @@ import kotlinx.coroutines.withContext
 
 @androidx.media3.common.util.UnstableApi
 class PlaybackService : MediaSessionService() {
-    private var mediaSession: MediaSession? = null
+    private var _mediaSession: MediaSession? = null
+    val mediaSession: MediaSession? get() = _mediaSession
     private var _artworkData: ByteArray? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var downloadJob: Job? = null
     private var currentDownloadingSurahId: Int? = null
     private var isSkipping = false
     var onWidgetDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
+    var onManualDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
+    private val manualDownloadJobs = mutableMapOf<Int, Job>()
 
     companion object {
         var instance: PlaybackService? = null
@@ -58,6 +61,7 @@ class PlaybackService : MediaSessionService() {
         var cache: SimpleCache? = null
             private set
         private const val CACHE_SIZE = 2L * 1024 * 1024 * 1024
+        private const val MAX_PARALLEL_DOWNLOADS = 3
 
         const val ACTION_REPEAT = "action_repeat"
         const val ACTION_AUTO_NEXT = "action_auto_next"
@@ -95,6 +99,10 @@ class PlaybackService : MediaSessionService() {
                 player.clearMediaItems()
             }
             cache?.removeResource(surah.url)
+        }
+
+        fun getActiveDownloadCount(): Int {
+            return instance?.manualDownloadJobs?.size ?: 0
         }
 
         private fun getFolderSize(file: File): Long {
@@ -138,7 +146,7 @@ class PlaybackService : MediaSessionService() {
             .build()
     }
 
-    private fun downloadAndPlay(player: Player, surah: Surah) {
+    fun downloadAndPlay(player: Player, surah: Surah) {
         val previousDownloadingSurahId = currentDownloadingSurahId
         downloadJob?.cancel()
         if (previousDownloadingSurahId != null) {
@@ -209,6 +217,40 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    fun downloadSurahInBackground(surah: Surah) {
+        if (manualDownloadJobs.containsKey(surah.id)) return
+        if (manualDownloadJobs.size >= MAX_PARALLEL_DOWNLOADS) return
+        val c = cache ?: return
+        manualDownloadJobs[surah.id] = serviceScope.launch {
+            onManualDownloadStateChanged?.invoke(surah.id, true, 0.001f)
+            val success = withContext(Dispatchers.IO) {
+                try {
+                    val dataSource = CacheDataSource.Factory()
+                        .setCache(c)
+                        .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
+                        .createDataSource()
+                    val dataSpec = DataSpec(surah.url.toUri())
+                    val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                        if (requestLength > 0) {
+                            val progress = bytesCached.toFloat() / requestLength.toFloat()
+                            serviceScope.launch {
+                                onManualDownloadStateChanged?.invoke(surah.id, true, progress)
+                            }
+                        }
+                    }
+                    val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
+                    writer.cache()
+                    true
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    false
+                }
+            }
+            manualDownloadJobs.remove(surah.id)
+            onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
+        }
+    }
+
     private fun getLocalizedSurahName(surah: Surah): String {
         val localizedNames = resources.getStringArray(R.array.surah_names)
         val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
@@ -243,7 +285,7 @@ class PlaybackService : MediaSessionService() {
 
     fun refreshLanguage() {
         refreshCustomLayout()
-        val player = mediaSession?.player ?: return
+        val player = _mediaSession?.player ?: return
         val currentItem = player.currentMediaItem ?: return
         val surahId = currentItem.mediaId.toIntOrNull() ?: return
         val currentSurah = SurahRepository.surahs.find { it.id == surahId } ?: return
@@ -284,7 +326,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun refreshCustomLayout() {
-        mediaSession?.let { session ->
+        _mediaSession?.let { session ->
             val layout = buildCustomLayout()
             session.setCustomLayout(layout)
         }
@@ -424,28 +466,31 @@ class PlaybackService : MediaSessionService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        mediaSession = MediaSession.Builder(this, player)
+        _mediaSession = MediaSession.Builder(this, player)
             .setCallback(callback)
             .setSessionActivity(sessionActivityPendingIntent)
             .build()
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = mediaSession?.player
+        val player = _mediaSession?.player
         if (player != null && (!player.playWhenReady || player.mediaItemCount == 0)) {
             stopSelf()
         }
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _mediaSession
 
     override fun onDestroy() {
         downloadJob?.cancel()
+        manualDownloadJobs.values.forEach { it.cancel() }
+        manualDownloadJobs.clear()
         onWidgetDownloadStateChanged = null
-        mediaSession?.run {
+        onManualDownloadStateChanged = null
+        _mediaSession?.run {
             player.release()
             release()
-            mediaSession = null
+            _mediaSession = null
         }
         cache?.release()
         cache = null

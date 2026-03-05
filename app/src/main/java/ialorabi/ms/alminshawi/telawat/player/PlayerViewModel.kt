@@ -124,7 +124,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val downloadLimitReached: SharedFlow<Unit> = _downloadLimitReached.asSharedFlow()
 
     companion object {
-        private const val MAX_PARALLEL_DOWNLOADS = 3
     }
     
     private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -164,14 +163,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun downloadSurah(surah: Surah) {
-        if (_downloadingSurahs.value.size >= MAX_PARALLEL_DOWNLOADS) {
+        if (_downloadingSurahs.value.contains(surah.id)) return
+        if (PlaybackService.getActiveDownloadCount() >= 3) {
             viewModelScope.launch { _downloadLimitReached.emit(Unit) }
             return
         }
-        val cache = PlaybackService.cache ?: return
-        viewModelScope.launch {
-            downloadSurahToCache(surah, cache)
-        }
+        PlaybackService.instance?.downloadSurahInBackground(surah)
     }
 
     private suspend fun downloadSurahToCache(surah: Surah, cache: androidx.media3.datasource.cache.SimpleCache) {
@@ -238,6 +235,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         refreshCachedSurahs()
                     }
                 }
+                PlaybackService.instance?.onManualDownloadStateChanged = { surahId, downloading, progress ->
+                    if (downloading) {
+                        _downloadingSurahs.value += surahId
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            put(surahId, progress)
+                        }
+                    } else {
+                        _downloadingSurahs.value -= surahId
+                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
+                            remove(surahId)
+                        }
+                        refreshCachedSurahs()
+                    }
+                }
             },
             MoreExecutors.directExecutor()
         )
@@ -279,6 +290,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
              _duration.value = exo.duration.coerceAtLeast(0L)
              _isPlaying.value = exo.isPlaying
              _isBuffering.value = exo.playbackState == Player.STATE_BUFFERING
+             if (exo.isPlaying) {
+                 startTrackingProgress()
+             }
         }
     }
 
@@ -391,14 +405,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
             _pendingDownloadSurahId.value = surah.id
-            val cache = PlaybackService.cache ?: return
-            viewModelScope.launch {
-                downloadSurahToCache(surah, cache)
-                if (surah.id in _cachedSurahIds.value && _pendingDownloadSurahId.value == surah.id) {
-                    _pendingDownloadSurahId.value = null
-                    playFromCache(surah)
-                }
-            }
+            PlaybackService.instance?.downloadAndPlay(PlaybackService.instance?.mediaSession?.player ?: return, surah)
         }
     }
 
