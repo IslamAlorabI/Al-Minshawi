@@ -17,6 +17,7 @@ android {
     defaultConfig {
         applicationId = "ialorabi.ms.alminshawi.telawat"
         minSdk = 31
+        //noinspection OldTargetApi
         targetSdk = 36
         versionCode = 2
         versionName = "1.1"
