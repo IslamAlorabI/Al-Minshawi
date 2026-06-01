@@ -60,5 +60,6 @@
     <string name="downloading_for_play_progress">جارِ تحميل سورة %1$s، %2$s</string>
     <string name="download_limit_reached">لا يمكن تحميل أكثر من ٣ سور في نفس الوقت</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="no_browser_found">لا يوجد متصفح لفتح الرابط</string>
 
 </resources>

@@ -60,5 +60,6 @@
     <string name="downloading_for_play_progress">Downloading %1$s, %2$s</string>
     <string name="download_limit_reached">Cannot download more than 3 surahs at the same time</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="no_browser_found">No browser found to open the link</string>
 
 </resources>

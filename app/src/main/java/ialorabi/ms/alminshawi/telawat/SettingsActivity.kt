@@ -296,7 +296,11 @@ class SettingsActivity : AppCompatActivity() {
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                     modifier = Modifier.clickable {
                                         val intent = Intent(Intent.ACTION_VIEW, "https://islamalorabi.github.io/al-minshawi-privacy-policy.html".toUri())
-                                        startActivity(intent)
+                                        try {
+                                            startActivity(intent)
+                                        } catch (_: android.content.ActivityNotFoundException) {
+                                            Toast.makeText(this@SettingsActivity, getString(R.string.no_browser_found), Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 ) {
                                     Row(
