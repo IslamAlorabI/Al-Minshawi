@@ -495,6 +495,14 @@ class PlaybackService : MediaSessionService() {
             .build()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        try {
+            return super.onStartCommand(intent, flags, startId)
+        } catch (e: Exception) {
+            return START_NOT_STICKY
+        }
+    }
+
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = _mediaSession?.player
         if (player != null && (!player.playWhenReady || player.mediaItemCount == 0)) {
