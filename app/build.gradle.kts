@@ -8,19 +8,15 @@ plugins {
 
 android {
     namespace = "ialorabi.ms.alminshawi.telawat"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "ialorabi.ms.alminshawi.telawat"
         minSdk = 31
         //noinspection OldTargetApi
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
