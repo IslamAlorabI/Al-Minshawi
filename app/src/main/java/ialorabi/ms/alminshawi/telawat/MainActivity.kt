@@ -16,6 +16,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -83,6 +89,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -250,6 +259,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     val showFloatingPlayer = currentSurahId != null && !showBottomSheet
+    var isPlayerCollapsed by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -364,7 +374,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         start = 16.dp,
                         end = 16.dp,
                         top = 8.dp,
-                        bottom = if (showFloatingPlayer) 100.dp else 8.dp
+                        bottom = if (showFloatingPlayer) (if (isPlayerCollapsed) 40.dp else 120.dp) else 8.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -394,21 +404,46 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val duration by viewModel.duration.collectAsState()
             val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
             val currentSurah = surahs.find { it.id == currentSurahId }
+            val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
             currentSurah?.let {
-                BottomPlayerBar(
-                    localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
-                    isPlaying = isPlaying,
-                    isBuffering = isBuffering,
-                    currentPosition = currentPosition,
-                    duration = duration,
-                    sleepTimerMs = sleepTimerMs,
-                    onPlayPauseClick = { viewModel.togglePlayPause() },
-                    onBarClick = { showBottomSheet = true },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
-                        .navigationBarsPadding()
-                )
+                val bottomModifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 24.dp)
+                    .navigationBarsPadding()
+
+                AnimatedContent(
+                    targetState = isPlayerCollapsed,
+                    modifier = bottomModifier,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(200)) +
+                            scaleIn(initialScale = 0.95f, animationSpec = tween(200)))
+                            .togetherWith(
+                                fadeOut(animationSpec = tween(150)) +
+                                    scaleOut(targetScale = 0.95f, animationSpec = tween(150))
+                            )
+                    },
+                    label = "player_collapse"
+                ) { collapsed ->
+                    if (collapsed) {
+                        CollapsedPlayerBar(
+                            progress = playbackProgress,
+                            onTap = { isPlayerCollapsed = false },
+                            onSwipeUp = { isPlayerCollapsed = false }
+                        )
+                    } else {
+                        BottomPlayerBar(
+                            localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
+                            isPlaying = isPlaying,
+                            isBuffering = isBuffering,
+                            currentPosition = currentPosition,
+                            duration = duration,
+                            sleepTimerMs = sleepTimerMs,
+                            onPlayPauseClick = { viewModel.togglePlayPause() },
+                            onBarClick = { showBottomSheet = true },
+                            onSwipeDown = { isPlayerCollapsed = true }
+                        )
+                    }
+                }
             }
         }
     }
@@ -842,15 +877,22 @@ fun BottomPlayerBar(
     sleepTimerMs: Long,
     onPlayPauseClick: () -> Unit,
     onBarClick: () -> Unit,
+    onSwipeDown: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val playerShape = RoundedCornerShape(20.dp)
+    val dragState = rememberDraggableState {}
     val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(playerShape)
-            .clickable { onBarClick() },
+            .clickable { onBarClick() }
+            .draggable(
+                state = dragState,
+                orientation = Orientation.Vertical,
+                onDragStopped = { velocity: Float -> if (velocity > 300f) onSwipeDown() }
+            ),
         shape = playerShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
         shadowElevation = 8.dp,
@@ -944,6 +986,43 @@ fun BottomPlayerBar(
     }
 }
 
+@Composable
+fun CollapsedPlayerBar(
+    progress: Float,
+    onTap: () -> Unit,
+    onSwipeUp: () -> Unit
+) {
+    val dragState = rememberDraggableState {}
+    val barShape = RoundedCornerShape(50)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(barShape)
+            .clickable { onTap() }
+            .draggable(
+                state = dragState,
+                orientation = Orientation.Vertical,
+                onDragStopped = { velocity: Float -> if (velocity < -300f) onSwipeUp() }
+            ),
+        shape = barShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shadowElevation = 4.dp,
+        tonalElevation = 2.dp
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            LinearProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+            )
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: Array<String>, viewModel: PlayerViewModel) {
