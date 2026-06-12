@@ -414,6 +414,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 AnimatedContent(
                     targetState = isPlayerCollapsed,
                     modifier = bottomModifier,
+                    contentAlignment = Alignment.BottomCenter,
                     transitionSpec = {
                         (fadeIn(animationSpec = tween(200)) +
                             scaleIn(initialScale = 0.95f, animationSpec = tween(200)))
@@ -425,10 +426,13 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     label = "player_collapse"
                 ) { collapsed ->
                     if (collapsed) {
-                        CollapsedPlayerBar(
+                        CollapsedPlayerFab(
                             progress = playbackProgress,
-                            onTap = { isPlayerCollapsed = false },
-                            onSwipeUp = { isPlayerCollapsed = false }
+                            isPlaying = isPlaying,
+                            isBuffering = isBuffering,
+                            sleepTimerMs = sleepTimerMs,
+                            onPlayPauseClick = { viewModel.togglePlayPause() },
+                            onExpand = { isPlayerCollapsed = false }
                         )
                     } else {
                         BottomPlayerBar(
@@ -986,40 +990,99 @@ fun BottomPlayerBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CollapsedPlayerBar(
+fun CollapsedPlayerFab(
     progress: Float,
-    onTap: () -> Unit,
-    onSwipeUp: () -> Unit
+    isPlaying: Boolean,
+    isBuffering: Boolean,
+    sleepTimerMs: Long,
+    onPlayPauseClick: () -> Unit,
+    onExpand: () -> Unit
 ) {
-    val dragState = rememberDraggableState {}
-    val barShape = RoundedCornerShape(50)
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(barShape)
-            .clickable { onTap() }
-            .draggable(
-                state = dragState,
-                orientation = Orientation.Vertical,
-                onDragStopped = { velocity: Float -> if (velocity < -300f) onSwipeUp() }
-            ),
-        shape = barShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shadowElevation = 4.dp,
-        tonalElevation = 2.dp
+    val haptic = LocalHapticFeedback.current
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(64.dp)
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                CircularProgressIndicator(
+                    progress = { progress.coerceIn(0f, 1f) },
+                    modifier = Modifier.size(64.dp),
+                    strokeWidth = 4.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                )
+            }
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 6.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(50)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-            )
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .combinedClickable(
+                        onClick = onPlayPauseClick,
+                        onLongClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onExpand()
+                        }
+                    ),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shadowElevation = 6.dp,
+                tonalElevation = 4.dp
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    if (isBuffering) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        if (sleepTimerMs > 0) {
+            val remainMin = (sleepTimerMs / 60000).toInt()
+            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                tonalElevation = 2.dp
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Bedtime,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
         }
     }
 }
