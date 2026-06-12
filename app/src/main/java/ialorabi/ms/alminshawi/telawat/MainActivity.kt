@@ -249,154 +249,166 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         }
     }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = MaterialTheme.colorScheme.inverseSurface,
-                    contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    shape = RoundedCornerShape(12.dp)
+    val showFloatingPlayer = currentSurahId != null && !showBottomSheet
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = MaterialTheme.colorScheme.inverseSurface,
+                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            topBar = {
+                TopAppBar(
+                    title = { 
+                        Column {
+                            Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.app_subtitle),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    actions = {
+                        IconButton(onClick = {
+                            context.startActivity(Intent(context, SettingsActivity::class.java))
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Settings,
+                                contentDescription = stringResource(R.string.settings),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 )
             }
-        },
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Column {
-                        Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold)
-                        Text(
-                            text = stringResource(R.string.app_subtitle),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                WavyTopDecor()
+
+                SearchBarSection(
+                    query = searchQuery,
+                    onQueryChange = {
+                        if (!isFilterActive) {
+                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                        }
+                        searchQuery = it
+                    },
+                    downloadFilter = downloadFilter,
+                    onFilterChange = {
+                        if (!isFilterActive) {
+                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                        }
+                        downloadFilter = it
+                    },
+                    showFavoritesOnly = showFavoritesOnly,
+                    onFavoritesToggle = {
+                        if (!isFilterActive) {
+                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                        }
+                        showFavoritesOnly = it
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                actions = {
-                    IconButton(onClick = {
-                        context.startActivity(Intent(context, SettingsActivity::class.java))
-                    }) {
+                )
+
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable { showHelpDialog = true }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
-                            imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.settings),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            imageVector = Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.help_title),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 }
-            )
-        },
-        bottomBar = {
-            val currentPosition by viewModel.currentPosition.collectAsState()
-            val duration by viewModel.duration.collectAsState()
-            val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
-            if (currentSurahId != null && !showBottomSheet) {
-                val currentSurah = surahs.find { it.id == currentSurahId }
-                currentSurah?.let {
-                    BottomPlayerBar(
-                        localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
-                        isPlaying = isPlaying,
-                        isBuffering = isBuffering,
-                        currentPosition = currentPosition,
-                        duration = duration,
-                        sleepTimerMs = sleepTimerMs,
-                        onPlayPauseClick = { viewModel.togglePlayPause() },
-                        onBarClick = { showBottomSheet = true }
-                    )
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = if (showFloatingPlayer) 100.dp else 8.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredSurahs, key = { it.id }) { surah ->
+                        SurahItem(
+                            surah = surah,
+                            localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
+                            isCurrentSelected = currentSurahId == surah.id,
+                            isPlaying = isPlaying,
+                            isBuffering = isBuffering && currentSurahId == surah.id,
+                            isDownloading = downloadingSurahs.contains(surah.id),
+                            downloadProgress = downloadingProgress[surah.id] ?: 0f,
+                            isDownloaded = cachedSurahIds.contains(surah.id),
+                            isFavorite = favoriteSurahIds.contains(surah.id),
+                            onPlayClick = { viewModel.playSurah(surah) },
+                            onPauseClick = { viewModel.togglePlayPause() },
+                            onDownloadClick = { viewModel.downloadSurah(surah) },
+                            onToggleFavorite = { viewModel.toggleFavorite(surah.id) }
+                        )
+                    }
                 }
             }
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            WavyTopDecor()
 
-            SearchBarSection(
-                query = searchQuery,
-                onQueryChange = {
-                    if (!isFilterActive) {
-                        savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                        savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                    }
-                    searchQuery = it
-                },
-                downloadFilter = downloadFilter,
-                onFilterChange = {
-                    if (!isFilterActive) {
-                        savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                        savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                    }
-                    downloadFilter = it
-                },
-                showFavoritesOnly = showFavoritesOnly,
-                onFavoritesToggle = {
-                    if (!isFilterActive) {
-                        savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                        savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                    }
-                    showFavoritesOnly = it
-                }
-            )
-
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .clickable { showHelpDialog = true }
-            ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.help_title),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            }
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredSurahs, key = { it.id }) { surah ->
-                    SurahItem(
-                        surah = surah,
-                        localizedName = localizedSurahNames.getOrElse(surah.id - 1) { _ -> surah.name },
-                        isCurrentSelected = currentSurahId == surah.id,
-                        isPlaying = isPlaying,
-                        isBuffering = isBuffering && currentSurahId == surah.id,
-                        isDownloading = downloadingSurahs.contains(surah.id),
-                        downloadProgress = downloadingProgress[surah.id] ?: 0f,
-                        isDownloaded = cachedSurahIds.contains(surah.id),
-                        isFavorite = favoriteSurahIds.contains(surah.id),
-                        onPlayClick = { viewModel.playSurah(surah) },
-                        onPauseClick = { viewModel.togglePlayPause() },
-                        onDownloadClick = { viewModel.downloadSurah(surah) },
-                        onToggleFavorite = { viewModel.toggleFavorite(surah.id) }
-                    )
-                }
+        if (showFloatingPlayer) {
+            val currentPosition by viewModel.currentPosition.collectAsState()
+            val duration by viewModel.duration.collectAsState()
+            val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
+            val currentSurah = surahs.find { it.id == currentSurahId }
+            currentSurah?.let {
+                BottomPlayerBar(
+                    localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
+                    isPlaying = isPlaying,
+                    isBuffering = isBuffering,
+                    currentPosition = currentPosition,
+                    duration = duration,
+                    sleepTimerMs = sleepTimerMs,
+                    onPlayPauseClick = { viewModel.togglePlayPause() },
+                    onBarClick = { showBottomSheet = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                        .navigationBarsPadding()
+                )
             }
         }
     }
@@ -827,29 +839,26 @@ fun BottomPlayerBar(
     duration: Long,
     sleepTimerMs: Long,
     onPlayPauseClick: () -> Unit,
-    onBarClick: () -> Unit
+    onBarClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val playerShape = RoundedCornerShape(20.dp)
     val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .clip(playerShape)
             .clickable { onBarClick() },
+        shape = playerShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
-        tonalElevation = 8.dp
+        shadowElevation = 8.dp,
+        tonalElevation = 4.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            LinearProgressIndicator(
-                progress = { playbackProgress.coerceIn(0f, 1f) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -915,6 +924,15 @@ fun BottomPlayerBar(
                     }
                 }
             }
+            LinearProgressIndicator(
+                progress = { playbackProgress.coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+            )
         }
     }
 }
