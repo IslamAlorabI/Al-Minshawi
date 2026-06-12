@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -291,17 +292,20 @@ class SettingsActivity : AppCompatActivity() {
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                                 )
+                                val privacyShape = RoundedCornerShape(8.dp)
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = privacyShape,
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.clickable {
-                                        val intent = Intent(Intent.ACTION_VIEW, "https://islamalorabi.github.io/al-minshawi-privacy-policy.html".toUri())
-                                        try {
-                                            startActivity(intent)
-                                        } catch (_: android.content.ActivityNotFoundException) {
-                                            Toast.makeText(this@SettingsActivity, getString(R.string.no_browser_found), Toast.LENGTH_SHORT).show()
+                                    modifier = Modifier
+                                        .clip(privacyShape)
+                                        .clickable {
+                                            val intent = Intent(Intent.ACTION_VIEW, "https://islamalorabi.github.io/al-minshawi-privacy-policy.html".toUri())
+                                            try {
+                                                startActivity(intent)
+                                            } catch (_: android.content.ActivityNotFoundException) {
+                                                Toast.makeText(this@SettingsActivity, getString(R.string.no_browser_found), Toast.LENGTH_SHORT).show()
+                                            }
                                         }
-                                    }
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -494,12 +498,14 @@ fun SettingOption(
     onClick: () -> Unit,
     icon: @Composable (() -> Unit)? = null
 ) {
+    val optionShape = MaterialTheme.shapes.medium
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .clip(optionShape)
             .clickable { onClick() },
-        shape = MaterialTheme.shapes.medium,
+        shape = optionShape,
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     ) {
         Row(
