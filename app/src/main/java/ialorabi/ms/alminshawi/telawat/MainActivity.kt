@@ -166,7 +166,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        skipPartiallyExpanded = true
+    )
 
     val shouldOpenPlayer by openPlayerRequest.collectAsState()
     LaunchedEffect(shouldOpenPlayer, currentSurahId) {
