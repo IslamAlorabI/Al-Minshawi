@@ -655,9 +655,12 @@ fun SurahItem(
 ) {
     val haptic = LocalHapticFeedback.current
     val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+    val cardShape = MaterialTheme.shapes.medium
     Card(
+        shape = cardShape,
         modifier = Modifier
             .fillMaxWidth()
+            .clip(cardShape)
             .combinedClickable(
                 onClick = { 
                     if (!isCurrentSelected) {
