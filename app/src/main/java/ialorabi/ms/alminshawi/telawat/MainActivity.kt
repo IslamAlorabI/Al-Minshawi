@@ -878,34 +878,36 @@ fun BottomPlayerBar(
                 }
 
                 if (duration > 0 || sleepTimerMs > 0) {
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        if (duration > 0) {
-                            Text(
-                                text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        if (sleepTimerMs > 0) {
-                            val remainMin = (sleepTimerMs / 60000).toInt()
-                            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Bedtime,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        ) {
+                            if (duration > 0) {
                                 Text(
-                                    text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Medium
+                                    text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+                            if (sleepTimerMs > 0) {
+                                val remainMin = (sleepTimerMs / 60000).toInt()
+                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Bedtime,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }
