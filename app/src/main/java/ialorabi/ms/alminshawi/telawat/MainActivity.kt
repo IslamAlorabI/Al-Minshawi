@@ -1,5 +1,8 @@
+@file:SuppressLint("UnsafeOptInUsageError")
+
 package ialorabi.ms.alminshawi.telawat
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -25,7 +28,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import android.content.Context
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.horizontalScroll
+import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -50,7 +53,7 @@ import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Bedtime
-import androidx.compose.material.icons.rounded.Check
+
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -65,7 +68,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
+
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -85,7 +88,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.graphics.Brush
+
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import androidx.core.content.edit
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
@@ -122,7 +125,6 @@ class MainActivity : AppCompatActivity() {
         playerViewModel.releaseController()
     }
 
-    @androidx.media3.common.util.UnstableApi
     override fun onResume() {
         super.onResume()
         playerViewModel.refreshCachedSurahs()
@@ -157,7 +159,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collectLatest { (index, offset) ->
-                delay(500)
+                delay(500.milliseconds)
                 sharedPref.edit {
                     putInt("scroll_index", index)
                     putInt("scroll_offset", offset)
@@ -167,8 +169,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberBottomSheetState(
-        initialValue = SheetValue.Hidden,
-        skipPartiallyExpanded = true
+        initialValue = SheetValue.PartiallyExpanded,
+        confirmValueChange = { it != SheetValue.Hidden }
     )
 
     val shouldOpenPlayer by openPlayerRequest.collectAsState()
@@ -180,7 +182,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     var searchQuery by remember { mutableStateOf("") }
-    var isSearchActive by remember { mutableStateOf(false) }
     var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
@@ -299,7 +300,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 val currentSurah = surahs.find { it.id == currentSurahId }
                 currentSurah?.let {
                     BottomPlayerBar(
-                        surah = it,
                         localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
                         isPlaying = isPlaying,
                         isBuffering = isBuffering,
@@ -329,8 +329,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     }
                     searchQuery = it
                 },
-                isActive = isSearchActive,
-                onActiveChange = { isSearchActive = it },
                 downloadFilter = downloadFilter,
                 onFilterChange = {
                     if (!isFilterActive) {
@@ -512,8 +510,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 fun SearchBarSection(
     query: String, 
     onQueryChange: (String) -> Unit, 
-    isActive: Boolean, 
-    onActiveChange: (Boolean) -> Unit,
     downloadFilter: DownloadFilter,
     onFilterChange: (DownloadFilter) -> Unit,
     showFavoritesOnly: Boolean,
@@ -827,7 +823,6 @@ fun BufferingIndicator(modifier: Modifier = Modifier) {
 
 @Composable
 fun BottomPlayerBar(
-    surah: Surah,
     localizedName: String,
     isPlaying: Boolean,
     isBuffering: Boolean,
@@ -959,8 +954,11 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
         label = "pulseAlpha"
     )
 
-    val config = LocalConfiguration.current
-    val isTablet = config.screenWidthDp > 600
+    val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
+    val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
+    val isTablet = screenWidthDp > 600.dp
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
@@ -992,7 +990,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (isTablet) Modifier.height((config.screenHeightDp * 0.30f).dp)
+                            if (isTablet) Modifier.height(screenHeightDp * 0.30f)
                             else Modifier.aspectRatio(4f / 3f)
                         )
                         .clip(MaterialTheme.shapes.extraLarge)
@@ -1300,7 +1298,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     val h = size.height
                     val midY = h / 2
                     val amplitude = h * 0.35f
-                    val path = androidx.compose.ui.graphics.Path().apply {
+                    val path = Path().apply {
                         moveTo(0f, midY)
                         val waves = 4
                         val segW = w / (waves * 2)
@@ -1314,7 +1312,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     drawPath(
                         path = path,
                         color = waveColor,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                        style = Stroke(width = 2.dp.toPx())
                     )
                 }
 
