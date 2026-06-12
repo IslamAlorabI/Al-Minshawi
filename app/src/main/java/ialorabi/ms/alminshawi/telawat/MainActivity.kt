@@ -168,10 +168,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberBottomSheetState(
-        initialValue = SheetValue.PartiallyExpanded,
-        confirmValueChange = { it != SheetValue.Hidden }
-    )
 
     val shouldOpenPlayer by openPlayerRequest.collectAsState()
     LaunchedEffect(shouldOpenPlayer, currentSurahId) {
@@ -223,7 +219,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         currentSurah?.let { surah ->
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
-                sheetState = sheetState,
                 containerColor = MaterialTheme.colorScheme.surface,
                 dragHandle = {},
                 shape = androidx.compose.ui.graphics.RectangleShape,
