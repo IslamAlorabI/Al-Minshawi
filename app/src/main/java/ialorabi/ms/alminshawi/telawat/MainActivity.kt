@@ -933,8 +933,9 @@ fun BottomPlayerBar(
                     progress = { playbackProgress.coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(50)),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                 )
