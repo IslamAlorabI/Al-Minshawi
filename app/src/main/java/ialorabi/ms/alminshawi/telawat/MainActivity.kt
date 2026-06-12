@@ -860,7 +860,7 @@ fun BottomPlayerBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -933,7 +933,7 @@ fun BottomPlayerBar(
                     progress = { playbackProgress.coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 10.dp)
                         .height(4.dp)
                         .clip(RoundedCornerShape(50)),
                     color = MaterialTheme.colorScheme.primary,
