@@ -717,7 +717,6 @@ fun SurahItem(
                         val waveWidth = 20.dp.toPx()
                         val waveHeight = 3.dp.toPx()
                         val strokeW = 1.5.dp.toPx()
-                        val dotRadius = strokeW
                         val waveY = size.height - 2.dp.toPx()
                         val textWidth = lineRight - lineLeft
                         clipRect(left = lineLeft, right = lineRight) {
@@ -732,8 +731,8 @@ fun SurahItem(
                             }
                             drawPath(path, waveColor, style = Stroke(width = strokeW))
                         }
-                        drawCircle(waveColor, radius = dotRadius, center = Offset(lineLeft, waveY))
-                        drawCircle(waveColor, radius = dotRadius, center = Offset(lineRight, waveY))
+                        drawCircle(waveColor, radius = strokeW, center = Offset(lineLeft, waveY))
+                        drawCircle(waveColor, radius = strokeW, center = Offset(lineRight, waveY))
                     } else Modifier
                 )
             }
