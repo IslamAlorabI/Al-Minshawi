@@ -430,6 +430,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             progress = playbackProgress,
                             isPlaying = isPlaying,
                             isBuffering = isBuffering,
+                            currentPosition = currentPosition,
+                            duration = duration,
                             sleepTimerMs = sleepTimerMs,
                             onPlayPauseClick = { viewModel.togglePlayPause() },
                             onExpand = { isPlayerCollapsed = false }
@@ -996,6 +998,8 @@ fun CollapsedPlayerFab(
     progress: Float,
     isPlaying: Boolean,
     isBuffering: Boolean,
+    currentPosition: Long,
+    duration: Long,
     sleepTimerMs: Long,
     onPlayPauseClick: () -> Unit,
     onExpand: () -> Unit
@@ -1003,9 +1007,40 @@ fun CollapsedPlayerFab(
     val haptic = LocalHapticFeedback.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
+        if (sleepTimerMs > 0) {
+            val remainMin = (sleepTimerMs / 60000).toInt()
+            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                tonalElevation = 2.dp
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Bedtime,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(64.dp)
@@ -1054,33 +1089,20 @@ fun CollapsedPlayerFab(
             }
         }
 
-        if (sleepTimerMs > 0) {
-            val remainMin = (sleepTimerMs / 60000).toInt()
-            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+        if (duration > 0) {
             Surface(
                 shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = MaterialTheme.colorScheme.secondaryContainer,
                 tonalElevation = 2.dp
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Bedtime,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(14.dp)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Text(
-                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                 }
             }
         }
