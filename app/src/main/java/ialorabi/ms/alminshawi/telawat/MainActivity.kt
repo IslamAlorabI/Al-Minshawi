@@ -475,8 +475,14 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                     Surface(
                         modifier = Modifier
-                            .fillMaxWidth(widthFraction)
-                            .defaultMinSize(minWidth = 64.dp, minHeight = 52.dp)
+                            .then(
+                                if (collapseFraction >= 0.99f) Modifier.size(64.dp)
+                                else Modifier
+                                    .fillMaxWidth(
+                                        androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
+                                    )
+                                    .defaultMinSize(minWidth = 64.dp, minHeight = 64.dp)
+                            )
                             .clip(RoundedCornerShape(cornerRadius))
                             .combinedClickable(
                                 onClick = {
