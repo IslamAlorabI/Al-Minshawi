@@ -423,10 +423,11 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
                 val cornerRadius = androidx.compose.ui.unit.lerp(20.dp, 32.dp, collapseFraction)
                 val widthFraction = androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
-                val surfaceColor = if (collapseFraction > 0.5f)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.secondaryContainer
+                val surfaceColor = when {
+                    collapseFraction >= 0.99f -> Color.Transparent
+                    collapseFraction > 0.5f -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.secondaryContainer
+                }
 
                 Box(
                     modifier = Modifier
@@ -460,8 +461,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             ),
                         shape = RoundedCornerShape(cornerRadius),
                         color = surfaceColor,
-                        shadowElevation = androidx.compose.ui.unit.lerp(8.dp, 6.dp, collapseFraction),
-                        tonalElevation = 4.dp
+                        shadowElevation = if (collapseFraction >= 0.99f) 0.dp else androidx.compose.ui.unit.lerp(8.dp, 6.dp, collapseFraction),
+                        tonalElevation = if (collapseFraction >= 0.99f) 0.dp else 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             if (collapseFraction < 0.5f) {
@@ -574,19 +575,31 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                         )
                                     }
-                                    if (isBuffering) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            strokeWidth = 2.dp,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(28.dp)
-                                        )
+                                    Surface(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(CircleShape),
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        shadowElevation = 6.dp,
+                                        tonalElevation = 4.dp
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                            if (isBuffering) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
