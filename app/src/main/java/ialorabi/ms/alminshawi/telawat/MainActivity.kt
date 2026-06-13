@@ -89,9 +89,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
+
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -446,7 +444,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             sleepTimerMs = sleepTimerMs,
                             onPlayPauseClick = { viewModel.togglePlayPause() },
                             onBarClick = { showBottomSheet = true },
-                            onSwipeDown = { isPlayerCollapsed = true }
+                            onCollapse = { isPlayerCollapsed = true }
                         )
                     }
                 }
@@ -873,6 +871,7 @@ fun BufferingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BottomPlayerBar(
     localizedName: String,
@@ -883,21 +882,22 @@ fun BottomPlayerBar(
     sleepTimerMs: Long,
     onPlayPauseClick: () -> Unit,
     onBarClick: () -> Unit,
-    onSwipeDown: () -> Unit = {},
+    onCollapse: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
     val playerShape = RoundedCornerShape(20.dp)
-    val dragState = rememberDraggableState {}
     val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(playerShape)
-            .clickable { onBarClick() }
-            .draggable(
-                state = dragState,
-                orientation = Orientation.Vertical,
-                onDragStopped = { velocity: Float -> if (velocity > 300f) onSwipeDown() }
+            .combinedClickable(
+                onClick = { onBarClick() },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onCollapse()
+                }
             ),
         shape = playerShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
