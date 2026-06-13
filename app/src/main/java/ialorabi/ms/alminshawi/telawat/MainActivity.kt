@@ -16,6 +16,12 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -404,48 +410,239 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val currentSurah = surahs.find { it.id == currentSurahId }
             val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
             currentSurah?.let {
-                val bottomModifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 24.dp)
-                    .navigationBarsPadding()
+                val localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name }
+                val haptic = LocalHapticFeedback.current
 
-                AnimatedContent(
-                    targetState = isPlayerCollapsed,
-                    modifier = bottomModifier,
-                    contentAlignment = Alignment.BottomCenter,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(200)) +
-                            scaleIn(initialScale = 0.95f, animationSpec = tween(200)))
-                            .togetherWith(
-                                fadeOut(animationSpec = tween(150)) +
-                                    scaleOut(targetScale = 0.95f, animationSpec = tween(150))
-                            )
-                    },
-                    label = "player_collapse"
-                ) { collapsed ->
-                    if (collapsed) {
-                        CollapsedPlayerFab(
-                            progress = playbackProgress,
-                            isPlaying = isPlaying,
-                            isBuffering = isBuffering,
-                            currentPosition = currentPosition,
-                            duration = duration,
-                            sleepTimerMs = sleepTimerMs,
-                            onPlayPauseClick = { viewModel.togglePlayPause() },
-                            onExpand = { isPlayerCollapsed = false }
-                        )
-                    } else {
-                        BottomPlayerBar(
-                            localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name },
-                            isPlaying = isPlaying,
-                            isBuffering = isBuffering,
-                            currentPosition = currentPosition,
-                            duration = duration,
-                            sleepTimerMs = sleepTimerMs,
-                            onPlayPauseClick = { viewModel.togglePlayPause() },
-                            onBarClick = { showBottomSheet = true },
-                            onCollapse = { isPlayerCollapsed = true }
-                        )
+                val collapseFraction by animateFloatAsState(
+                    targetValue = if (isPlayerCollapsed) 1f else 0f,
+                    animationSpec = tween(400, easing = FastOutSlowInEasing),
+                    label = "collapse"
+                )
+
+                val expandedAlpha = (1f - collapseFraction * 3f).coerceIn(0f, 1f)
+                val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
+                val cornerRadius = androidx.compose.ui.unit.lerp(20.dp, 32.dp, collapseFraction)
+                val widthFraction = androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
+                val surfaceColor = if (collapseFraction > 0.5f)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.secondaryContainer
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp)
+                        .navigationBarsPadding()
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AnimatedVisibility(
+                        visible = isPlayerCollapsed && sleepTimerMs > 0,
+                        enter = fadeIn(tween(300)) + expandVertically(),
+                        exit = fadeOut(tween(200)) + shrinkVertically()
+                    ) {
+                        val remainMin = (sleepTimerMs / 60000).toInt()
+                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            tonalElevation = 2.dp
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Bedtime,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth(widthFraction)
+                            .defaultMinSize(minWidth = 64.dp, minHeight = 52.dp)
+                            .clip(RoundedCornerShape(cornerRadius))
+                            .combinedClickable(
+                                onClick = {
+                                    if (isPlayerCollapsed) viewModel.togglePlayPause()
+                                    else showBottomSheet = true
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isPlayerCollapsed = !isPlayerCollapsed
+                                }
+                            ),
+                        shape = RoundedCornerShape(cornerRadius),
+                        color = surfaceColor,
+                        shadowElevation = androidx.compose.ui.unit.lerp(8.dp, 6.dp, collapseFraction),
+                        tonalElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (collapseFraction < 0.5f) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .graphicsLayer { alpha = expandedAlpha }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.sheikh_short),
+                                                fontSize = 14.sp,
+                                                color = Color.Gray,
+                                                maxLines = 1
+                                            )
+                                        }
+
+                                        if (duration > 0 || sleepTimerMs > 0) {
+                                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.End,
+                                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                                ) {
+                                                    if (duration > 0) {
+                                                        Text(
+                                                            text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                                            fontSize = 12.sp,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                    if (sleepTimerMs > 0) {
+                                                        val remainMin = (sleepTimerMs / 60000).toInt()
+                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Icon(
+                                                                imageVector = Icons.Rounded.Bedtime,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.primary,
+                                                                modifier = Modifier.size(12.dp)
+                                                            )
+                                                            Spacer(modifier = Modifier.width(4.dp))
+                                                            Text(
+                                                                text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                                                                fontSize = 11.sp,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (isBuffering) {
+                                            BufferingIndicator(modifier = Modifier.size(50.dp))
+                                        } else {
+                                            FilledIconButton(
+                                                onClick = { viewModel.togglePlayPause() },
+                                                modifier = Modifier.size(50.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                                    contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                        LinearProgressIndicator(
+                                            progress = { playbackProgress.coerceIn(0f, 1f) },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 10.dp)
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(50)),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (collapseFraction >= 0.5f) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .graphicsLayer { alpha = collapsedAlpha }
+                                ) {
+                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                        CircularProgressIndicator(
+                                            progress = { playbackProgress.coerceIn(0f, 1f) },
+                                            modifier = Modifier.size(64.dp),
+                                            strokeWidth = 4.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                        )
+                                    }
+                                    if (isBuffering) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = isPlayerCollapsed && duration > 0,
+                        enter = fadeIn(tween(300)) + expandVertically(),
+                        exit = fadeOut(tween(200)) + shrinkVertically()
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            tonalElevation = 2.dp
+                        ) {
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
