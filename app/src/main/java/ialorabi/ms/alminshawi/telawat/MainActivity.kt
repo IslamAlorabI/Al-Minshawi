@@ -566,7 +566,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             modifier = Modifier.size(64.dp),
                                             strokeWidth = 4.dp,
                                             color = MaterialTheme.colorScheme.primary,
-                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                         )
                                     }
                                     Surface(
