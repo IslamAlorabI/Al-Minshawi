@@ -418,11 +418,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
                 val cornerRadius = androidx.compose.ui.unit.lerp(20.dp, 32.dp, collapseFraction)
                 val widthFraction = androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
-                val surfaceColor = when {
-                    collapseFraction >= 0.99f -> Color.Transparent
-                    collapseFraction > 0.5f -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.secondaryContainer
-                }
+                val surfaceColor = if (collapseFraction >= 0.99f)
+                    Color.Transparent
+                else
+                    MaterialTheme.colorScheme.secondaryContainer
 
                 Box(
                     modifier = Modifier
