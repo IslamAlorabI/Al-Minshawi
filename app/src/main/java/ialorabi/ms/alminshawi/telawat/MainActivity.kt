@@ -18,16 +18,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -485,47 +480,40 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 fontSize = 18.sp,
                                                 maxLines = 1
                                             )
-                                            Text(
-                                                text = stringResource(R.string.sheikh_short),
-                                                fontSize = 14.sp,
-                                                color = Color.Gray,
-                                                maxLines = 1
-                                            )
-                                        }
-
-                                        if (duration > 0 || sleepTimerMs > 0) {
-                                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                                Column(
-                                                    horizontalAlignment = Alignment.End,
-                                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                            if (sleepTimerMs > 0) {
+                                                val remainMin = (sleepTimerMs / 60000).toInt()
+                                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.padding(top = 2.dp)
                                                 ) {
-                                                    if (duration > 0) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Bedtime,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(12.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                                                         Text(
-                                                            text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                                                            fontSize = 12.sp,
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                                                            fontSize = 11.sp,
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            fontWeight = FontWeight.Medium
                                                         )
                                                     }
-                                                    if (sleepTimerMs > 0) {
-                                                        val remainMin = (sleepTimerMs / 60000).toInt()
-                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                            Icon(
-                                                                imageVector = Icons.Rounded.Bedtime,
-                                                                contentDescription = null,
-                                                                tint = MaterialTheme.colorScheme.primary,
-                                                                modifier = Modifier.size(12.dp)
-                                                            )
-                                                            Spacer(modifier = Modifier.width(4.dp))
-                                                            Text(
-                                                                text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                                                fontSize = 11.sp,
-                                                                color = MaterialTheme.colorScheme.primary,
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                        }
-                                                    }
                                                 }
+                                            }
+                                        }
+
+                                        if (duration > 0) {
+                                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                                Text(
+                                                    text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(horizontal = 6.dp)
+                                                )
                                             }
                                         }
 
