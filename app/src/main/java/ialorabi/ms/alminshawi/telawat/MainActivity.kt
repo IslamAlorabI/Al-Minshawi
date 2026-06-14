@@ -479,28 +479,33 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 fontSize = 18.sp,
                                                 maxLines = 1
                                             )
-                                            if (sleepTimerMs > 0) {
-                                                val remainMin = (sleepTimerMs / 60000).toInt()
-                                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.padding(top = 2.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.Bedtime,
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(12.dp)
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(top = 2.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Bedtime,
+                                                    contentDescription = null,
+                                                    tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                if (sleepTimerMs > 0) {
+                                                    val remainMin = (sleepTimerMs / 60000).toInt()
+                                                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                    val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                    Text(
+                                                        text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                        fontSize = 11.sp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontWeight = FontWeight.Medium
                                                     )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                                        Text(
-                                                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                                            fontSize = 11.sp,
-                                                            color = MaterialTheme.colorScheme.primary,
-                                                            fontWeight = FontWeight.Medium
-                                                        )
-                                                    }
+                                                } else {
+                                                    Text(
+                                                        text = stringResource(R.string.sleep_timer_off_label),
+                                                        fontSize = 11.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                    )
                                                 }
                                             }
                                         }
