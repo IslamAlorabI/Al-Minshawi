@@ -1006,6 +1006,16 @@ fun SurahItem(
                         drawCircle(waveColor, radius = strokeW, center = Offset(lineRight, waveY))
                     } else Modifier
                 )
+                val revelationText = if (surah.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
+                    stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
+                val juzText = stringResource(R.string.juz_label, surah.juz)
+                Text(
+                    text = "$revelationText · $juzText",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))

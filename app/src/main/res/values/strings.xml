@@ -61,5 +61,8 @@
     <string name="download_limit_reached">لا يمكن تحميل أكثر من ٣ سور في نفس الوقت</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
     <string name="no_browser_found">لا يوجد متصفح لفتح الرابط</string>
+    <string name="revelation_makki">مكية</string>
+    <string name="revelation_madani">مدنية</string>
+    <string name="juz_label">الجزء %d</string>
 
 </resources>
