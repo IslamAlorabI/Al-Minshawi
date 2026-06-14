@@ -510,19 +510,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             }
                                         }
 
-                                        if (duration > 0) {
-                                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                                Text(
-                                                    text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.padding(horizontal = 6.dp)
-                                                )
-                                            }
-                                        }
-
                                         if (isBuffering) {
                                             BufferingIndicator(modifier = Modifier.size(50.dp))
                                         } else {
@@ -539,16 +526,36 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         }
                                     }
                                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                        LinearProgressIndicator(
-                                            progress = { playbackProgress.coerceIn(0f, 1f) },
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 10.dp)
-                                                .height(4.dp)
-                                                .clip(RoundedCornerShape(50)),
-                                            color = MaterialTheme.colorScheme.primary,
-                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                                        )
+                                                .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = if (duration > 0) formatTime(currentPosition) else "",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            LinearProgressIndicator(
+                                                progress = { playbackProgress.coerceIn(0f, 1f) },
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(horizontal = 8.dp)
+                                                    .height(4.dp)
+                                                    .clip(RoundedCornerShape(50)),
+                                                color = MaterialTheme.colorScheme.primary,
+                                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                            )
+                                            Text(
+                                                text = if (duration > 0) formatTime(duration) else "",
+                                                fontSize = 11.sp,
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                            )
+                                        }
                                     }
                                 }
                             }
