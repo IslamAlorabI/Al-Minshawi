@@ -473,16 +473,38 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 18.sp,
-                                                maxLines = 1
-                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 18.sp,
+                                                    maxLines = 1
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "${it.id}",
+                                                    fontSize = 12.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                                )
+                                            }
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.padding(top = 2.dp)
                                             ) {
+                                                val revelationText = if (it.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
+                                                    stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
+                                                Text(
+                                                    text = "$revelationText · ${stringResource(R.string.juz_label, it.juz)}",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                )
+                                                Text(
+                                                    text = " · ",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                                )
                                                 Icon(
                                                     imageVector = Icons.Rounded.Bedtime,
                                                     contentDescription = null,
