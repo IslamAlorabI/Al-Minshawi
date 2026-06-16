@@ -22,6 +22,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.ui.layout.layout
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -466,10 +467,15 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                     .fillMaxWidth()
                                     .graphicsLayer {
                                         alpha = expandedAlpha
-                                        scaleY = if (expandedAlpha == 0f) 0.01f else 1f
+                                    }
+                                    .layout { measurable, constraints ->
+                                        val placeable = measurable.measure(constraints)
+                                        val h = (placeable.height * (1f - collapseFraction)).toInt().coerceAtLeast(0)
+                                        layout(placeable.width, h) {
+                                            placeable.placeRelative(0, 0)
+                                        }
                                     }
                             ) {
-                                if (expandedAlpha > 0f) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -623,7 +629,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         }
                                     }
                                 }
-                            }
 
                             if (collapseFraction >= 0.5f) {
                                 Box(
