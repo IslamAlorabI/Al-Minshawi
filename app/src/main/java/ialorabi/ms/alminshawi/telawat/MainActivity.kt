@@ -259,7 +259,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     val showFloatingPlayer = currentSurahId != null && !showBottomSheet
-    var isPlayerCollapsed by remember { mutableStateOf(false) }
+    val isPlayerCollapsed by viewModel.isPlayerCollapsed.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -453,7 +453,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 },
                                 onLongClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    isPlayerCollapsed = !isPlayerCollapsed
+                                    viewModel.togglePlayerCollapsed()
                                 }
                             ),
                         shape = RoundedCornerShape(cornerRadius),
