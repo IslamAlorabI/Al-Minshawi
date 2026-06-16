@@ -263,7 +263,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-
             topBar = {
                 TopAppBar(
                     title = { 
@@ -358,29 +357,18 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     }
                 }
 
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) { data ->
-                    Snackbar(
-                        snackbarData = data,
-                        containerColor = MaterialTheme.colorScheme.inverseSurface,
-                        contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = if (showFloatingPlayer) (if (isPlayerCollapsed) 40.dp else 120.dp) else 8.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                            bottom = if (showFloatingPlayer) (if (isPlayerCollapsed) 40.dp else 120.dp) else 8.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                     items(filteredSurahs, key = { it.id }) { surah ->
                         SurahItem(
                             surah = surah,
@@ -398,10 +386,24 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             onToggleFavorite = { viewModel.toggleFavorite(surah.id) }
                         )
                     }
+                    }
+
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(horizontal = 16.dp)
+                    ) { data ->
+                        Snackbar(
+                            snackbarData = data,
+                            containerColor = MaterialTheme.colorScheme.inverseSurface,
+                            contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
                 }
             }
         }
-
         if (showFloatingPlayer) {
             val currentPosition by viewModel.currentPosition.collectAsState()
             val duration by viewModel.duration.collectAsState()
