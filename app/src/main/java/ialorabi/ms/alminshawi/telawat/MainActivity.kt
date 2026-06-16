@@ -473,22 +473,12 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 18.sp,
-                                                    maxLines = 1
-                                                )
-                                                Spacer(modifier = Modifier.width(6.dp))
-                                                Text(
-                                                    text = "${it.id}",
-                                                    fontSize = 12.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                                )
-                                            }
+                                            Text(
+                                                text = "(${it.id}) ${stringResource(R.string.surah_prefix)} $localizedName",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                maxLines = 1
+                                            )
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.padding(top = 2.dp)
@@ -574,8 +564,9 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             Text(
                                                 text = if (duration > 0) formatTime(duration) else "",
                                                 fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
                                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
