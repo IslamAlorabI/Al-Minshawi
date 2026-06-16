@@ -563,12 +563,14 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     )
                                             ) {
                                                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                                    Icon(
-                                                        imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
-                                                        contentDescription = stringResource(R.string.auto_play_next),
-                                                        tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(20.dp)
-                                                    )
+                                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                                        Icon(
+                                                            imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
+                                                            contentDescription = stringResource(R.string.auto_play_next),
+                                                            tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
                                                 }
                                             }
                                             if (isBuffering) {
@@ -1702,12 +1704,14 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             )
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
-                                contentDescription = stringResource(R.string.auto_play_next),
-                                tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Icon(
+                                    imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
+                                    contentDescription = stringResource(R.string.auto_play_next),
+                                    tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
