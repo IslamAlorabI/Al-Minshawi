@@ -550,7 +550,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         ) {
                                             Surface(
                                                 shape = CircleShape,
-                                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
                                                 modifier = Modifier
                                                     .size(40.dp)
                                                     .clip(CircleShape)
@@ -567,7 +567,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                         Icon(
                                                             imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
                                                             contentDescription = stringResource(R.string.auto_play_next),
-                                                            tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                             modifier = Modifier.size(20.dp)
                                                         )
                                                     }
@@ -1691,7 +1691,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     val haptic = LocalHapticFeedback.current
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
@@ -1708,7 +1708,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                                 Icon(
                                     imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
                                     contentDescription = stringResource(R.string.auto_play_next),
-                                    tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
