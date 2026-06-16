@@ -459,12 +459,15 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         tonalElevation = if (collapseFraction >= 0.99f) 0.dp else 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            if (collapseFraction < 0.5f) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .graphicsLayer { alpha = expandedAlpha }
-                                ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        alpha = expandedAlpha
+                                        scaleY = if (expandedAlpha == 0f) 0.01f else 1f
+                                    }
+                            ) {
+                                if (expandedAlpha > 0f) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
