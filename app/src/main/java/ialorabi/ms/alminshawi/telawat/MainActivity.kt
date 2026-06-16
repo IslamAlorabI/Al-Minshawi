@@ -402,6 +402,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val currentPosition by viewModel.currentPosition.collectAsState()
             val duration by viewModel.duration.collectAsState()
             val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
+            val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
+            val isAutoPlayReversed by viewModel.autoPlayReversed.collectAsState()
             val currentSurah = surahs.find { it.id == currentSurahId }
             val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
             currentSurah?.let {
@@ -525,18 +527,46 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             }
                                         }
 
-                                        if (isBuffering) {
-                                            BufferingIndicator(modifier = Modifier.size(50.dp))
-                                        } else {
-                                            FilledIconButton(
-                                                onClick = { viewModel.togglePlayPause() },
-                                                modifier = Modifier.size(50.dp)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(CircleShape)
+                                                    .combinedClickable(
+                                                        onClick = { viewModel.toggleAutoPlayNext() },
+                                                        onLongClick = {
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            viewModel.toggleAutoPlayReversed()
+                                                        }
+                                                    )
                                             ) {
-                                                Icon(
-                                                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                                    contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                                    modifier = Modifier.size(28.dp)
-                                                )
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                                    Icon(
+                                                        imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
+                                                        contentDescription = stringResource(R.string.auto_play_next),
+                                                        tint = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+                                            }
+                                            if (isBuffering) {
+                                                BufferingIndicator(modifier = Modifier.size(50.dp))
+                                            } else {
+                                                FilledIconButton(
+                                                    onClick = { viewModel.togglePlayPause() },
+                                                    modifier = Modifier.size(50.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                                        modifier = Modifier.size(28.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
