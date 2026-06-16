@@ -219,6 +219,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (exo.mediaItemCount == 0) {
             val lastSurahId = prefs.getInt("last_surah_id", -1)
             val lastPos = prefs.getLong("last_pos", 0L)
+            val lastDuration = prefs.getLong("last_duration", 0L)
             
             if (lastSurahId != -1) {
                 val surahs = SurahRepository.surahs
@@ -242,6 +243,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     
                     _currentPlayingSurahId.value = lastSurahId
                     _currentPosition.value = lastPos
+                    _duration.value = lastDuration
                 }
             }
         } else {
@@ -347,10 +349,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val surahId = _currentPlayingSurahId.value
         val isEnded = player?.playbackState == Player.STATE_ENDED
         val pos = if (isEnded) 0L else (player?.currentPosition ?: 0L)
+        val dur = player?.duration?.coerceAtLeast(0L) ?: 0L
         if (surahId != null) {
             prefs.edit {
                 putInt("last_surah_id", surahId)
                 putLong("last_pos", pos)
+                putLong("last_duration", dur)
             }
         }
     }

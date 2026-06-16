@@ -603,7 +603,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp)
                                         ) {
                                             Text(
-                                                text = if (duration > 0) formatTime(currentPosition) else "",
+                                                text = if (duration > 0) formatTime(currentPosition) else "--:--",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -620,7 +620,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                             )
                                             Text(
-                                                text = if (duration > 0) formatTime(duration) else "",
+                                                text = if (duration > 0) formatTime(duration) else "--:--",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -720,21 +720,19 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 }
                             }
 
-                            if (duration > 0) {
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    tonalElevation = 2.dp
-                                ) {
-                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                        Text(
-                                            text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            fontWeight = FontWeight.Medium,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                        )
-                                    }
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                tonalElevation = 2.dp
+                            ) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = if (duration > 0) "${formatTime(currentPosition)} / ${formatTime(duration)}" else "--:-- / --:--",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                    )
                                 }
                             }
                         }
@@ -1583,7 +1581,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     .padding(vertical = 4.dp)
             ) {
                 Text(
-                    text = formatTime(currentPos), 
+                    text = if (duration > 0) formatTime(currentPos) else "--:--", 
                     color = Color.Gray, 
                     fontSize = 12.sp,
                     modifier = Modifier.align(Alignment.CenterStart)
@@ -1605,7 +1603,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
 
                 Text(
-                    text = formatTime(duration), 
+                    text = if (duration > 0) formatTime(duration) else "--:--", 
                     color = Color.Gray, 
                     fontSize = 12.sp,
                     modifier = Modifier.align(Alignment.CenterEnd)
