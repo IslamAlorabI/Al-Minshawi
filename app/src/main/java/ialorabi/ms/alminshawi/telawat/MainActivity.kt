@@ -1521,6 +1521,17 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                var discRotation by remember { mutableFloatStateOf(0f) }
+                LaunchedEffect(isPlaying) {
+                    if (isPlaying) {
+                        val degreesPerFrame = 360f / 8000f * 16f
+                        while (true) {
+                            discRotation = (discRotation + degreesPerFrame) % 360f
+                            delay(16L)
+                        }
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .then(
@@ -1534,7 +1545,9 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     Icon(
                         painter = painterResource(id = R.drawable.player_logo),
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(0.55f),
+                        modifier = Modifier
+                            .fillMaxSize(0.55f)
+                            .rotate(discRotation),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
