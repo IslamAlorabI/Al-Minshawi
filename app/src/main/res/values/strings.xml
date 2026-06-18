@@ -64,5 +64,7 @@
     <string name="revelation_makki">مكية</string>
     <string name="revelation_madani">مدنية</string>
     <string name="juz_label">الجزء %d</string>
+    <string name="hide_help_banner">إخفاء</string>
+    <string name="show_help_banner">إظهار شريط "كيف يعمل التطبيق"</string>
 
 </resources>

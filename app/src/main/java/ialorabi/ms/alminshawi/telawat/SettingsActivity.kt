@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.animation.AnimatedContent
@@ -203,6 +204,21 @@ class SettingsActivity : AppCompatActivity() {
                             isSelected = false,
                             onClick = { showClearAllDialog = true }
                         )
+
+                        var isHelpBannerHidden by remember { mutableStateOf(sharedPrefs.getBoolean("hide_help_banner", false)) }
+                        if (isHelpBannerHidden) {
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            SettingOption(
+                                label = stringResource(R.string.show_help_banner),
+                                icon = { Icon(Icons.Rounded.Info, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                isSelected = false,
+                                onClick = {
+                                    sharedPrefs.edit { putBoolean("hide_help_banner", false) }
+                                    isHelpBannerHidden = false
+                                }
+                            )
+                        }
                       }
 
                         Spacer(modifier = Modifier.height(8.dp))
