@@ -197,6 +197,17 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     val appSettingsPrefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
     var isHelpBannerHidden by remember { mutableStateOf(appSettingsPrefs.getBoolean("hide_help_banner", false)) }
 
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                isHelpBannerHidden = appSettingsPrefs.getBoolean("hide_help_banner", false)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
     val savedScrollIndex = remember { mutableIntStateOf(-1) }
@@ -859,12 +870,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(text = stringResource(R.string.help_auto_play_reverse_desc), style = MaterialTheme.typography.bodyMedium)
                     }
-                    HorizontalDivider()
-                    Text(
-                        text = stringResource(R.string.help_streaming_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+
                 }
             },
             confirmButton = {
