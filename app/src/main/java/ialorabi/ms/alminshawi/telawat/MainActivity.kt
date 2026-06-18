@@ -1522,6 +1522,11 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 Spacer(modifier = Modifier.height(24.dp))
 
                 var discRotation by remember { mutableFloatStateOf(0f) }
+                val animatedRotation by animateFloatAsState(
+                    targetValue = if (!isPlaying) 0f else discRotation,
+                    animationSpec = if (!isPlaying) tween(600, easing = FastOutSlowInEasing) else tween(0),
+                    label = "discReset"
+                )
                 LaunchedEffect(isPlaying) {
                     if (isPlaying) {
                         val degreesPerFrame = 360f / 8000f * 16f
@@ -1547,7 +1552,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxSize(0.55f)
-                            .rotate(discRotation),
+                            .rotate(animatedRotation),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
