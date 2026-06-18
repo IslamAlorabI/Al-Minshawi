@@ -1521,19 +1521,23 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                var discRotation by remember { mutableFloatStateOf(0f) }
-                val animatedRotation by animateFloatAsState(
-                    targetValue = if (!isPlaying) 0f else discRotation,
-                    animationSpec = if (!isPlaying) tween(600, easing = FastOutSlowInEasing) else tween(0),
-                    label = "discReset"
-                )
+                val discRotation = remember { androidx.compose.animation.core.Animatable(0f) }
                 LaunchedEffect(isPlaying) {
                     if (isPlaying) {
-                        val degreesPerFrame = 360f / 8000f * 16f
-                        while (true) {
-                            discRotation = (discRotation + degreesPerFrame) % 360f
-                            delay(16L)
-                        }
+                        discRotation.snapTo(0f)
+                        discRotation.animateTo(
+                            targetValue = 360f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(8000, easing = LinearEasing)
+                            )
+                        )
+                    } else {
+                        val current = discRotation.value % 360f
+                        discRotation.snapTo(current)
+                        discRotation.animateTo(
+                            targetValue = 0f,
+                            animationSpec = tween(600, easing = FastOutSlowInEasing)
+                        )
                     }
                 }
 
@@ -1552,7 +1556,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxSize(0.55f)
-                            .rotate(animatedRotation),
+                            .rotate(discRotation.value),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
