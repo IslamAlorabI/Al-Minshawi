@@ -22,7 +22,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clipToBounds
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -422,10 +424,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     label = "collapse"
                 )
 
-                val expandedAlpha = (1f - collapseFraction * 3f).coerceIn(0f, 1f)
-                val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
+
                 val cornerRadius = androidx.compose.ui.unit.lerp(20.dp, 32.dp, collapseFraction)
-                val widthFraction = androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
                 val surfaceColor = if (collapseFraction >= 0.99f)
                     Color.Transparent
                 else
@@ -466,215 +466,230 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         shadowElevation = if (collapseFraction >= 0.99f) 0.dp else androidx.compose.ui.unit.lerp(8.dp, 6.dp, collapseFraction),
                         tonalElevation = if (collapseFraction >= 0.99f) 0.dp else 4.dp
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        val expandedAlpha = (1f - collapseFraction * 3f).coerceIn(0f, 1f)
+                        val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
+                        var expandedHeightPx by remember { mutableIntStateOf(0) }
+                        val density = LocalDensity.current
+                        val collapsedHeightPx = with(density) { 64.dp.roundToPx() }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (expandedHeightPx > 0 && collapseFraction > 0f) {
+                                        val h = androidx.compose.ui.util.lerp(
+                                            expandedHeightPx.toFloat(),
+                                            collapsedHeightPx.toFloat(),
+                                            collapseFraction
+                                        )
+                                        Modifier.height(with(density) { h.toInt().toDp() })
+                                    } else Modifier
+                                )
+                                .clipToBounds(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .graphicsLayer {
-                                        alpha = expandedAlpha
-                                    }
-                                    .layout { measurable, constraints ->
-                                        val placeable = measurable.measure(constraints)
-                                        val h = (placeable.height * (1f - collapseFraction)).toInt().coerceAtLeast(0)
-                                        layout(placeable.width, h) {
-                                            placeable.placeRelative(0, 0)
+                                    .onSizeChanged { size ->
+                                        if (collapseFraction < 0.01f && size.height > 0) {
+                                            expandedHeightPx = size.height
                                         }
                                     }
+                                    .graphicsLayer { alpha = expandedAlpha }
                             ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Surface(
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                                    modifier = Modifier.padding(end = 6.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "${it.id}",
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                    )
-                                                }
-                                                Text(
-                                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 18.sp,
-                                                    maxLines = 1
-                                                )
-                                            }
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.padding(top = 2.dp)
-                                            ) {
-                                                val revelationText = if (it.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
-                                                    stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
-                                                Text(
-                                                    text = "$revelationText · ${stringResource(R.string.juz_label, it.juz)}",
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                                )
-                                                Text(
-                                                    text = " · ",
-                                                    fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                                )
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Bedtime,
-                                                    contentDescription = null,
-                                                    tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                if (sleepTimerMs > 0) {
-                                                    val remainMin = (sleepTimerMs / 60000).toInt()
-                                                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                    val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
-                                                    Text(
-                                                        text = stringResource(R.string.sleep_timer_active, timeStr),
-                                                        fontSize = 11.sp,
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        text = stringResource(R.string.sleep_timer_off_label),
-                                                        fontSize = 11.sp,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                                    )
-                                                }
-                                            }
-                                        }
-
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Surface(
-                                                shape = CircleShape,
-                                                color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                                modifier = Modifier
-                                                    .size(40.dp)
-                                                    .clip(CircleShape)
-                                                    .combinedClickable(
-                                                        onClick = { viewModel.toggleAutoPlayNext() },
-                                                        onLongClick = {
-                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                            viewModel.toggleAutoPlayReversed()
-                                                        }
-                                                    )
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                                modifier = Modifier.padding(end = 6.dp)
                                             ) {
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                                        Icon(
-                                                            imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
-                                                            contentDescription = stringResource(R.string.auto_play_next),
-                                                            tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                            modifier = Modifier.size(20.dp)
-                                                        )
-                                                    }
-                                                }
+                                                Text(
+                                                    text = "${it.id}",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
                                             }
-                                            if (isBuffering) {
-                                                BufferingIndicator(modifier = Modifier.size(50.dp))
-                                            } else {
-                                                FilledIconButton(
-                                                    onClick = { viewModel.togglePlayPause() },
-                                                    modifier = Modifier.size(50.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                                        modifier = Modifier.size(28.dp)
-                                                    )
-                                                }
-                                            }
+                                            Text(
+                                                text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                maxLines = 1
+                                            )
                                         }
-                                    }
-                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp)
+                                            modifier = Modifier.padding(top = 2.dp)
                                         ) {
+                                            val revelationText = if (it.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
+                                                stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
                                             Text(
-                                                text = if (duration > 0) formatTime(currentPosition) else "--:--",
+                                                text = "$revelationText · ${stringResource(R.string.juz_label, it.juz)}",
                                                 fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            LinearProgressIndicator(
-                                                progress = { playbackProgress.coerceIn(0f, 1f) },
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .padding(horizontal = 8.dp)
-                                                    .height(4.dp)
-                                                    .clip(RoundedCornerShape(50)),
-                                                color = MaterialTheme.colorScheme.primary,
-                                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                             )
                                             Text(
-                                                text = if (duration > 0) formatTime(duration) else "--:--",
+                                                text = " · ",
                                                 fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                                             )
-                                        }
-                                    }
-                                }
-
-                            if (collapseFraction >= 0.5f) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .graphicsLayer { alpha = collapsedAlpha }
-                                ) {
-                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                        CircularProgressIndicator(
-                                            progress = { playbackProgress.coerceIn(0f, 1f) },
-                                            modifier = Modifier.size(64.dp),
-                                            strokeWidth = 4.dp,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                        )
-                                    }
-                                    Surface(
-                                        modifier = Modifier
-                                            .size(52.dp)
-                                            .clip(CircleShape),
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        shadowElevation = 6.dp,
-                                        tonalElevation = 4.dp
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                            if (isBuffering) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.dp,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            Icon(
+                                                imageVector = Icons.Rounded.Bedtime,
+                                                contentDescription = null,
+                                                tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            if (sleepTimerMs > 0) {
+                                                val remainMin = (sleepTimerMs / 60000).toInt()
+                                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                Text(
+                                                    text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontWeight = FontWeight.Medium
                                                 )
                                             } else {
+                                                Text(
+                                                    text = stringResource(R.string.sleep_timer_off_label),
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(CircleShape)
+                                                .combinedClickable(
+                                                    onClick = { viewModel.toggleAutoPlayNext() },
+                                                    onLongClick = {
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        viewModel.toggleAutoPlayReversed()
+                                                    }
+                                                )
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                                    Icon(
+                                                        imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
+                                                        contentDescription = stringResource(R.string.auto_play_next),
+                                                        tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (isBuffering) {
+                                            BufferingIndicator(modifier = Modifier.size(50.dp))
+                                        } else {
+                                            FilledIconButton(
+                                                onClick = { viewModel.togglePlayPause() },
+                                                modifier = Modifier.size(50.dp)
+                                            ) {
                                                 Icon(
                                                     imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
                                                     modifier = Modifier.size(28.dp)
                                                 )
                                             }
+                                        }
+                                    }
+                                }
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = if (duration > 0) formatTime(currentPosition) else "--:--",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        LinearProgressIndicator(
+                                            progress = { playbackProgress.coerceIn(0f, 1f) },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(horizontal = 8.dp)
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(50)),
+                                            color = MaterialTheme.colorScheme.primary,
+                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                        )
+                                        Text(
+                                            text = if (duration > 0) formatTime(duration) else "--:--",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .graphicsLayer { alpha = collapsedAlpha }
+                            ) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    CircularProgressIndicator(
+                                        progress = { playbackProgress.coerceIn(0f, 1f) },
+                                        modifier = Modifier.size(64.dp),
+                                        strokeWidth = 4.dp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    )
+                                }
+                                Surface(
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .clip(CircleShape),
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shadowElevation = 6.dp,
+                                    tonalElevation = 4.dp
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                        if (isBuffering) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(28.dp)
+                                            )
                                         }
                                     }
                                 }
