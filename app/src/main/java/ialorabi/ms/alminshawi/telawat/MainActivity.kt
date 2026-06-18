@@ -275,6 +275,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     val showFloatingPlayer = currentSurahId != null && !showBottomSheet
     val isPlayerCollapsed by viewModel.isPlayerCollapsed.collectAsState()
+    var playerHeightPx by remember { mutableIntStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -397,7 +398,9 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             start = 16.dp,
                             end = 16.dp,
                             top = 8.dp,
-                            bottom = if (showFloatingPlayer) (if (isPlayerCollapsed) 40.dp else 120.dp) else 8.dp
+                            bottom = if (showFloatingPlayer && playerHeightPx > 0)
+                                with(LocalDensity.current) { playerHeightPx.toDp() } + 32.dp
+                            else 8.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -467,7 +470,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         .padding(bottom = 24.dp)
                         .navigationBarsPadding()
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = 12.dp)
+                        .onSizeChanged { size -> playerHeightPx = size.height },
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Surface(
