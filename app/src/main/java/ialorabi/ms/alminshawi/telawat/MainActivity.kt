@@ -1523,19 +1523,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .then(
-                            if (isTablet) Modifier.height(screenHeightDp * 0.30f)
-                            else Modifier.aspectRatio(4f / 3f)
+                            if (isTablet) Modifier.size(screenHeightDp * 0.30f)
+                            else Modifier.fillMaxWidth(0.70f).aspectRatio(1f)
                         )
-                        .clip(MaterialTheme.shapes.extraLarge)
+                        .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.player_logo),
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(0.65f),
+                        modifier = Modifier.fillMaxSize(0.55f),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
