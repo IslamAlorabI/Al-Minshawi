@@ -1852,16 +1852,28 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
             }
 
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val scope = rememberCoroutineScope()
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val sleepScale = remember { androidx.compose.animation.core.Animatable(1f) }
                     FilledTonalIconButton(
-                        onClick = { showSleepTimerSheet = true },
-                        modifier = Modifier.size(48.dp)
+                        onClick = {
+                            scope.launch {
+                                sleepScale.animateTo(0.8f, animationSpec = tween(60))
+                                sleepScale.animateTo(1f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                            }
+                            showSleepTimerSheet = true
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .graphicsLayer {
+                                scaleX = sleepScale.value
+                                scaleY = sleepScale.value
+                            }
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Bedtime,
@@ -1874,14 +1886,25 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val haptic = LocalHapticFeedback.current
+                    val autoPlayScale = remember { androidx.compose.animation.core.Animatable(1f) }
                     Surface(
                         shape = CircleShape,
                         color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
                         modifier = Modifier
                             .size(48.dp)
+                            .graphicsLayer {
+                                scaleX = autoPlayScale.value
+                                scaleY = autoPlayScale.value
+                            }
                             .clip(CircleShape)
                             .combinedClickable(
-                                onClick = { viewModel.toggleAutoPlayNext() },
+                                onClick = {
+                                    scope.launch {
+                                        autoPlayScale.animateTo(0.8f, animationSpec = tween(60))
+                                        autoPlayScale.animateTo(1f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                                    }
+                                    viewModel.toggleAutoPlayNext()
+                                },
                                 onLongClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     viewModel.toggleAutoPlayReversed()
@@ -1902,9 +1925,21 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val repeatScale = remember { androidx.compose.animation.core.Animatable(1f) }
                     FilledTonalIconButton(
-                        onClick = { viewModel.toggleRepeat() },
-                        modifier = Modifier.size(48.dp)
+                        onClick = {
+                            scope.launch {
+                                repeatScale.animateTo(0.8f, animationSpec = tween(60))
+                                repeatScale.animateTo(1f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                            }
+                            viewModel.toggleRepeat()
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .graphicsLayer {
+                                scaleX = repeatScale.value
+                                scaleY = repeatScale.value
+                            }
                     ) {
                         Icon(
                             imageVector = if (isRepeatOn) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
@@ -2019,10 +2054,13 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     }
 
     if (showSleepTimerSheet) {
+        val sleepTimerSheetState = rememberModalBottomSheetState()
         ModalBottomSheet(
             onDismissRequest = { showSleepTimerSheet = false },
+            sheetState = sleepTimerSheetState,
             containerColor = MaterialTheme.colorScheme.surface
         ) {
+            val sleepSheetScope = rememberCoroutineScope()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2040,7 +2078,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 Surface(
                     onClick = {
                         viewModel.setSleepTimer(null)
-                        showSleepTimerSheet = false
+                        sleepSheetScope.launch {
+                            sleepTimerSheetState.hide()
+                            showSleepTimerSheet = false
+                        }
                     },
                     shape = RoundedCornerShape(12.dp),
                     color = if (isOff) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -2071,7 +2112,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             Surface(
                                 onClick = {
                                     viewModel.setSleepTimer(minutes)
-                                    showSleepTimerSheet = false
+                                    sleepSheetScope.launch {
+                                        sleepTimerSheetState.hide()
+                                        showSleepTimerSheet = false
+                                    }
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
