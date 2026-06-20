@@ -75,7 +75,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.drawBehind
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
@@ -94,11 +94,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.text.TextLayoutResult
 
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import androidx.core.content.edit
@@ -1048,7 +1045,6 @@ fun SurahItem(
     onToggleFavorite: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
     val cardShape = MaterialTheme.shapes.medium
     Card(
         shape = cardShape,
@@ -1096,39 +1092,12 @@ fun SurahItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
                 Text(
                     text = "${stringResource(R.string.surah_prefix)} $localizedName",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    onTextLayout = { textLayoutResult = it },
-                    modifier = if (isFavorite) Modifier
-                        .padding(bottom = 8.dp)
-                        .drawBehind {
-                        val result = textLayoutResult ?: return@drawBehind
-                        val lineLeft = result.getLineLeft(0)
-                        val lineRight = result.getLineRight(0)
-                        val waveWidth = 20.dp.toPx()
-                        val waveHeight = 3.dp.toPx()
-                        val strokeW = 1.5.dp.toPx()
-                        val waveY = size.height - 2.dp.toPx()
-                        val textWidth = lineRight - lineLeft
-                        clipRect(left = lineLeft, right = lineRight) {
-                            val path = Path().apply {
-                                moveTo(lineLeft, waveY)
-                                var currentX = 0f
-                                while (currentX < textWidth) {
-                                    relativeQuadraticTo(waveWidth / 4, -waveHeight, waveWidth / 2, 0f)
-                                    relativeQuadraticTo(waveWidth / 4, waveHeight, waveWidth / 2, 0f)
-                                    currentX += waveWidth
-                                }
-                            }
-                            drawPath(path, waveColor, style = Stroke(width = strokeW))
-                        }
-                        drawCircle(waveColor, radius = strokeW, center = Offset(lineLeft, waveY))
-                        drawCircle(waveColor, radius = strokeW, center = Offset(lineRight, waveY))
-                    } else Modifier
+                    color = if (isFavorite) MaterialTheme.colorScheme.primary else Color.Unspecified
                 )
                 val revelationText = if (surah.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
                     stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
