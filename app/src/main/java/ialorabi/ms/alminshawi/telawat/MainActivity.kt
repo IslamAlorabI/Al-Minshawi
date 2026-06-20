@@ -8,6 +8,8 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
 
 import androidx.activity.viewModels
@@ -83,6 +85,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
@@ -244,7 +247,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 onDismissRequest = { showBottomSheet = false },
                 sheetState = sheetState,
                 containerColor = MaterialTheme.colorScheme.surface,
-                dragHandle = {},
+                dragHandle = null,
                 shape = androidx.compose.ui.graphics.RectangleShape,
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -1494,8 +1497,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                 )
 
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 val discRotation = remember { androidx.compose.animation.core.Animatable(0f) }
                 LaunchedEffect(isPlaying) {
@@ -1582,7 +1584,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         Icon(
                             imageVector = Icons.Rounded.Bedtime,
                             contentDescription = null,
-                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -1594,7 +1596,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             } else {
                                 stringResource(R.string.sleep_timer_off_label)
                             },
-                            color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -1628,8 +1630,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
             ) {
                 Text(
                     text = if (duration > 0) formatTime(currentPos) else "--:--", 
-                    color = Color.Gray, 
+                    color = MaterialTheme.colorScheme.onSurface, 
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
                     modifier = Modifier.align(Alignment.CenterStart)
                 )
 
@@ -1650,8 +1654,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Text(
                     text = if (duration > 0) formatTime(duration) else "--:--", 
-                    color = Color.Gray, 
+                    color = MaterialTheme.colorScheme.onSurface, 
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
                     modifier = Modifier.align(Alignment.CenterEnd)
                 )
             }
