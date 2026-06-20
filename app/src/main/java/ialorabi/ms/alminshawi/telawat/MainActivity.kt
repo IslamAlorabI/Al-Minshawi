@@ -1548,13 +1548,14 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     }
                 }
 
+                val cookieShape = MaterialShapes.Cookie9Sided.toShape()
                 Box(
                     modifier = Modifier
                         .then(
                             if (isTablet) Modifier.size(screenHeightDp * 0.30f)
                             else Modifier.fillMaxWidth(0.70f).aspectRatio(1f)
                         )
-                        .clip(CircleShape)
+                        .clip(cookieShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
