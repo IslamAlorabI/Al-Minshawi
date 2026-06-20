@@ -471,7 +471,11 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         .navigationBarsPadding()
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .onSizeChanged { size -> playerHeightPx = size.height },
+                        .onSizeChanged { size ->
+                            if (collapseFraction < 0.01f || collapseFraction > 0.99f) {
+                                playerHeightPx = size.height
+                            }
+                        },
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Surface(
@@ -618,6 +622,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 .size(40.dp)
                                                 .clip(CircleShape)
                                                 .combinedClickable(
+                                                    enabled = collapseFraction < 0.3f,
                                                     onClick = { viewModel.toggleAutoPlayNext() },
                                                     onLongClick = {
                                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -641,7 +646,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         } else {
                                             FilledIconButton(
                                                 onClick = { viewModel.togglePlayPause() },
-                                                modifier = Modifier.size(50.dp)
+                                                modifier = Modifier.size(50.dp),
+                                                enabled = collapseFraction < 0.3f
                                             ) {
                                                 Icon(
                                                     imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -708,8 +714,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         .clip(CircleShape),
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    shadowElevation = 6.dp,
-                                    tonalElevation = 4.dp
+                                    shadowElevation = if (collapsedAlpha > 0f) 6.dp else 0.dp,
+                                    tonalElevation = if (collapsedAlpha > 0f) 4.dp else 0.dp
                                 ) {
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                         if (isBuffering) {
