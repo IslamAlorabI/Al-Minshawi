@@ -1500,9 +1500,8 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 val discRotation = remember { androidx.compose.animation.core.Animatable(0f) }
                 LaunchedEffect(isPlaying) {
                     if (isPlaying) {
-                        discRotation.snapTo(0f)
                         discRotation.animateTo(
-                            targetValue = 360f,
+                            targetValue = discRotation.value + 360f,
                             animationSpec = infiniteRepeatable(
                                 animation = tween(8000, easing = LinearEasing)
                             )
