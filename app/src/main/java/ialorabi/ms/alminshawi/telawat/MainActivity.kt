@@ -510,9 +510,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .then(
-                                    if (expandedHeightPx > 0 && collapseFraction > 0f) {
+                                    if (collapseFraction > 0f) {
+                                        val expandedH = if (expandedHeightPx > 0) expandedHeightPx.toFloat() else collapsedHeightPx.toFloat()
                                         val h = androidx.compose.ui.util.lerp(
-                                            expandedHeightPx.toFloat(),
+                                            expandedH,
                                             collapsedHeightPx.toFloat(),
                                             collapseFraction
                                         )
