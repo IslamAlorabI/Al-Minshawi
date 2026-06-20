@@ -1549,11 +1549,19 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
+                    var surahFontSize by remember { mutableStateOf(24.sp) }
                     Text(
                         text = "${stringResource(R.string.surah_prefix)} $localizedName (${surah.id})",
-                        fontSize = 24.sp,
+                        fontSize = surahFontSize,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false,
+                        onTextLayout = { result ->
+                            if (result.hasVisualOverflow && surahFontSize > 16.sp) {
+                                surahFontSize = (surahFontSize.value - 1f).sp
+                            }
+                        }
                     )
                 }
 
