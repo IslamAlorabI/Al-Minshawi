@@ -40,6 +40,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import android.content.Context
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -1677,16 +1679,73 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val haptic = LocalHapticFeedback.current
+                val surahs = SurahRepository.surahs
+                val isFirstSurah = surah.id <= 1
+                val isLastSurah = surah.id >= surahs.size
+
+                val prevScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                val prevOffsetX = remember { androidx.compose.animation.core.Animatable(0f) }
+                val scope = rememberCoroutineScope()
+
                 IconButton(
-                    onClick = { viewModel.playPreviousSurah() },
-                    modifier = Modifier.size(48.dp)
+                    onClick = {
+                        if (isFirstSurah) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            scope.launch {
+                                prevOffsetX.animateTo(
+                                    -8f,
+                                    animationSpec = tween(50)
+                                )
+                                prevOffsetX.animateTo(
+                                    8f,
+                                    animationSpec = tween(50)
+                                )
+                                prevOffsetX.animateTo(
+                                    -4f,
+                                    animationSpec = tween(50)
+                                )
+                                prevOffsetX.animateTo(
+                                    0f,
+                                    animationSpec = tween(50)
+                                )
+                            }
+                        } else {
+                            scope.launch {
+                                prevScale.animateTo(0.75f, animationSpec = tween(80))
+                                prevScale.animateTo(1f, animationSpec = tween(150, easing = FastOutSlowInEasing))
+                            }
+                            viewModel.playPreviousSurah()
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .graphicsLayer {
+                            scaleX = prevScale.value
+                            scaleY = prevScale.value
+                            translationX = prevOffsetX.value.dp.toPx()
+                        }
                 ) {
-                    Icon(imageVector = Icons.Rounded.SkipPrevious, contentDescription = "Previous Surah", modifier = Modifier.size(32.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.SkipPrevious,
+                        contentDescription = stringResource(R.string.rewind),
+                        modifier = Modifier.size(32.dp),
+                        tint = if (isFirstSurah) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
+                val rewindRotation = remember { androidx.compose.animation.core.Animatable(0f) }
                 FilledTonalIconButton(
-                    onClick = { viewModel.seekBackward() },
-                    modifier = Modifier.size(56.dp)
+                    onClick = {
+                        scope.launch {
+                            rewindRotation.animateTo(-30f, animationSpec = tween(100))
+                            rewindRotation.animateTo(0f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                        }
+                        viewModel.seekBackward()
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .graphicsLayer { rotationZ = rewindRotation.value }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Replay10,
@@ -1698,9 +1757,21 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 if (isBuffering) {
                     BufferingIndicator(modifier = Modifier.size(80.dp))
                 } else {
+                    val playScale = remember { androidx.compose.animation.core.Animatable(1f) }
                     FilledIconButton(
-                        onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(80.dp)
+                        onClick = {
+                            scope.launch {
+                                playScale.animateTo(0.85f, animationSpec = tween(60))
+                                playScale.animateTo(1f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                            }
+                            viewModel.togglePlayPause()
+                        },
+                        modifier = Modifier
+                            .size(80.dp)
+                            .graphicsLayer {
+                                scaleX = playScale.value
+                                scaleY = playScale.value
+                            }
                     ) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -1710,9 +1781,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     }
                 }
 
+                val forwardRotation = remember { androidx.compose.animation.core.Animatable(0f) }
                 FilledTonalIconButton(
-                    onClick = { viewModel.seekForward() },
-                    modifier = Modifier.size(56.dp)
+                    onClick = {
+                        scope.launch {
+                            forwardRotation.animateTo(30f, animationSpec = tween(100))
+                            forwardRotation.animateTo(0f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+                        }
+                        viewModel.seekForward()
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .graphicsLayer { rotationZ = forwardRotation.value }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Forward30,
@@ -1721,11 +1801,53 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     )
                 }
 
+                val nextScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                val nextOffsetX = remember { androidx.compose.animation.core.Animatable(0f) }
+
                 IconButton(
-                    onClick = { viewModel.playNextSurah() },
-                    modifier = Modifier.size(48.dp)
+                    onClick = {
+                        if (isLastSurah) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            scope.launch {
+                                nextOffsetX.animateTo(
+                                    8f,
+                                    animationSpec = tween(50)
+                                )
+                                nextOffsetX.animateTo(
+                                    -8f,
+                                    animationSpec = tween(50)
+                                )
+                                nextOffsetX.animateTo(
+                                    4f,
+                                    animationSpec = tween(50)
+                                )
+                                nextOffsetX.animateTo(
+                                    0f,
+                                    animationSpec = tween(50)
+                                )
+                            }
+                        } else {
+                            scope.launch {
+                                nextScale.animateTo(0.75f, animationSpec = tween(80))
+                                nextScale.animateTo(1f, animationSpec = tween(150, easing = FastOutSlowInEasing))
+                            }
+                            viewModel.playNextSurah()
+                        }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .graphicsLayer {
+                            scaleX = nextScale.value
+                            scaleY = nextScale.value
+                            translationX = nextOffsetX.value.dp.toPx()
+                        }
                 ) {
-                    Icon(imageVector = Icons.Rounded.SkipNext, contentDescription = "Next Surah", modifier = Modifier.size(32.dp))
+                    Icon(
+                        imageVector = Icons.Rounded.SkipNext,
+                        contentDescription = stringResource(R.string.forward),
+                        modifier = Modifier.size(32.dp),
+                        tint = if (isLastSurah) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
 
