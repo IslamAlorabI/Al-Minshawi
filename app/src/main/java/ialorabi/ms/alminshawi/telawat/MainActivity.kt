@@ -273,7 +273,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
         }
     }
 
-    val showFloatingPlayer = currentSurahId != null && !showBottomSheet
+    val showFloatingPlayer = currentSurahId != null
     val isPlayerCollapsed by viewModel.isPlayerCollapsed.collectAsState()
     var playerHeightPx by remember { mutableIntStateOf(0) }
 

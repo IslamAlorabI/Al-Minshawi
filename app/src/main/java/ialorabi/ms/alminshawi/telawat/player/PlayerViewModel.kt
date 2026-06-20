@@ -102,7 +102,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _sleepTimerSelectedMinutes = MutableStateFlow<Int?>(null)
     val sleepTimerSelectedMinutes: StateFlow<Int?> = _sleepTimerSelectedMinutes.asStateFlow()
 
-    private val _isPlayerCollapsed = MutableStateFlow(prefs.getBoolean("player_collapsed", false))
+    private val _isPlayerCollapsed = MutableStateFlow(false)
     val isPlayerCollapsed: StateFlow<Boolean> = _isPlayerCollapsed.asStateFlow()
 
     private val _favoriteSurahIds = MutableStateFlow<Set<Int>>(emptySet())
