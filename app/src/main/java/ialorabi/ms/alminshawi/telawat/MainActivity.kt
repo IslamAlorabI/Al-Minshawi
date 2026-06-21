@@ -1650,43 +1650,54 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 ) else SliderDefaults.colors()
             )
 
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (duration > 0) formatTime(currentPos) else "--:--", 
-                    color = MaterialTheme.colorScheme.onSurface, 
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                )
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Text(
+                        text = if (duration > 0) formatTime(currentPos) else "--:--",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
 
                 if (isDownloadingForPlay && pendingDownloadId != null) {
                     val pendingSurah = SurahRepository.surahs.find { it.id == pendingDownloadId }
                     val pendingSurahName = pendingSurah?.let { s -> localizedSurahNames.getOrElse(s.id - 1) { s.name } } ?: ""
                     val percent = "${(dlProgress * 100).toInt()}%"
-                    
+
                     Text(
                         text = stringResource(R.string.downloading_for_play_progress, pendingSurahName, percent),
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center),
                         style = LocalTextStyle.current.copy(textDirection = TextDirection.Content)
                     )
                 }
 
-                Text(
-                    text = if (duration > 0) formatTime(duration) else "--:--", 
-                    color = MaterialTheme.colorScheme.onSurface, 
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                )
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Text(
+                        text = if (duration > 0) formatTime(duration) else "--:--",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
