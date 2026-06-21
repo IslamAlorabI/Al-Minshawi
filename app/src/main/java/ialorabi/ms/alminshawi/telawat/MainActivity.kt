@@ -2095,6 +2095,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     }
 
     if (showSleepTimerSheet) {
+        @Suppress("DEPRECATION")
         val sleepTimerSheetState = rememberModalBottomSheetState()
         ModalBottomSheet(
             onDismissRequest = { showSleepTimerSheet = false },
