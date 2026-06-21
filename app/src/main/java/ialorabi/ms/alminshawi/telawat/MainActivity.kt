@@ -27,6 +27,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clipToBounds
@@ -1587,42 +1589,40 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Spacer(modifier = Modifier.height(12.dp))
                 val timerActive = sleepTimerMs > 0
-                AnimatedContent(
-                    targetState = timerActive,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.92f, animationSpec = tween(300)))
-                            .togetherWith(fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.92f, animationSpec = tween(200)))
-                    },
-                    label = "sleepTimerChip"
-                ) { isActive ->
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
+                val chipTint by animateColorAsState(
+                    targetValue = if (timerActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer,
+                    animationSpec = tween(300),
+                    label = "chipTint"
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .animateContentSize(animationSpec = tween(300))
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Bedtime,
-                                contentDescription = null,
-                                tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isActive) {
-                                    val remainMin = (sleepTimerMs / 60000).toInt()
-                                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                    String.format(Locale.US, stringResource(R.string.sleep_timer_active), String.format(Locale.US, "%02d:%02d", remainMin, remainSec))
-                                } else {
-                                    stringResource(R.string.sleep_timer_off_label)
-                                },
-                                color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Rounded.Bedtime,
+                            contentDescription = null,
+                            tint = chipTint,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (timerActive) {
+                                val remainMin = (sleepTimerMs / 60000).toInt()
+                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                String.format(Locale.US, stringResource(R.string.sleep_timer_active), String.format(Locale.US, "%02d:%02d", remainMin, remainSec))
+                            } else {
+                                stringResource(R.string.sleep_timer_off_label)
+                            },
+                            color = chipTint,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
