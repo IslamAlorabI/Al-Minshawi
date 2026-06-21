@@ -523,6 +523,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         sleepTimerJob = viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             while (isActive) {
+                delay(500L)
                 val elapsed = System.currentTimeMillis() - startTime
                 val remaining = (totalMs - elapsed).coerceAtLeast(0L)
                 _sleepTimerRemainingMs.value = remaining
@@ -532,7 +533,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     _sleepTimerSelectedMinutes.value = null
                     break
                 }
-                delay(1000L)
             }
         }
     }

@@ -25,7 +25,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
@@ -1377,7 +1376,6 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 ) {
                     Row(
                         modifier = Modifier
-                            .animateContentSize(animationSpec = tween(300))
                             .padding(horizontal = 16.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
