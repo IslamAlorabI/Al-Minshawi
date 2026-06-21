@@ -1125,12 +1125,16 @@ fun SurahItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    .background(
+                        if (isFavorite) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = surah.id.toString(),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (isFavorite) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1143,7 +1147,7 @@ fun SurahItem(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    color = if (isFavorite) MaterialTheme.colorScheme.primary else Color.Unspecified
+                    color = Color.Unspecified
                 )
                 val revelationText = if (surah.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
                     stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
