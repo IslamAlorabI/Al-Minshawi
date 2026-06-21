@@ -27,7 +27,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.draw.clipToBounds
 
 import androidx.compose.foundation.Canvas
@@ -478,7 +481,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .onSizeChanged { size ->
-                            if (collapseFraction < 0.01f || collapseFraction > 0.99f) {
+                            if (collapseFraction !in 0.01f..0.99f) {
                                 playerHeightPx = size.height
                             }
                         },
@@ -675,7 +678,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             text = if (duration > 0) formatTime(currentPosition) else "--:--",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontFamily = FontFamily.Monospace,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         LinearProgressIndicator(
@@ -692,7 +695,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             text = if (duration > 0) formatTime(duration) else "--:--",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontFamily = FontFamily.Monospace,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
@@ -1205,243 +1208,6 @@ fun BufferingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun BottomPlayerBar(
-    localizedName: String,
-    isPlaying: Boolean,
-    isBuffering: Boolean,
-    currentPosition: Long,
-    duration: Long,
-    sleepTimerMs: Long,
-    onPlayPauseClick: () -> Unit,
-    onBarClick: () -> Unit,
-    onCollapse: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val haptic = LocalHapticFeedback.current
-    val playerShape = RoundedCornerShape(20.dp)
-    val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(playerShape)
-            .combinedClickable(
-                onClick = { onBarClick() },
-                onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onCollapse()
-                }
-            ),
-        shape = playerShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shadowElevation = 8.dp,
-        tonalElevation = 4.dp
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        text = stringResource(R.string.sheikh_short),
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                if (duration > 0 || sleepTimerMs > 0) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        ) {
-                            if (duration > 0) {
-                                Text(
-                                    text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            if (sleepTimerMs > 0) {
-                                val remainMin = (sleepTimerMs / 60000).toInt()
-                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Bedtime,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (isBuffering) {
-                    BufferingIndicator(modifier = Modifier.size(50.dp))
-                } else {
-                    FilledIconButton(
-                        onClick = onPlayPauseClick,
-                        modifier = Modifier.size(50.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            }
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                LinearProgressIndicator(
-                    progress = { playbackProgress.coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 10.dp)
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(50)),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun CollapsedPlayerFab(
-    progress: Float,
-    isPlaying: Boolean,
-    isBuffering: Boolean,
-    currentPosition: Long,
-    duration: Long,
-    sleepTimerMs: Long,
-    onPlayPauseClick: () -> Unit,
-    onExpand: () -> Unit
-) {
-    val haptic = LocalHapticFeedback.current
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        if (sleepTimerMs > 0) {
-            val remainMin = (sleepTimerMs / 60000).toInt()
-            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                tonalElevation = 2.dp
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Bedtime,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Text(
-                            text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-        }
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(64.dp)
-        ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                CircularProgressIndicator(
-                    progress = { progress.coerceIn(0f, 1f) },
-                    modifier = Modifier.size(64.dp),
-                    strokeWidth = 4.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                )
-            }
-            Surface(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .combinedClickable(
-                        onClick = onPlayPauseClick,
-                        onLongClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onExpand()
-                        }
-                    ),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shadowElevation = 6.dp,
-                tonalElevation = 4.dp
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    if (isBuffering) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    } else {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        if (duration > 0) {
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                tonalElevation = 2.dp
-            ) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Text(
-                        text = "${formatTime(currentPosition)} / ${formatTime(duration)}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
-                }
-            }
-        }
-    }
-}
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: Array<String>, viewModel: PlayerViewModel) {
@@ -1476,13 +1242,13 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = LinearEasing),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
     )
 
-    val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
-    val density = androidx.compose.ui.platform.LocalDensity.current
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
     val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }
     val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
     val isTablet = screenWidthDp > 600.dp
@@ -1512,13 +1278,13 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val discRotation = remember { androidx.compose.animation.core.Animatable(0f) }
+                val discRotation = remember { Animatable(0f) }
                 LaunchedEffect(Unit) {
                     snapshotFlow { isPlaying }
                         .distinctUntilChanged()
                         .collectLatest { playing ->
                             if (playing) {
-                                delay(150)
+                                delay(150.milliseconds)
                                 discRotation.animateTo(
                                     targetValue = discRotation.value + 360f,
                                     animationSpec = infiniteRepeatable(
@@ -1725,8 +1491,8 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 val isFirstSurah = surah.id <= 1
                 val isLastSurah = surah.id >= surahs.size
 
-                val prevScale = remember { androidx.compose.animation.core.Animatable(1f) }
-                val prevOffsetX = remember { androidx.compose.animation.core.Animatable(0f) }
+                val prevScale = remember { Animatable(1f) }
+                val prevOffsetX = remember { Animatable(0f) }
                 val scope = rememberCoroutineScope()
 
                 IconButton(
@@ -1775,7 +1541,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     )
                 }
 
-                val rewindRotation = remember { androidx.compose.animation.core.Animatable(0f) }
+                val rewindRotation = remember { Animatable(0f) }
                 FilledTonalIconButton(
                     onClick = {
                         scope.launch {
@@ -1798,7 +1564,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 if (isBuffering) {
                     BufferingIndicator(modifier = Modifier.size(68.dp))
                 } else {
-                    val playScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                    val playScale = remember { Animatable(1f) }
                     FilledIconButton(
                         onClick = {
                             scope.launch {
@@ -1822,7 +1588,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     }
                 }
 
-                val forwardRotation = remember { androidx.compose.animation.core.Animatable(0f) }
+                val forwardRotation = remember { Animatable(0f) }
                 FilledTonalIconButton(
                     onClick = {
                         scope.launch {
@@ -1842,8 +1608,8 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     )
                 }
 
-                val nextScale = remember { androidx.compose.animation.core.Animatable(1f) }
-                val nextOffsetX = remember { androidx.compose.animation.core.Animatable(0f) }
+                val nextScale = remember { Animatable(1f) }
+                val nextOffsetX = remember { Animatable(0f) }
 
                 IconButton(
                     onClick = {
@@ -1900,7 +1666,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
             ) {
                 val scope = rememberCoroutineScope()
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val sleepScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                    val sleepScale = remember { Animatable(1f) }
                     FilledTonalIconButton(
                         onClick = {
                             scope.launch {
@@ -1927,7 +1693,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val haptic = LocalHapticFeedback.current
-                    val autoPlayScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                    val autoPlayScale = remember { Animatable(1f) }
                     Surface(
                         shape = CircleShape,
                         color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -1966,7 +1732,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val repeatScale = remember { androidx.compose.animation.core.Animatable(1f) }
+                    val repeatScale = remember { Animatable(1f) }
                     FilledTonalIconButton(
                         onClick = {
                             scope.launch {
