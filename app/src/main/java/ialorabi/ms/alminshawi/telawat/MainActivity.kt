@@ -554,67 +554,102 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Row(
-                                            verticalAlignment = Alignment.CenterVertically
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             Surface(
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                                modifier = Modifier.padding(end = 6.dp)
+                                                shape = RoundedCornerShape(50),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                                             ) {
                                                 Text(
                                                     text = "${it.id}",
                                                     fontSize = 12.sp,
-                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
                                             }
-                                            Text(
-                                                text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 18.sp,
-                                                maxLines = 1
-                                            )
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
+                                            ) {
+                                                Text(
+                                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp,
+                                                    maxLines = 1,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                                                )
+                                            }
                                         }
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(top = 2.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            modifier = Modifier.padding(top = 4.dp)
                                         ) {
                                             val revelationText = if (it.revelationType == ialorabi.ms.alminshawi.telawat.data.RevelationType.MAKKI)
                                                 stringResource(R.string.revelation_makki) else stringResource(R.string.revelation_madani)
-                                            Text(
-                                                text = "$revelationText · ${stringResource(R.string.juz_label, it.juz)}",
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                            )
-                                            Text(
-                                                text = " · ",
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                            )
-                                            Icon(
-                                                imageVector = Icons.Rounded.Bedtime,
-                                                contentDescription = null,
-                                                tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            if (sleepTimerMs > 0) {
-                                                val remainMin = (sleepTimerMs / 60000).toInt()
-                                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
+                                            ) {
                                                 Text(
-                                                    text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                    text = revelationText,
                                                     fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.Medium
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
-                                            } else {
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
+                                            ) {
                                                 Text(
-                                                    text = stringResource(R.string.sleep_timer_off_label),
+                                                    text = stringResource(R.string.juz_label, it.juz),
                                                     fontSize = 11.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Bedtime,
+                                                        contentDescription = null,
+                                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
+                                                            else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                        modifier = Modifier.size(12.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    if (sleepTimerMs > 0) {
+                                                        val remainMin = (sleepTimerMs / 60000).toInt()
+                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                        val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                        Text(
+                                                            text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            text = stringResource(R.string.sleep_timer_off_label),
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
