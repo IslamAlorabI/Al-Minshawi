@@ -41,7 +41,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import android.content.Context
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlin.time.Duration.Companion.milliseconds
@@ -1504,22 +1506,27 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 Spacer(modifier = Modifier.height(16.dp))
 
                 val discRotation = remember { androidx.compose.animation.core.Animatable(0f) }
-                LaunchedEffect(isPlaying) {
-                    if (isPlaying) {
-                        discRotation.animateTo(
-                            targetValue = discRotation.value + 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(8000, easing = LinearEasing)
-                            )
-                        )
-                    } else {
-                        val current = discRotation.value % 360f
-                        discRotation.snapTo(current)
-                        discRotation.animateTo(
-                            targetValue = 0f,
-                            animationSpec = tween(600, easing = FastOutSlowInEasing)
-                        )
-                    }
+                LaunchedEffect(Unit) {
+                    snapshotFlow { isPlaying }
+                        .distinctUntilChanged()
+                        .collectLatest { playing ->
+                            if (playing) {
+                                delay(150)
+                                discRotation.animateTo(
+                                    targetValue = discRotation.value + 360f,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(8000, easing = LinearEasing)
+                                    )
+                                )
+                            } else {
+                                val current = discRotation.value % 360f
+                                discRotation.snapTo(current)
+                                discRotation.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = tween(600, easing = FastOutSlowInEasing)
+                                )
+                            }
+                        }
                 }
 
                 val cookieShape = MaterialShapes.Cookie9Sided.toShape()
