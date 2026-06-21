@@ -355,12 +355,12 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                 androidx.compose.animation.AnimatedVisibility(visible = !isHelpBannerHidden) {
                     Surface(
-                        shape = MaterialTheme.shapes.small,
+                        shape = RoundedCornerShape(50),
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clip(MaterialTheme.shapes.small)
+                            .clip(RoundedCornerShape(50))
                             .clickable { showHelpDialog = true }
                     ) {
                         Row(
