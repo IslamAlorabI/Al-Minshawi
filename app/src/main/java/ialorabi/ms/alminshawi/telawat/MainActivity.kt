@@ -23,10 +23,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.layout.onSizeChanged
@@ -1689,7 +1686,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val haptic = LocalHapticFeedback.current
@@ -1757,18 +1754,18 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         viewModel.seekBackward()
                     },
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(48.dp)
                         .graphicsLayer { rotationZ = rewindRotation.value }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Replay10,
                         contentDescription = stringResource(R.string.rewind),
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
                 if (isBuffering) {
-                    BufferingIndicator(modifier = Modifier.size(80.dp))
+                    BufferingIndicator(modifier = Modifier.size(68.dp))
                 } else {
                     val playScale = remember { androidx.compose.animation.core.Animatable(1f) }
                     FilledIconButton(
@@ -1780,7 +1777,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             viewModel.togglePlayPause()
                         },
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(68.dp)
                             .graphicsLayer {
                                 scaleX = playScale.value
                                 scaleY = playScale.value
@@ -1789,7 +1786,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         Icon(
                             imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                             contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                 }
@@ -1804,13 +1801,13 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         viewModel.seekForward()
                     },
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(48.dp)
                         .graphicsLayer { rotationZ = forwardRotation.value }
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Forward30,
                         contentDescription = stringResource(R.string.forward),
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
