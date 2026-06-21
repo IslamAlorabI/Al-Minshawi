@@ -21,7 +21,7 @@
     <string name="system_default_mode">System Default</string>
     <string name="storage">Storage</string>
     <string name="clear_cache">Clear Cached Audio</string>
-    <string name="manage_cache">Manage Cached Surahs</string>
+    <string name="manage_cache">Manage and Save Cached Surahs</string>
     <string name="clear_cache_confirm_title">Clear All Cache?</string>
     <string name="clear_cache_confirm_message">Are you sure you want to delete all cached audio files? This action cannot be undone.</string>
     <string name="cancel">Cancel</string>
