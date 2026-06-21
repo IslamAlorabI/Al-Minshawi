@@ -1091,7 +1091,7 @@ fun SurahItem(
     onToggleFavorite: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val cardShape = MaterialTheme.shapes.medium
+    val cardShape = RoundedCornerShape(20.dp)
     Card(
         shape = cardShape,
         modifier = Modifier
