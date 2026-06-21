@@ -32,6 +32,7 @@ import ialorabi.ms.alminshawi.telawat.R
 import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import java.io.File
+import android.os.Environment
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
@@ -102,6 +103,33 @@ class PlaybackService : MediaSessionService() {
                 player.clearMediaItems()
             }
             cache?.removeResource(surah.url)
+        }
+
+        fun saveSurahToDownloads(context: Context, surah: Surah, fileName: String): Boolean {
+            val c = cache ?: return false
+            val spans = c.getCachedSpans(surah.url)
+            if (spans.isEmpty()) return false
+
+            return try {
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val outputFile = File(downloadsDir, fileName)
+                outputFile.outputStream().buffered().use { output ->
+                    spans.sortedBy { it.position }.forEach { span ->
+                        span.file?.inputStream()?.buffered()?.use { input ->
+                            input.copyTo(output)
+                        }
+                    }
+                }
+                android.media.MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(outputFile.absolutePath),
+                    arrayOf("audio/mpeg"),
+                    null
+                )
+                true
+            } catch (_: Exception) {
+                false
+            }
         }
 
         fun getActiveDownloadCount(): Int {

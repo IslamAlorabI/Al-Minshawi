@@ -31,6 +31,8 @@
     <string name="surah_deleted">تم حذف السورة</string>
     <string name="confirm_delete_surah">تأكيد مسح السورة؟</string>
     <string name="downloading_to_storage">جارِ الحفظ في مجلد التنزيلات…</string>
+    <string name="saved_to_downloads">تم الحفظ في مجلد التنزيلات</string>
+    <string name="save_failed">فشل الحفظ</string>
     <string name="filter_downloaded">محملة</string>
     <string name="filter_not_downloaded">غير محملة</string>
     <string name="help_title">كيف يعمل التطبيق؟</string>

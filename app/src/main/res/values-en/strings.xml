@@ -31,6 +31,8 @@
     <string name="surah_deleted">Surah deleted</string>
     <string name="confirm_delete_surah">Confirm delete?</string>
     <string name="downloading_to_storage">Saving to Downloads folder…</string>
+    <string name="saved_to_downloads">Saved to Downloads folder</string>
+    <string name="save_failed">Save failed</string>
     <string name="filter_downloaded">Downloaded</string>
     <string name="filter_not_downloaded">Not Downloaded</string>
     <string name="help_title">How it works</string>

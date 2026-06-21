@@ -36,11 +36,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import android.widget.Toast
-import android.app.DownloadManager
+
 import android.content.Intent
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import android.os.Environment
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -459,17 +459,14 @@ class SettingsActivity : AppCompatActivity() {
                                                                         modifier = Modifier.weight(1f),
                                                                         style = MaterialTheme.typography.bodyLarge
                                                                     )
-                                                                    IconButton(
-                                                                        onClick = {
-                                                                            val request = DownloadManager.Request(surah.url.toUri())
-                                                                            request.setTitle("${surah.id}. $localizedName - ${getString(R.string.app_name)}.mp3")
-                                                                            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                                                                            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${surah.id}_${localizedName}_Minshawi.mp3")
-                                                                            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                                                                            dm.enqueue(request)
-                                                                            Toast.makeText(this@SettingsActivity, getString(R.string.downloading_to_storage), Toast.LENGTH_SHORT).show()
-                                                                        }
-                                                                    ) {
+                                                                        IconButton(
+                                                                            onClick = {
+                                                                                val fileName = "${surah.id}_${localizedName}_Minshawi.mp3"
+                                                                                val saved = PlaybackService.saveSurahToDownloads(this@SettingsActivity, surah, fileName)
+                                                                                val message = if (saved) R.string.saved_to_downloads else R.string.save_failed
+                                                                                Toast.makeText(this@SettingsActivity, getString(message), Toast.LENGTH_SHORT).show()
+                                                                            }
+                                                                        ) {
                                                                         Icon(
                                                                             imageVector = Icons.Rounded.SaveAlt,
                                                                             contentDescription = "Save to device",
