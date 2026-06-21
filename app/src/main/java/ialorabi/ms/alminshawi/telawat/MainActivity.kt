@@ -291,10 +291,11 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 TopAppBar(
                     title = { 
                         Column {
-                            Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold, fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily)
                             Text(
                                 text = stringResource(R.string.app_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
+                                fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
