@@ -297,6 +297,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 if (playbackState == Player.STATE_ENDED && !isTransitioning) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
+                    _currentPosition.value = _duration.value
                     _repeatMode.value = prefs.getBoolean("repeat_mode", false)
                     _autoPlayNext.value = prefs.getBoolean("auto_play_next", false)
                     _autoPlayReversed.value = prefs.getBoolean("auto_play_reversed", false)
@@ -337,13 +338,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
             var tickCount = 0
+            if (!isSeeking) {
+                _currentPosition.value = player?.currentPosition ?: 0L
+            }
             while (isActive) {
+                delay(250L)
                 if (!isSeeking) {
                     _currentPosition.value = player?.currentPosition ?: 0L
                 }
                 tickCount++
-                if (tickCount % 4 == 0) saveCurrentState()
-                delay(500L)
+                if (tickCount % 8 == 0) saveCurrentState()
             }
         }
     }

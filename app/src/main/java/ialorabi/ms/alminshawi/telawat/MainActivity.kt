@@ -1460,7 +1460,12 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val isDownloadingForPlay = pendingDownloadId != null
     val dlProgress = pendingDownloadId?.let { downloadingProgressMap[it] } ?: 0f
 
-    val progress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
+    val rawProgress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
+    val progress by animateFloatAsState(
+        targetValue = rawProgress,
+        animationSpec = tween(durationMillis = 300, easing = LinearEasing),
+        label = "sliderProgress"
+    )
     var showSleepTimerSheet by remember { mutableStateOf(false) }
 
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
