@@ -822,7 +822,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.clickable { showBottomSheet = true }
                         ) {
                             if (sleepTimerMs > 0) {
                                 val remainMin = (sleepTimerMs / 60000).toInt()
