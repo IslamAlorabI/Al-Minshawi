@@ -643,39 +643,94 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
                                             }
-                                            Surface(
-                                                shape = RoundedCornerShape(50),
-                                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                            var showSleepDropdown by remember { mutableStateOf(false) }
+                                            val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
+                                            Box {
+                                                Surface(
+                                                    shape = RoundedCornerShape(50),
+                                                    color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                        else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(50))
+                                                        .clickable { showSleepDropdown = true }
                                                 ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.Bedtime,
-                                                        contentDescription = null,
-                                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
-                                                            else MaterialTheme.colorScheme.onSecondaryContainer,
-                                                        modifier = Modifier.size(12.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    if (sleepTimerMs > 0) {
-                                                        val remainMin = (sleepTimerMs / 60000).toInt()
-                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                        val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
-                                                        Text(
-                                                            text = stringResource(R.string.sleep_timer_active, timeStr),
-                                                            fontSize = 11.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = MaterialTheme.colorScheme.primary
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.Bedtime,
+                                                            contentDescription = null,
+                                                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
+                                                                else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                            modifier = Modifier.size(12.dp)
                                                         )
-                                                    } else {
-                                                        Text(
-                                                            text = stringResource(R.string.sleep_timer_off_label),
-                                                            fontSize = 11.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        if (sleepTimerMs > 0) {
+                                                            val remainMin = (sleepTimerMs / 60000).toInt()
+                                                            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                            val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                            Text(
+                                                                text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                                fontSize = 11.sp,
+                                                                fontWeight = FontWeight.Medium,
+                                                                color = MaterialTheme.colorScheme.primary
+                                                            )
+                                                        } else {
+                                                            Text(
+                                                                text = stringResource(R.string.sleep_timer_off_label),
+                                                                fontSize = 11.sp,
+                                                                fontWeight = FontWeight.Medium,
+                                                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                DropdownMenu(
+                                                    expanded = showSleepDropdown,
+                                                    onDismissRequest = { showSleepDropdown = false }
+                                                ) {
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                text = stringResource(R.string.sleep_timer_off),
+                                                                fontWeight = if (sleepTimerMs == 0L) FontWeight.Bold else FontWeight.Normal,
+                                                                color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary else Color.Unspecified
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            viewModel.setSleepTimer(null)
+                                                            showSleepDropdown = false
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                imageVector = Icons.Rounded.Close,
+                                                                contentDescription = null,
+                                                                tint = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                            )
+                                                        }
+                                                    )
+                                                    listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
+                                                        val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
+                                                        DropdownMenuItem(
+                                                            text = {
+                                                                Text(
+                                                                    text = String.format(stringResource(R.string.sleep_timer_minutes), minutes),
+                                                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                                                                    color = if (isActive) MaterialTheme.colorScheme.primary else Color.Unspecified
+                                                                )
+                                                            },
+                                                            onClick = {
+                                                                viewModel.setSleepTimer(minutes)
+                                                                showSleepDropdown = false
+                                                            },
+                                                            leadingIcon = {
+                                                                Icon(
+                                                                    imageVector = Icons.Rounded.Bedtime,
+                                                                    contentDescription = null,
+                                                                    tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                                )
+                                                            }
                                                         )
                                                     }
                                                 }
