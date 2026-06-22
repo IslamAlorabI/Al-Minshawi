@@ -716,44 +716,42 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
                                             }
-                                            Surface(
-                                                shape = RoundedCornerShape(50),
-                                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
-                                                    .clickable { showSleepTimerPicker = !showSleepTimerPicker }
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.Bedtime,
-                                                        contentDescription = null,
-                                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
-                                                            else MaterialTheme.colorScheme.onSecondaryContainer,
-                                                        modifier = Modifier.size(12.dp)
+                                                    .background(
+                                                        if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                        else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
                                                     )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    if (sleepTimerMs > 0) {
-                                                        val remainMin = (sleepTimerMs / 60000).toInt()
-                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                        val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
-                                                        Text(
-                                                            text = stringResource(R.string.sleep_timer_active, timeStr),
-                                                            fontSize = 11.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = MaterialTheme.colorScheme.primary
-                                                        )
-                                                    } else {
-                                                        Text(
-                                                            text = stringResource(R.string.sleep_timer_off_label),
-                                                            fontSize = 11.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                        )
-                                                    }
+                                                    .clickable { showSleepTimerPicker = !showSleepTimerPicker }
+                                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Bedtime,
+                                                    contentDescription = null,
+                                                    tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
+                                                        else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                if (sleepTimerMs > 0) {
+                                                    val remainMin = (sleepTimerMs / 60000).toInt()
+                                                    val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                    val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                    Text(
+                                                        text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        text = stringResource(R.string.sleep_timer_off_label),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    )
                                                 }
                                             }
                                         }
@@ -862,7 +860,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .size(64.dp)
+                                    .then(
+                                        if (collapseFraction > 0.3f) Modifier.size(64.dp)
+                                        else Modifier.size(0.dp)
+                                    )
                                     .graphicsLayer { alpha = collapsedAlpha }
                             ) {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
