@@ -457,7 +457,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val currentSurah = surahs.find { it.id == currentSurahId }
             val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
             val pendingDownloadId by viewModel.pendingDownloadSurahId.collectAsState()
-            val isCurrentDownloading = pendingDownloadId != null || (currentSurahId != null && downloadingSurahs.contains(currentSurahId))
+            val isCurrentDownloading = pendingDownloadId != null || downloadingSurahs.contains(currentSurahId)
             val currentDlProgress = pendingDownloadId?.let { downloadingProgress[it] }
                 ?: currentSurahId?.let { downloadingProgress[it] }
                 ?: 0f
