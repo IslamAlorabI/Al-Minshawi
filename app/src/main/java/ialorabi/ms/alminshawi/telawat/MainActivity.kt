@@ -456,6 +456,11 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val isAutoPlayReversed by viewModel.autoPlayReversed.collectAsState()
             val currentSurah = surahs.find { it.id == currentSurahId }
             val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
+            val pendingDownloadId by viewModel.pendingDownloadSurahId.collectAsState()
+            val isCurrentDownloading = currentSurahId != null && (
+                downloadingSurahs.contains(currentSurahId) || pendingDownloadId == currentSurahId
+            )
+            val currentDlProgress = currentSurahId?.let { downloadingProgress[it] } ?: 0f
             currentSurah?.let {
                 val localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name }
                 val haptic = LocalHapticFeedback.current
@@ -685,7 +690,25 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 }
                                             }
                                         }
-                                        if (isBuffering) {
+                                        if (isCurrentDownloading) {
+                                            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(50.dp)) {
+                                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                                    CircularProgressIndicator(
+                                                        progress = { currentDlProgress.coerceIn(0f, 1f) },
+                                                        modifier = Modifier.size(50.dp),
+                                                        strokeWidth = 3.dp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                    )
+                                                }
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Download,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        } else if (isBuffering) {
                                             BufferingIndicator(modifier = Modifier.size(50.dp))
                                         } else {
                                             FilledIconButton(
@@ -745,7 +768,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             ) {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                                     CircularProgressIndicator(
-                                        progress = { playbackProgress.coerceIn(0f, 1f) },
+                                        progress = { if (isCurrentDownloading) currentDlProgress.coerceIn(0f, 1f) else playbackProgress.coerceIn(0f, 1f) },
                                         modifier = Modifier.size(64.dp),
                                         strokeWidth = 4.dp,
                                         color = MaterialTheme.colorScheme.primary,
@@ -762,7 +785,14 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                     tonalElevation = if (collapsedAlpha > 0f) 4.dp else 0.dp
                                 ) {
                                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                        if (isBuffering) {
+                                        if (isCurrentDownloading) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Download,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        } else if (isBuffering) {
                                             CircularProgressIndicator(
                                                 modifier = Modifier.size(24.dp),
                                                 strokeWidth = 2.dp,
@@ -1599,7 +1629,25 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     )
                 }
 
-                if (isBuffering) {
+                if (isDownloadingForPlay) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(68.dp)) {
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            CircularProgressIndicator(
+                                progress = { dlProgress.coerceIn(0f, 1f) },
+                                modifier = Modifier.size(68.dp),
+                                strokeWidth = 4.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                } else if (isBuffering) {
                     BufferingIndicator(modifier = Modifier.size(68.dp))
                 } else {
                     val playScale = remember { Animatable(1f) }
