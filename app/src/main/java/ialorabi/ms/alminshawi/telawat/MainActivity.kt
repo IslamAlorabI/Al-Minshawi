@@ -26,6 +26,7 @@ import androidx.compose.animation.fadeOut
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.ui.platform.LocalDensity
@@ -454,6 +455,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsState()
             val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
             val isAutoPlayReversed by viewModel.autoPlayReversed.collectAsState()
+            val isRepeatOn by viewModel.repeatMode.collectAsState()
             val currentSurah = surahs.find { it.id == currentSurahId }
             val playbackProgress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
             val pendingDownloadId by viewModel.pendingDownloadSurahId.collectAsState()
@@ -584,8 +586,29 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 15.sp,
                                                     maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
                                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 10.dp, vertical = 2.dp)
+                                                        .weight(1f, fill = false)
+                                                )
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = if (isRepeatOn) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .clickable { viewModel.toggleRepeat() }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Repeat,
+                                                    contentDescription = stringResource(R.string.repeat_surah),
+                                                    tint = if (isRepeatOn) MaterialTheme.colorScheme.primary
+                                                        else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                                                        .size(14.dp)
                                                 )
                                             }
                                         }
