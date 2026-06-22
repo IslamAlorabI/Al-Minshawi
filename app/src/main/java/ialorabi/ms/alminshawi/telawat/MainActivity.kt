@@ -595,8 +595,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             }
                                             Surface(
                                                 shape = RoundedCornerShape(50),
-                                                color = if (isRepeatOn) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                                                color = if (isRepeatOn) MaterialTheme.colorScheme.primary
+                                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
                                                     .clickable { viewModel.toggleRepeat() }
@@ -604,11 +604,11 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 Icon(
                                                     imageVector = Icons.Rounded.Repeat,
                                                     contentDescription = stringResource(R.string.repeat_surah),
-                                                    tint = if (isRepeatOn) MaterialTheme.colorScheme.primary
-                                                        else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                    tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
+                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     modifier = Modifier
-                                                        .padding(horizontal = 6.dp, vertical = 3.dp)
-                                                        .size(14.dp)
+                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                        .size(16.dp)
                                                 )
                                             }
                                         }
