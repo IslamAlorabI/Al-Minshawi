@@ -23,6 +23,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.layout.onSizeChanged
@@ -494,7 +496,78 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         },
                     contentAlignment = Alignment.BottomCenter
                 ) {
-                    Surface(
+                    var showSleepTimerPicker by remember { mutableStateOf(false) }
+                    val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = showSleepTimerPicker && collapseFraction < 0.3f,
+                            enter = expandVertically(tween(250), expandFrom = Alignment.Bottom) + fadeIn(tween(200)),
+                            exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                shadowElevation = 6.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .clickable {
+                                                viewModel.setSleepTimer(null)
+                                                showSleepTimerPicker = false
+                                            }
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.sleep_timer_off),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.onPrimary
+                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                    listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
+                                        val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = if (isActive) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .clickable {
+                                                    viewModel.setSleepTimer(minutes)
+                                                    showSleepTimerPicker = false
+                                                }
+                                        ) {
+                                            Text(
+                                                text = "$minutes",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = if (isActive) MaterialTheme.colorScheme.onPrimary
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Surface(
                         modifier = Modifier
                             .then(
                                 if (collapseFraction >= 0.99f) Modifier.size(64.dp)
@@ -643,94 +716,42 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
                                             }
-                                            var showSleepDropdown by remember { mutableStateOf(false) }
-                                            val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
-                                            Box {
-                                                Surface(
-                                                    shape = RoundedCornerShape(50),
-                                                    color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                                        else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(50))
-                                                        .clickable { showSleepDropdown = true }
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                    else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .clickable { showSleepTimerPicker = !showSleepTimerPicker }
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Rounded.Bedtime,
-                                                            contentDescription = null,
-                                                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
-                                                                else MaterialTheme.colorScheme.onSecondaryContainer,
-                                                            modifier = Modifier.size(12.dp)
-                                                        )
-                                                        Spacer(modifier = Modifier.width(4.dp))
-                                                        if (sleepTimerMs > 0) {
-                                                            val remainMin = (sleepTimerMs / 60000).toInt()
-                                                            val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                                            val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
-                                                            Text(
-                                                                text = stringResource(R.string.sleep_timer_active, timeStr),
-                                                                fontSize = 11.sp,
-                                                                fontWeight = FontWeight.Medium,
-                                                                color = MaterialTheme.colorScheme.primary
-                                                            )
-                                                        } else {
-                                                            Text(
-                                                                text = stringResource(R.string.sleep_timer_off_label),
-                                                                fontSize = 11.sp,
-                                                                fontWeight = FontWeight.Medium,
-                                                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                                DropdownMenu(
-                                                    expanded = showSleepDropdown,
-                                                    onDismissRequest = { showSleepDropdown = false }
-                                                ) {
-                                                    DropdownMenuItem(
-                                                        text = {
-                                                            Text(
-                                                                text = stringResource(R.string.sleep_timer_off),
-                                                                fontWeight = if (sleepTimerMs == 0L) FontWeight.Bold else FontWeight.Normal,
-                                                                color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary else Color.Unspecified
-                                                            )
-                                                        },
-                                                        onClick = {
-                                                            viewModel.setSleepTimer(null)
-                                                            showSleepDropdown = false
-                                                        },
-                                                        leadingIcon = {
-                                                            Icon(
-                                                                imageVector = Icons.Rounded.Close,
-                                                                contentDescription = null,
-                                                                tint = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                                            )
-                                                        }
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Bedtime,
+                                                        contentDescription = null,
+                                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
+                                                            else MaterialTheme.colorScheme.onSecondaryContainer,
+                                                        modifier = Modifier.size(12.dp)
                                                     )
-                                                    listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
-                                                        val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
-                                                        DropdownMenuItem(
-                                                            text = {
-                                                                Text(
-                                                                    text = String.format(stringResource(R.string.sleep_timer_minutes), minutes),
-                                                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                                                                    color = if (isActive) MaterialTheme.colorScheme.primary else Color.Unspecified
-                                                                )
-                                                            },
-                                                            onClick = {
-                                                                viewModel.setSleepTimer(minutes)
-                                                                showSleepDropdown = false
-                                                            },
-                                                            leadingIcon = {
-                                                                Icon(
-                                                                    imageVector = Icons.Rounded.Bedtime,
-                                                                    contentDescription = null,
-                                                                    tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                                                )
-                                                            }
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    if (sleepTimerMs > 0) {
+                                                        val remainMin = (sleepTimerMs / 60000).toInt()
+                                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                                        val timeStr = String.format(Locale.US, "%02d:%02d", remainMin, remainSec)
+                                                        Text(
+                                                            text = stringResource(R.string.sleep_timer_active, timeStr),
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            text = stringResource(R.string.sleep_timer_off_label),
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = MaterialTheme.colorScheme.onSecondaryContainer
                                                         )
                                                     }
                                                 }
@@ -888,6 +909,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 }
                             }
                         }
+                    }
                     }
 
                     androidx.compose.animation.AnimatedVisibility(
