@@ -166,6 +166,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     val cachedSurahIds by viewModel.cachedSurahIds.collectAsState()
     val favoriteSurahIds by viewModel.favoriteSurahIds.collectAsState()
     val downloadingProgress by viewModel.downloadingProgress.collectAsState()
+    val pendingDownloadSurahId by viewModel.pendingDownloadSurahId.collectAsState()
     
     LaunchedEffect(Unit) {
         viewModel.refreshCachedSurahs()
@@ -401,6 +402,13 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         }
                     }
                 }
+
+                ActiveDownloadIndicator(
+                    downloadingSurahIds = downloadingSurahs,
+                    downloadingProgress = downloadingProgress,
+                    pendingDownloadSurahId = pendingDownloadSurahId,
+                    localizedSurahNames = localizedSurahNames
+                )
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
@@ -2144,4 +2152,149 @@ private fun formatTime(ms: Long): String {
 
 enum class DownloadFilter {
     ALL, DOWNLOADED, NOT_DOWNLOADED
+}
+
+@Composable
+fun ActiveDownloadIndicator(
+    downloadingSurahIds: Set<Int>,
+    downloadingProgress: Map<Int, Float>,
+    pendingDownloadSurahId: Int?,
+    localizedSurahNames: Array<String>
+) {
+    val hasActiveDownloads = downloadingSurahIds.isNotEmpty()
+    var showPopup by remember { mutableStateOf(false) }
+
+    LaunchedEffect(hasActiveDownloads) {
+        if (!hasActiveDownloads) showPopup = false
+    }
+
+    androidx.compose.animation.AnimatedVisibility(
+        visible = hasActiveDownloads,
+        enter = expandVertically(tween(300), expandFrom = Alignment.Top) + fadeIn(tween(250)),
+        exit = shrinkVertically(tween(250), shrinkTowards = Alignment.Top) + fadeOut(tween(200))
+    ) {
+        Box {
+            val count = downloadingSurahIds.size
+            val indicatorText = if (count == 1)
+                stringResource(R.string.active_download_single)
+            else
+                stringResource(R.string.active_downloads_count, count)
+
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable { showPopup = !showPopup }
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = indicatorText,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.Download,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.6f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = showPopup,
+                onDismissRequest = { showPopup = false },
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.active_downloads),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp))
+
+                val surahs = SurahRepository.surahs
+                downloadingSurahIds.forEach { surahId ->
+                    val surah = surahs.find { it.id == surahId }
+                    val name = surah?.let { s ->
+                        val locName = localizedSurahNames.getOrElse(s.id - 1) { s.name }
+                        "${stringResource(R.string.surah_prefix)} $locName"
+                    } ?: "#$surahId"
+                    val progress = downloadingProgress[surahId] ?: 0f
+                    val percent = (progress * 100).toInt()
+                    val isForPlay = surahId == pendingDownloadSurahId
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (isForPlay) {
+                                Icon(
+                                    imageVector = Icons.Rounded.PlayArrow,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$percent%",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            LinearProgressIndicator(
+                                progress = { progress.coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(50)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            )
+                        }
+                    }
+                    if (surahId != downloadingSurahIds.last()) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

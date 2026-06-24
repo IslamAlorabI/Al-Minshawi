@@ -68,5 +68,8 @@
     <string name="juz_label">Juz\' %d</string>
     <string name="hide_help_banner">Dismiss</string>
     <string name="show_help_banner">Show "How it works" banner</string>
+    <string name="active_downloads">Active Downloads</string>
+    <string name="active_downloads_count">%d downloads in progress</string>
+    <string name="active_download_single">Downloading…</string>
 
 </resources>

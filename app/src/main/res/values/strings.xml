@@ -68,5 +68,8 @@
     <string name="juz_label">الجزء %d</string>
     <string name="hide_help_banner">إخفاء</string>
     <string name="show_help_banner">إظهار شريط "كيف يعمل التطبيق"</string>
+    <string name="active_downloads">التحميلات النشطة</string>
+    <string name="active_downloads_count">%d تحميلات جارية</string>
+    <string name="active_download_single">تحميل جاري…</string>
 
 </resources>
