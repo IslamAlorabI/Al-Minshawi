@@ -361,8 +361,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
                 val surahId = mediaItem?.mediaId?.toIntOrNull()
+                if (_currentPlayingSurahId.value != surahId) {
+                    _currentPosition.value = 0L
+                }
                 _currentPlayingSurahId.value = surahId
-                _currentPosition.value = 0L
             }
 
             override fun onPositionDiscontinuity(
