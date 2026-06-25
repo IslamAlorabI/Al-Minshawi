@@ -309,6 +309,7 @@ class PlaybackService : MediaSessionService() {
             }
             manualDownloadJobs.remove(surah.id)
             onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
+            if (!success) onDownloadFailed?.invoke()
         }
     }
 
