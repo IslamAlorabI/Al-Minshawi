@@ -25,6 +25,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.layout.onSizeChanged
@@ -2200,8 +2202,8 @@ fun ActiveDownloadIndicator(
 
     androidx.compose.animation.AnimatedVisibility(
         visible = hasActiveDownloads,
-        enter = fadeIn(tween(300)) + expandVertically(tween(300), expandFrom = Alignment.Top),
-        exit = fadeOut(tween(250)) + shrinkVertically(tween(250), shrinkTowards = Alignment.Top),
+        enter = fadeIn(tween(400)),
+        exit = fadeOut(tween(300)),
         modifier = Modifier
             .padding(end = 16.dp, top = 8.dp)
     ) {
