@@ -443,8 +443,7 @@ class PlaybackService : MediaSessionService() {
 
         val cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(cache!!)
-            .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
-            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE or CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
