@@ -73,5 +73,7 @@
     <string name="active_download_single">تحميل جاري…</string>
     <string name="cancel_download">إلغاء التحميل</string>
     <string name="cancel_all_downloads">إلغاء الكل</string>
+    <string name="download_failed">فشل تحميل السورة، تحقق من اتصال الإنترنت</string>
+    <string name="playback_error">خطأ في التشغيل، أعد تحميل السورة</string>
 
 </resources>

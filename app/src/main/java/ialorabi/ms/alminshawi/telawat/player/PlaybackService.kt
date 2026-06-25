@@ -57,6 +57,8 @@ class PlaybackService : MediaSessionService() {
     private var isSkipping = false
     var onWidgetDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
     var onManualDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
+    var onDownloadFailed: (() -> Unit)? = null
+    var onPlaybackError: (() -> Unit)? = null
     private val manualDownloadJobs = mutableMapOf<Int, Job>()
 
     companion object {
@@ -258,6 +260,8 @@ class PlaybackService : MediaSessionService() {
                 player.setMediaItem(buildMediaItem(surah))
                 player.prepare()
                 player.play()
+            } else {
+                onDownloadFailed?.invoke()
             }
             isSkipping = false
         }
@@ -467,6 +471,17 @@ class PlaybackService : MediaSessionService() {
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
+
+        exoPlayer.addListener(object : Player.Listener {
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                val mediaId = exoPlayer.currentMediaItem?.mediaId?.toIntOrNull()
+                if (mediaId != null) {
+                    val surah = SurahRepository.surahs.find { it.id == mediaId }
+                    if (surah != null) cache?.removeResource(surah.url)
+                }
+                onPlaybackError?.invoke()
+            }
+        })
 
         val player = object : ForwardingPlayer(exoPlayer) {
             override fun getAvailableCommands(): Player.Commands {

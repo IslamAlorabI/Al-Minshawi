@@ -275,11 +275,31 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     val snackbarHostState = remember { SnackbarHostState() }
     val downloadLimitMsg = stringResource(R.string.download_limit_reached)
+    val downloadFailedMsg = stringResource(R.string.download_failed)
+    val playbackErrorMsg = stringResource(R.string.playback_error)
     LaunchedEffect(Unit) {
         viewModel.downloadLimitReached.collect {
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(
                 message = downloadLimitMsg,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.downloadFailed.collect {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(
+                message = downloadFailedMsg,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.playbackError.collect {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(
+                message = playbackErrorMsg,
                 duration = SnackbarDuration.Short
             )
         }

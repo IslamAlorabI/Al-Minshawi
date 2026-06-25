@@ -119,6 +119,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _downloadLimitReached = MutableSharedFlow<Unit>()
     val downloadLimitReached: SharedFlow<Unit> = _downloadLimitReached.asSharedFlow()
 
+    private val _downloadFailed = MutableSharedFlow<Unit>()
+    val downloadFailed: SharedFlow<Unit> = _downloadFailed.asSharedFlow()
+
+    private val _playbackError = MutableSharedFlow<Unit>()
+    val playbackError: SharedFlow<Unit> = _playbackError.asSharedFlow()
+
     companion object {
     }
     
@@ -237,6 +243,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
                             remove(surahId)
                         }
+                        refreshCachedSurahs()
+                    }
+                }
+                PlaybackService.instance?.onDownloadFailed = {
+                    viewModelScope.launch { _downloadFailed.emit(Unit) }
+                }
+                PlaybackService.instance?.onPlaybackError = {
+                    viewModelScope.launch {
+                        _playbackError.emit(Unit)
                         refreshCachedSurahs()
                     }
                 }
