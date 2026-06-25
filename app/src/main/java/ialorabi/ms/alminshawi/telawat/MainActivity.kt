@@ -752,7 +752,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
                                                     .background(
-                                                        if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                                        if (showSleepTimerPicker || sleepTimerMs > 0) MaterialTheme.colorScheme.primary
                                                         else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f)
                                                     )
                                                     .clickable { showSleepTimerPicker = !showSleepTimerPicker }
@@ -761,7 +761,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 Icon(
                                                     imageVector = Icons.Rounded.Bedtime,
                                                     contentDescription = null,
-                                                    tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary
+                                                    tint = if (showSleepTimerPicker || sleepTimerMs > 0) MaterialTheme.colorScheme.onPrimary
                                                         else MaterialTheme.colorScheme.onSecondaryContainer,
                                                     modifier = Modifier.size(12.dp)
                                                 )
@@ -774,14 +774,15 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                         text = stringResource(R.string.sleep_timer_active, timeStr),
                                                         fontSize = 11.sp,
                                                         fontWeight = FontWeight.Medium,
-                                                        color = MaterialTheme.colorScheme.primary
+                                                        color = MaterialTheme.colorScheme.onPrimary
                                                     )
                                                 } else {
                                                     Text(
                                                         text = stringResource(R.string.sleep_timer_off_label),
                                                         fontSize = 11.sp,
                                                         fontWeight = FontWeight.Medium,
-                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                        color = if (showSleepTimerPicker) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSecondaryContainer
                                                     )
                                                 }
                                             }
