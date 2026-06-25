@@ -702,18 +702,21 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 color = if (isRepeatOn) MaterialTheme.colorScheme.primary
                                                     else MaterialTheme.colorScheme.surfaceContainerHighest,
                                                 modifier = Modifier
+                                                    .weight(1f)
                                                     .clip(RoundedCornerShape(50))
-                                                    .clickable { viewModel.toggleRepeat() }
+                                                    .clickable(enabled = collapseFraction < 0.3f) { viewModel.toggleRepeat() }
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Repeat,
-                                                    contentDescription = stringResource(R.string.repeat_surah),
-                                                    tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
-                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                                        .size(16.dp)
-                                                )
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Repeat,
+                                                        contentDescription = stringResource(R.string.repeat_surah),
+                                                        tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier
+                                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                            .size(16.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                         Row(
