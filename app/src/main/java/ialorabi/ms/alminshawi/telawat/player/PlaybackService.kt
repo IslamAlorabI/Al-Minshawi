@@ -203,6 +203,7 @@ class PlaybackService : MediaSessionService() {
         val downloadingTitle = getString(R.string.widget_downloading, getLocalizedSurahName(surah))
 
         val originalMediaItem = if (player.mediaItemCount > 0) player.currentMediaItem else null
+        val originalPosition = player.currentPosition
 
         if (player.mediaItemCount > 0) {
             val currentItem = player.currentMediaItem!!
@@ -263,8 +264,15 @@ class PlaybackService : MediaSessionService() {
                 player.prepare()
                 player.play()
             } else {
-                if (originalMediaItem != null && player.mediaItemCount > 0) {
-                    player.replaceMediaItem(0, originalMediaItem)
+                if (player.mediaItemCount > 0) {
+                    val currentItem = player.currentMediaItem!!
+                    val restoredItem = currentItem.buildUpon()
+                        .setMediaMetadata(
+                            originalMediaItem?.mediaMetadata ?: currentItem.mediaMetadata
+                        )
+                        .build()
+                    player.replaceMediaItem(0, restoredItem)
+                    player.seekTo(originalPosition)
                 }
                 onDownloadFailed?.invoke()
             }
