@@ -39,7 +39,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 
 @androidx.media3.common.util.UnstableApi
@@ -223,7 +227,7 @@ class PlaybackService : MediaSessionService() {
                     .createDataSource()
                 val dataSpec = DataSpec(surah.url.toUri())
                 val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                    if (requestLength > 0) {
+                    if (requestLength > 0 && currentDownloadingSurahId == surah.id) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
                             onWidgetDownloadStateChanged?.invoke(surah.id, true, progress)
@@ -234,12 +238,13 @@ class PlaybackService : MediaSessionService() {
                 for (attempt in 1..MAX_DOWNLOAD_RETRIES) {
                     try {
                         val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
-                        writer.cache()
+                        runInterruptible { writer.cache() }
                         return@withContext true
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            Thread.sleep(RETRY_DELAY_MS)
+                            delay(RETRY_DELAY_MS)
                         }
                     }
                 }
@@ -274,7 +279,7 @@ class PlaybackService : MediaSessionService() {
                     .createDataSource()
                 val dataSpec = DataSpec(surah.url.toUri())
                 val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                    if (requestLength > 0) {
+                    if (requestLength > 0 && manualDownloadJobs.containsKey(surah.id)) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
                             onManualDownloadStateChanged?.invoke(surah.id, true, progress)
@@ -285,12 +290,13 @@ class PlaybackService : MediaSessionService() {
                 for (attempt in 1..MAX_DOWNLOAD_RETRIES) {
                     try {
                         val writer = CacheWriter(dataSource, dataSpec, null, progressListener)
-                        writer.cache()
+                        runInterruptible { writer.cache() }
                         return@withContext true
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            Thread.sleep(RETRY_DELAY_MS)
+                            delay(RETRY_DELAY_MS)
                         }
                     }
                 }
@@ -300,6 +306,37 @@ class PlaybackService : MediaSessionService() {
             manualDownloadJobs.remove(surah.id)
             onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
         }
+    }
+
+    fun cancelManualDownload(surahId: Int) {
+        val job = manualDownloadJobs.remove(surahId)
+        onManualDownloadStateChanged?.invoke(surahId, false, 0f)
+        val surah = SurahRepository.surahs.find { it.id == surahId } ?: return
+        serviceScope.launch {
+            job?.cancelAndJoin()
+            withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
+        }
+    }
+
+    fun cancelPlayDownload() {
+        val surahId = currentDownloadingSurahId ?: return
+        val job = downloadJob
+        downloadJob = null
+        currentDownloadingSurahId = null
+        onWidgetDownloadStateChanged?.invoke(surahId, false, 0f)
+        isSkipping = false
+        val surah = SurahRepository.surahs.find { it.id == surahId }
+        serviceScope.launch {
+            job?.cancelAndJoin()
+            if (surah != null) withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
+        }
+    }
+
+    fun cancelAllDownloads() {
+        val playId = currentDownloadingSurahId
+        if (playId != null) cancelPlayDownload()
+
+        manualDownloadJobs.keys.toList().forEach { cancelManualDownload(it) }
     }
 
     private fun getLocalizedSurahName(surah: Surah): String {

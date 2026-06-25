@@ -71,5 +71,7 @@
     <string name="active_downloads">Active Downloads</string>
     <string name="active_downloads_count">%d downloads in progress</string>
     <string name="active_download_single">Downloading…</string>
+    <string name="cancel_download">Cancel Download</string>
+    <string name="cancel_all_downloads">Cancel All</string>
 
 </resources>

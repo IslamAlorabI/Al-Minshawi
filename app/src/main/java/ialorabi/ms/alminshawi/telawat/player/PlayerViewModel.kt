@@ -167,6 +167,34 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         PlaybackService.instance?.downloadSurahInBackground(surah)
     }
 
+    fun cancelDownload(surahId: Int) {
+        if (surahId == _pendingDownloadSurahId.value) {
+            PlaybackService.instance?.cancelPlayDownload()
+            _pendingDownloadSurahId.value = null
+        } else {
+            PlaybackService.instance?.cancelManualDownload(surahId)
+        }
+        _downloadingSurahs.value -= surahId
+        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply { remove(surahId) }
+        _cachedSurahIds.value -= surahId
+        viewModelScope.launch {
+            delay(1000)
+            refreshCachedSurahs()
+        }
+    }
+
+    fun cancelAllDownloads() {
+        val downloading = _downloadingSurahs.value
+        PlaybackService.instance?.cancelAllDownloads()
+        _pendingDownloadSurahId.value = null
+        _downloadingSurahs.value = emptySet()
+        _downloadingProgress.value = emptyMap()
+        _cachedSurahIds.value -= downloading
+        viewModelScope.launch {
+            delay(1000)
+            refreshCachedSurahs()
+        }
+    }
 
 
 

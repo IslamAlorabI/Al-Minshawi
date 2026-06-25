@@ -431,6 +431,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             onPlayClick = { viewModel.playSurah(surah) },
                             onPauseClick = { viewModel.togglePlayPause() },
                             onDownloadClick = { viewModel.downloadSurah(surah) },
+                            onCancelDownload = { viewModel.cancelDownload(surah.id) },
                             onToggleFavorite = { viewModel.toggleFavorite(surah.id) }
                         )
                     }
@@ -454,7 +455,9 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         downloadingSurahIds = downloadingSurahs,
                         downloadingProgress = downloadingProgress,
                         pendingDownloadSurahId = pendingDownloadSurahId,
-                        localizedSurahNames = localizedSurahNames
+                        localizedSurahNames = localizedSurahNames,
+                        onCancelDownload = { viewModel.cancelDownload(it) },
+                        onCancelAll = { viewModel.cancelAllDownloads() }
                     )
                 }
             }
@@ -1229,6 +1232,7 @@ fun SurahItem(
     onPlayClick: () -> Unit,
     onPauseClick: () -> Unit,
     onDownloadClick: () -> Unit,
+    onCancelDownload: () -> Unit,
     onToggleFavorite: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -1305,11 +1309,25 @@ fun SurahItem(
             Spacer(modifier = Modifier.width(8.dp))
 
             if (isDownloading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp).padding(2.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .clickable { onCancelDownload() }
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.cancel_download),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             } else if (isDownloaded) {
                 Icon(
                     imageVector = Icons.Rounded.CloudDone,
@@ -2159,7 +2177,9 @@ fun ActiveDownloadIndicator(
     downloadingSurahIds: Set<Int>,
     downloadingProgress: Map<Int, Float>,
     pendingDownloadSurahId: Int?,
-    localizedSurahNames: Array<String>
+    localizedSurahNames: Array<String>,
+    onCancelDownload: (Int) -> Unit,
+    onCancelAll: () -> Unit
 ) {
     val hasActiveDownloads = downloadingSurahIds.isNotEmpty()
     var showPopup by remember { mutableStateOf(false) }
@@ -2252,6 +2272,33 @@ fun ActiveDownloadIndicator(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            Spacer(modifier = Modifier.weight(1f))
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .clickable { onCancelAll() }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.cancel_all_downloads),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -2312,6 +2359,24 @@ fun ActiveDownloadIndicator(
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                         )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(CircleShape)
+                                            .clickable { onCancelDownload(surahId) }
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Close,
+                                                contentDescription = stringResource(R.string.cancel_download),
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
