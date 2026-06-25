@@ -247,7 +247,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
                 PlaybackService.instance?.onDownloadFailed = {
-                    viewModelScope.launch { _downloadFailed.emit(Unit) }
+                    viewModelScope.launch {
+                        _pendingDownloadSurahId.value = null
+                        _downloadFailed.emit(Unit)
+                    }
                 }
                 PlaybackService.instance?.onPlaybackError = {
                     viewModelScope.launch {

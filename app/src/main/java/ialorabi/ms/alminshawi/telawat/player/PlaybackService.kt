@@ -202,6 +202,8 @@ class PlaybackService : MediaSessionService() {
 
         val downloadingTitle = getString(R.string.widget_downloading, getLocalizedSurahName(surah))
 
+        val originalMediaItem = if (player.mediaItemCount > 0) player.currentMediaItem else null
+
         if (player.mediaItemCount > 0) {
             val currentItem = player.currentMediaItem!!
             val indicatorItem = currentItem.buildUpon()
@@ -261,6 +263,9 @@ class PlaybackService : MediaSessionService() {
                 player.prepare()
                 player.play()
             } else {
+                if (originalMediaItem != null && player.mediaItemCount > 0) {
+                    player.replaceMediaItem(0, originalMediaItem)
+                }
                 onDownloadFailed?.invoke()
             }
             isSkipping = false
