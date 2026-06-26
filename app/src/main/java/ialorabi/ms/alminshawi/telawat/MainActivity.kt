@@ -633,15 +633,26 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     .clip(RoundedCornerShape(50))
                                                     .clickable { viewModel.toggleRepeat() }
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Repeat,
-                                                    contentDescription = stringResource(R.string.repeat_surah),
-                                                    tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
-                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                                        .size(16.dp)
-                                                )
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Repeat,
+                                                        contentDescription = stringResource(R.string.repeat_surah),
+                                                        tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(
+                                                        text = stringResource(R.string.repeat_label),
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                             }
                                         }
                                         Row(

@@ -47,6 +47,7 @@
     <string name="sleep_timer_minutes">%d Minutes</string>
     <string name="sleep_timer_active">%s left</string>
     <string name="repeat_surah">Repeat Surah</string>
+    <string name="repeat_label">Repeat</string>
     <string name="auto_play_next">Auto Play Next</string>
     <string name="help_auto_play_desc">When enabled, playback automatically moves to the next Surah after the current one ends.</string>
     <string name="help_auto_play_reverse_desc">Long-press the auto-play button to reverse direction and move to the previous Surah instead.</string>

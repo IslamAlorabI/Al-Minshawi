@@ -47,6 +47,7 @@
     <string name="sleep_timer_minutes">%d دقيقة</string>
     <string name="sleep_timer_active">متبقي %s</string>
     <string name="repeat_surah">تكرار السورة</string>
+    <string name="repeat_label">تكرار</string>
     <string name="auto_play_next">تشغيل تلقائي</string>
     <string name="help_auto_play_desc">عند تفعيله، ينتقل التشغيل تلقائيًا إلى السورة التالية بعد انتهاء الحالية.</string>
     <string name="help_auto_play_reverse_desc">اضغط مطولاً على زر التشغيل التلقائي لعكس الاتجاه والانتقال إلى السورة السابقة بدلاً من التالية.</string>
