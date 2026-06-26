@@ -104,7 +104,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.painterResource
-
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -326,7 +328,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         shadowElevation = 4.dp,
                         modifier = Modifier.weight(1f, fill = false)
                     ) {
@@ -354,7 +356,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         shadowElevation = 4.dp,
                         modifier = Modifier.size(48.dp)
                     ) {
@@ -962,17 +964,26 @@ fun SearchBarSection(
     showFavoritesOnly: Boolean,
     onFavoritesToggle: (Boolean) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+        label = "searchBorderColor"
+    )
+
     Surface(
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         shadowElevation = 4.dp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(2.dp, borderColor, RoundedCornerShape(50))
     ) {
         TextField(
             value = query,
             onValueChange = onQueryChange,
+            interactionSource = interactionSource,
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.search_surahs)) },
             leadingIcon = {
