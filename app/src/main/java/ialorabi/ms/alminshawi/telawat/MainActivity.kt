@@ -896,10 +896,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .then(
-                                        if (collapseFraction > 0.3f) Modifier.size(64.dp)
-                                        else Modifier.size(0.dp)
-                                    )
+                                    .size(64.dp)
                                     .graphicsLayer { alpha = collapsedAlpha }
                             ) {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -959,34 +956,77 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.clickable { showBottomSheet = true }
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            if (sleepTimerMs > 0) {
-                                val remainMin = (sleepTimerMs / 60000).toInt()
-                                val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    tonalElevation = 2.dp
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Bedtime,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.size(14.dp)
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                tonalElevation = 2.dp,
+                                modifier = Modifier
+                                    .widthIn(max = 200.dp)
+                                    .clickable { showBottomSheet = true }
+                            ) {
+                                Text(
+                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                        .basicMarquee(
+                                            iterations = Int.MAX_VALUE,
+                                            velocity = 30.dp
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                )
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = if (isRepeatOn) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable { viewModel.toggleRepeat() }
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Repeat,
+                                            contentDescription = stringResource(R.string.repeat_surah),
+                                            tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
+                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                                Surface(
+                                    shape = CircleShape,
+                                    color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .combinedClickable(
+                                            onClick = { viewModel.toggleAutoPlayNext() },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                viewModel.toggleAutoPlayReversed()
+                                            }
+                                        )
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                            Text(
-                                                text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                fontWeight = FontWeight.Medium
+                                            Icon(
+                                                imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
+                                                contentDescription = stringResource(R.string.auto_play_next),
+                                                tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(18.dp)
                                             )
                                         }
                                     }
@@ -995,8 +1035,52 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                             Surface(
                                 shape = RoundedCornerShape(50),
+                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                tonalElevation = 2.dp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .clickable { showSleepTimerPicker = !showSleepTimerPicker }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Bedtime,
+                                        contentDescription = null,
+                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.onPrimaryContainer
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    if (sleepTimerMs > 0) {
+                                        val remainMin = (sleepTimerMs / 60000).toInt()
+                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
+                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                            Text(
+                                                text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    } else {
+                                        Text(
+                                            text = stringResource(R.string.sleep_timer_off),
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(50),
                                 color = MaterialTheme.colorScheme.secondaryContainer,
-                                tonalElevation = 2.dp
+                                tonalElevation = 2.dp,
+                                modifier = Modifier.clickable { showBottomSheet = true }
                             ) {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                                     Text(
