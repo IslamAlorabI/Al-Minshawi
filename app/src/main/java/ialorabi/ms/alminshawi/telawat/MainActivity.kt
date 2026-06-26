@@ -104,9 +104,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
+
 
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -309,12 +307,42 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     var playerHeightPx by remember { mutableIntStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { 
-                        Column {
-                            Text(stringResource(R.string.sheikh_name), fontWeight = FontWeight.Bold, fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily)
+        Scaffold { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.size(48.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.weight(1f, fill = false)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = stringResource(R.string.sheikh_name),
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                             Text(
                                 text = stringResource(R.string.app_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
@@ -322,13 +350,14 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    actions = {
+                    }
+
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         IconButton(onClick = {
                             context.startActivity(Intent(context, SettingsActivity::class.java))
                         }) {
@@ -339,15 +368,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             )
                         }
                     }
-                )
-            }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                WavyTopDecor()
+                }
 
                 SearchBarSection(
                     query = searchQuery,
@@ -941,125 +962,101 @@ fun SearchBarSection(
     showFavoritesOnly: Boolean,
     onFavoritesToggle: (Boolean) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val borderColor = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent
-
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        interactionSource = interactionSource,
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shadowElevation = 4.dp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(2.dp, borderColor, MaterialTheme.shapes.medium),
-        placeholder = { Text(stringResource(R.string.search_surahs)) },
-        leadingIcon = {
-            Icon(Icons.Rounded.Search, contentDescription = null)
-        },
-        trailingIcon = {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
-                Surface(
-                    shape = CircleShape,
-                    color = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED) }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.CloudDone,
-                            contentDescription = stringResource(R.string.filter_downloaded),
-                            tint = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                
-                Surface(
-                    shape = CircleShape,
-                    color = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onFilterChange(if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED) }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.CloudOff,
-                            contentDescription = stringResource(R.string.filter_not_downloaded),
-                            tint = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color = if (showFavoritesOnly) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onFavoritesToggle(!showFavoritesOnly) }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (showFavoritesOnly) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            contentDescription = stringResource(R.string.filter_favorites),
-                            tint = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Rounded.Close, contentDescription = null)
-                    }
-                }
-            }
-        },
-        singleLine = true,
-        shape = MaterialTheme.shapes.medium,
-        colors = TextFieldDefaults.colors(
-            unfocusedIndicatorColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent
-        )
-    )
-}
-
-@Composable
-fun WavyTopDecor() {
-    val waveColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(24.dp)
-            .padding(vertical = 8.dp)
     ) {
-        val width = size.width
-        val height = size.height
-        val waveWidth = 40.dp.toPx()
-        val path = Path().apply {
-            moveTo(0f, height / 2)
-            var currentX = 0f
-            while (currentX < width) {
-                relativeQuadraticTo(waveWidth / 4, -height / 2, waveWidth / 2, 0f)
-                relativeQuadraticTo(waveWidth / 4, height / 2, waveWidth / 2, 0f)
-                currentX += waveWidth
-            }
-        }
-        drawPath(
-            path = path,
-            color = waveColor,
-            style = Stroke(width = 2.dp.toPx())
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(stringResource(R.string.search_surahs)) },
+            leadingIcon = {
+                Icon(Icons.Rounded.Search, contentDescription = null)
+            },
+            trailingIcon = {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
+                    Surface(
+                        shape = CircleShape,
+                        color = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onFilterChange(if (downloadFilter == DownloadFilter.DOWNLOADED) DownloadFilter.ALL else DownloadFilter.DOWNLOADED) }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudDone,
+                                contentDescription = stringResource(R.string.filter_downloaded),
+                                tint = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    
+                    Surface(
+                        shape = CircleShape,
+                        color = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onFilterChange(if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) DownloadFilter.ALL else DownloadFilter.NOT_DOWNLOADED) }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.CloudOff,
+                                contentDescription = stringResource(R.string.filter_not_downloaded),
+                                tint = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = CircleShape,
+                        color = if (showFavoritesOnly) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onFavoritesToggle(!showFavoritesOnly) }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (showFavoritesOnly) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                contentDescription = stringResource(R.string.filter_favorites),
+                                tint = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(Icons.Rounded.Close, contentDescription = null)
+                        }
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(50),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            )
         )
     }
 }
+
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
