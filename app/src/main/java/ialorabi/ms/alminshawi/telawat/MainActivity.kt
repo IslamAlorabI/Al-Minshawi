@@ -33,7 +33,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.draw.clipToBounds
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -307,7 +306,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     }
 
     val showFloatingPlayer = currentSurahId != null
-    val isPlayerCollapsed by viewModel.isPlayerCollapsed.collectAsState()
     var playerHeightPx by remember { mutableIntStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -501,19 +499,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 val localizedName = localizedSurahNames.getOrElse(it.id - 1) { _ -> it.name }
                 val haptic = LocalHapticFeedback.current
 
-                val collapseFraction by animateFloatAsState(
-                    targetValue = if (isPlayerCollapsed) 1f else 0f,
-                    animationSpec = tween(400, easing = FastOutSlowInEasing),
-                    label = "collapse"
-                )
-
-
-                val cornerRadius = androidx.compose.ui.unit.lerp(20.dp, 32.dp, collapseFraction)
-                val surfaceColor = if (collapseFraction >= 0.99f)
-                    Color.Transparent
-                else
-                    MaterialTheme.colorScheme.secondaryContainer
-
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -522,9 +507,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .onSizeChanged { size ->
-                            if (collapseFraction !in 0.01f..0.99f) {
-                                playerHeightPx = size.height
-                            }
+                            playerHeightPx = size.height
                         },
                     contentAlignment = Alignment.BottomCenter
                 ) {
@@ -533,7 +516,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         androidx.compose.animation.AnimatedVisibility(
-                            visible = showSleepTimerPicker && collapseFraction < 0.3f,
+                            visible = showSleepTimerPicker,
                             enter = expandVertically(tween(250), expandFrom = Alignment.Bottom) + fadeIn(tween(200)),
                             exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
                         ) {
@@ -601,62 +584,16 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                         Surface(
                         modifier = Modifier
-                            .then(
-                                if (collapseFraction >= 0.99f) Modifier.size(64.dp)
-                                else Modifier
-                                    .fillMaxWidth(
-                                        androidx.compose.ui.util.lerp(1f, 0.18f, collapseFraction)
-                                    )
-                                    .defaultMinSize(minWidth = 64.dp, minHeight = 64.dp)
-                            )
-                            .clip(RoundedCornerShape(cornerRadius))
-                            .combinedClickable(
-                                onClick = {
-                                    if (isPlayerCollapsed) viewModel.togglePlayPause()
-                                    else showBottomSheet = true
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    viewModel.togglePlayerCollapsed()
-                                }
-                            ),
-                        shape = RoundedCornerShape(cornerRadius),
-                        color = surfaceColor,
-                        shadowElevation = if (collapseFraction >= 0.99f) 0.dp else androidx.compose.ui.unit.lerp(8.dp, 6.dp, collapseFraction),
-                        tonalElevation = if (collapseFraction >= 0.99f) 0.dp else 4.dp
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { showBottomSheet = true },
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shadowElevation = 8.dp,
+                        tonalElevation = 4.dp
                     ) {
-                        val expandedAlpha = (1f - collapseFraction * 3f).coerceIn(0f, 1f)
-                        val collapsedAlpha = ((collapseFraction - 0.5f) * 2f).coerceIn(0f, 1f)
-                        var expandedHeightPx by remember { mutableIntStateOf(0) }
-                        val density = LocalDensity.current
-                        val collapsedHeightPx = with(density) { 64.dp.roundToPx() }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .then(
-                                    if (collapseFraction > 0f) {
-                                        val expandedH = if (expandedHeightPx > 0) expandedHeightPx.toFloat() else collapsedHeightPx.toFloat()
-                                        val h = androidx.compose.ui.util.lerp(
-                                            expandedH,
-                                            collapsedHeightPx.toFloat(),
-                                            collapseFraction
-                                        )
-                                        Modifier.height(with(density) { h.toInt().toDp() })
-                                    } else Modifier
-                                )
-                                .clipToBounds(),
-                            contentAlignment = Alignment.Center
-                        ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .onSizeChanged { size ->
-                                        if (collapseFraction < 0.01f && size.height > 0) {
-                                            expandedHeightPx = size.height
-                                        }
-                                    }
-                                    .graphicsLayer { alpha = expandedAlpha }
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -707,7 +644,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     else MaterialTheme.colorScheme.surfaceContainerHighest,
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
-                                                    .clickable(enabled = collapseFraction < 0.3f) { viewModel.toggleRepeat() }
+                                                    .clickable { viewModel.toggleRepeat() }
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Rounded.Repeat,
@@ -804,7 +741,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 .size(40.dp)
                                                 .clip(CircleShape)
                                                 .combinedClickable(
-                                                    enabled = collapseFraction < 0.3f,
+
                                                     onClick = { viewModel.toggleAutoPlayNext() },
                                                     onLongClick = {
                                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -847,7 +784,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             FilledIconButton(
                                                 onClick = { viewModel.togglePlayPause() },
                                                 modifier = Modifier.size(50.dp),
-                                                enabled = collapseFraction < 0.3f
+
                                             ) {
                                                 Icon(
                                                     imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -890,206 +827,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-                                }
-                            }
-
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .graphicsLayer { alpha = collapsedAlpha }
-                            ) {
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                    CircularProgressIndicator(
-                                        progress = { if (isCurrentDownloading) currentDlProgress.coerceIn(0f, 1f) else playbackProgress.coerceIn(0f, 1f) },
-                                        modifier = Modifier.size(64.dp),
-                                        strokeWidth = 4.dp,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                    )
-                                }
-                                Surface(
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .clip(CircleShape),
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    shadowElevation = if (collapsedAlpha > 0f) 6.dp else 0.dp,
-                                    tonalElevation = if (collapsedAlpha > 0f) 4.dp else 0.dp
-                                ) {
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                        if (isCurrentDownloading) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Download,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        } else if (isBuffering) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                strokeWidth = 2.dp,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        } else {
-                                            Icon(
-                                                imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                modifier = Modifier.size(28.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    }
-
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = isPlayerCollapsed && collapseFraction >= 0.99f,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 70.dp),
-                        enter = fadeIn(tween(200)),
-                        exit = fadeOut(tween(150))
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                tonalElevation = 2.dp,
-                                modifier = Modifier
-                                    .widthIn(max = 200.dp)
-                                    .clickable { showBottomSheet = true }
-                            ) {
-                                Text(
-                                    text = "${stringResource(R.string.surah_prefix)} $localizedName",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            velocity = 30.dp
-                                        )
-                                )
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = if (isRepeatOn) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .clickable { viewModel.toggleRepeat() }
-                                ) {
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Repeat,
-                                            contentDescription = stringResource(R.string.repeat_surah),
-                                            tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                                Surface(
-                                    shape = CircleShape,
-                                    color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .combinedClickable(
-                                            onClick = { viewModel.toggleAutoPlayNext() },
-                                            onLongClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                viewModel.toggleAutoPlayReversed()
-                                            }
-                                        )
-                                ) {
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                            Icon(
-                                                imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
-                                                contentDescription = stringResource(R.string.auto_play_next),
-                                                tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                tonalElevation = 2.dp,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .clickable { showSleepTimerPicker = !showSleepTimerPicker }
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Bedtime,
-                                        contentDescription = null,
-                                        tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.onPrimaryContainer
-                                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    if (sleepTimerMs > 0) {
-                                        val remainMin = (sleepTimerMs / 60000).toInt()
-                                        val remainSec = ((sleepTimerMs % 60000) / 1000).toInt()
-                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                            Text(
-                                                text = String.format(Locale.US, "%02d:%02d", remainMin, remainSec),
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    } else {
-                                        Text(
-                                            text = stringResource(R.string.sleep_timer_off),
-                                            fontSize = 12.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                }
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                tonalElevation = 2.dp,
-                                modifier = Modifier.clickable { showBottomSheet = true }
-                            ) {
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                    Text(
-                                        text = if (duration > 0) "${formatTime(currentPosition)} / ${formatTime(duration)}" else "--:-- / --:--",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        fontWeight = FontWeight.Medium,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                    )
                                 }
                             }
                         }
