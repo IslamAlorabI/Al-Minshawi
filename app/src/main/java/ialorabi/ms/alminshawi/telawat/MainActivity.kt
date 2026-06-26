@@ -431,7 +431,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             end = 16.dp,
                             top = 8.dp,
                             bottom = if (showFloatingPlayer && playerHeightPx > 0)
-                                with(LocalDensity.current) { playerHeightPx.toDp() } + 32.dp
+                                with(LocalDensity.current) { playerHeightPx.toDp() } + 8.dp
                             else 8.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -502,10 +502,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 24.dp)
-                        .navigationBarsPadding()
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
                         .onSizeChanged { size ->
                             playerHeightPx = size.height
                         },
@@ -521,12 +518,12 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
                         ) {
                             Surface(
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                shadowElevation = 6.dp,
+                                tonalElevation = 4.dp,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
+                                    .padding(bottom = 4.dp)
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -585,15 +582,16 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                             .clickable { showBottomSheet = true },
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                         color = MaterialTheme.colorScheme.secondaryContainer,
-                        shadowElevation = 8.dp,
                         tonalElevation = 4.dp
                     ) {
                             Column(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .navigationBarsPadding()
                             ) {
                                 Row(
                                     modifier = Modifier
