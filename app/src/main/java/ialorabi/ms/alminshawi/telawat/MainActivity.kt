@@ -511,75 +511,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     var showSleepTimerPicker by remember { mutableStateOf(false) }
                     val selectedTimerMinutes by viewModel.sleepTimerSelectedMinutes.collectAsState()
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = showSleepTimerPicker,
-                            enter = expandVertically(tween(250), expandFrom = Alignment.Bottom) + fadeIn(tween(200)),
-                            exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                tonalElevation = 4.dp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 4.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Surface(
-                                        shape = RoundedCornerShape(50),
-                                        color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary
-                                            else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(50))
-                                            .clickable {
-                                                viewModel.setSleepTimer(null)
-                                                showSleepTimerPicker = false
-                                            }
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.sleep_timer_off),
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.onPrimary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                        )
-                                    }
-                                    listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
-                                        val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
-                                        Surface(
-                                            shape = RoundedCornerShape(50),
-                                            color = if (isActive) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.surfaceContainerHighest,
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(50))
-                                                .clickable {
-                                                    viewModel.setSleepTimer(minutes)
-                                                    showSleepTimerPicker = false
-                                                }
-                                        ) {
-                                            Text(
-                                                text = "$minutes",
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                color = if (isActive) MaterialTheme.colorScheme.onPrimary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Surface(
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
@@ -593,6 +525,63 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                     .fillMaxWidth()
                                     .navigationBarsPadding()
                             ) {
+                                androidx.compose.animation.AnimatedVisibility(
+                                    visible = showSleepTimerPicker,
+                                    enter = expandVertically(tween(250), expandFrom = Alignment.Bottom) + fadeIn(tween(200)),
+                                    exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary
+                                                else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .clickable {
+                                                    viewModel.setSleepTimer(null)
+                                                    showSleepTimerPicker = false
+                                                }
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.sleep_timer_off),
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.onPrimary
+                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                            )
+                                        }
+                                        listOf(10, 15, 20, 30, 45, 60).forEach { minutes ->
+                                            val isActive = selectedTimerMinutes == minutes && sleepTimerMs > 0
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = if (isActive) MaterialTheme.colorScheme.primary
+                                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(50))
+                                                    .clickable {
+                                                        viewModel.setSleepTimer(minutes)
+                                                        showSleepTimerPicker = false
+                                                    }
+                                            ) {
+                                                Text(
+                                                    text = "$minutes",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = if (isActive) MaterialTheme.colorScheme.onPrimary
+                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -826,9 +815,8 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         )
                                     }
                                 }
-                            }
-                        }
                     }
+                }
                 }
             }
         }
