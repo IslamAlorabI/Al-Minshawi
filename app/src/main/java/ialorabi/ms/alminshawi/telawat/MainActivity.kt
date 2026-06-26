@@ -706,7 +706,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     .clip(RoundedCornerShape(50))
                                                     .clickable(enabled = collapseFraction < 0.3f) { viewModel.toggleRepeat() }
                                             ) {
-                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
                                                     Icon(
                                                         imageVector = Icons.Rounded.Repeat,
                                                         contentDescription = stringResource(R.string.repeat_surah),
