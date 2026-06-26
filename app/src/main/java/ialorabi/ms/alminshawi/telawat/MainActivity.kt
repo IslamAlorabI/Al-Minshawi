@@ -430,9 +430,10 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             start = 16.dp,
                             end = 16.dp,
                             top = 8.dp,
-                            bottom = if (showFloatingPlayer && playerHeightPx > 0)
-                                with(LocalDensity.current) { playerHeightPx.toDp() } + 8.dp
-                            else 8.dp
+                            bottom = if (showFloatingPlayer && playerHeightPx > 0) {
+                                val navBarPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+                                with(LocalDensity.current) { (playerHeightPx - navBarPx).coerceAtLeast(0).toDp() } + 8.dp
+                            } else 8.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
