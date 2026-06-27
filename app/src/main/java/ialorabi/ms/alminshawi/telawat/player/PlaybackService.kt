@@ -222,7 +222,6 @@ class PlaybackService : MediaLibraryService() {
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(title)
-                    .setArtist(artist)
                     .setSubtitle("$artist · $downloadStatus")
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
