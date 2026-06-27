@@ -987,7 +987,7 @@ fun SearchBarSection(
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.search_surahs)) },
             leadingIcon = {
-                Icon(Icons.Rounded.Search, contentDescription = null)
+                Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
             },
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 4.dp)) {
@@ -1004,7 +1004,7 @@ fun SearchBarSection(
                             Icon(
                                 imageVector = Icons.Rounded.CloudDone,
                                 contentDescription = stringResource(R.string.filter_downloaded),
-                                tint = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                tint = if (downloadFilter == DownloadFilter.DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1023,7 +1023,7 @@ fun SearchBarSection(
                             Icon(
                                 imageVector = Icons.Rounded.CloudOff,
                                 contentDescription = stringResource(R.string.filter_not_downloaded),
-                                tint = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                tint = if (downloadFilter == DownloadFilter.NOT_DOWNLOADED) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1042,7 +1042,7 @@ fun SearchBarSection(
                             Icon(
                                 imageVector = if (showFavoritesOnly) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                                 contentDescription = stringResource(R.string.filter_favorites),
-                                tint = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                tint = if (showFavoritesOnly) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1050,7 +1050,7 @@ fun SearchBarSection(
 
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { onQueryChange("") }) {
-                            Icon(Icons.Rounded.Close, contentDescription = null)
+                            Icon(Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
                 }
@@ -1061,7 +1061,12 @@ fun SearchBarSection(
                 unfocusedContainerColor = Color.Transparent,
                 focusedContainerColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                focusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                cursorColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
     }
