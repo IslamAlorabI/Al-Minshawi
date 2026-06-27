@@ -76,5 +76,7 @@
     <string name="cancel_all_downloads">Cancel All</string>
     <string name="download_failed">Download failed, check your internet connection</string>
     <string name="playback_error">Playback error, please re-download the surah</string>
+    <string name="browse_all_surahs">All Surahs</string>
+    <string name="browse_by_juz">By Juz</string>
 
 </resources>

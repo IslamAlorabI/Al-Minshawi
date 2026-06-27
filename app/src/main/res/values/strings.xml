@@ -76,5 +76,7 @@
     <string name="cancel_all_downloads">إلغاء الكل</string>
     <string name="download_failed">فشل تحميل السورة، تحقق من اتصال الإنترنت</string>
     <string name="playback_error">خطأ في التشغيل، أعد تحميل السورة</string>
+    <string name="browse_all_surahs">كل السور</string>
+    <string name="browse_by_juz">الأجزاء</string>
 
 </resources>

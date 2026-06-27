@@ -24,8 +24,9 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import ialorabi.ms.alminshawi.telawat.R
@@ -33,8 +34,11 @@ import ialorabi.ms.alminshawi.telawat.data.Surah
 import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import java.io.File
 import android.os.Environment
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
+import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,9 +51,9 @@ import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 
 @androidx.media3.common.util.UnstableApi
-class PlaybackService : MediaSessionService() {
-    private var _mediaSession: MediaSession? = null
-    val mediaSession: MediaSession? get() = _mediaSession
+class PlaybackService : MediaLibraryService() {
+    private var _mediaSession: MediaLibraryService.MediaLibrarySession? = null
+    val mediaSession: MediaLibraryService.MediaLibrarySession? get() = _mediaSession
     private var _artworkData: ByteArray? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var downloadJob: Job? = null
@@ -77,6 +81,11 @@ class PlaybackService : MediaSessionService() {
         const val ACTION_AUTO_NEXT = "action_auto_next"
         const val ACTION_PREV_SURAH = "action_prev_surah"
         const val ACTION_NEXT_SURAH = "action_next_surah"
+
+        private const val BROWSE_ROOT = "root"
+        private const val BROWSE_ALL_SURAHS = "all_surahs"
+        private const val BROWSE_BY_JUZ = "by_juz"
+        private const val BROWSE_JUZ_PREFIX = "juz_"
 
         fun getCacheSize(context: Context): Long {
             return cache?.cacheSpace ?: getFolderSize(File(context.filesDir, "audio_cache"))
@@ -177,6 +186,42 @@ class PlaybackService : MediaSessionService() {
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
+                    .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                    .build()
+            )
+            .build()
+    }
+
+    private fun buildBrowseFolderItem(mediaId: String, title: String): MediaItem {
+        return MediaItem.Builder()
+            .setMediaId(mediaId)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setIsBrowsable(true)
+                    .setIsPlayable(false)
+                    .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
+                    .build()
+            )
+            .build()
+    }
+
+    private fun buildBrowsableSurahItem(surah: Surah): MediaItem {
+        val localizedNames = resources.getStringArray(R.array.surah_names)
+        val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
+        val prefix = getString(R.string.surah_prefix)
+        val title = "$prefix $name (${surah.id})"
+        val artist = getString(R.string.sheikh_name)
+
+        return MediaItem.Builder()
+            .setMediaId(surah.id.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setArtist(artist)
+                    .setIsBrowsable(false)
+                    .setIsPlayable(true)
+                    .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                     .build()
             )
@@ -519,7 +564,9 @@ class PlaybackService : MediaSessionService() {
         val customCommands = listOf(ACTION_REPEAT, ACTION_AUTO_NEXT, ACTION_PREV_SURAH, ACTION_NEXT_SURAH)
             .map { SessionCommand(it, Bundle.EMPTY) }
 
-        val callback = object : MediaSession.Callback {
+        val downloadExecutor = Executors.newSingleThreadExecutor()
+
+        val callback = object : MediaLibrarySession.Callback {
             override fun onConnect(
                 session: MediaSession,
                 controller: MediaSession.ControllerInfo
@@ -571,6 +618,121 @@ class PlaybackService : MediaSessionService() {
                 }
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
+
+            override fun onGetLibraryRoot(
+                session: MediaLibrarySession,
+                browser: MediaSession.ControllerInfo,
+                params: LibraryParams?
+            ): ListenableFuture<LibraryResult<MediaItem>> {
+                val root = MediaItem.Builder()
+                    .setMediaId(BROWSE_ROOT)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setIsBrowsable(true)
+                            .setIsPlayable(false)
+                            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
+                            .setTitle(getString(R.string.app_name))
+                            .build()
+                    )
+                    .build()
+                return Futures.immediateFuture(LibraryResult.ofItem(root, params))
+            }
+
+            override fun onGetChildren(
+                session: MediaLibrarySession,
+                browser: MediaSession.ControllerInfo,
+                parentId: String,
+                page: Int,
+                pageSize: Int,
+                params: LibraryParams?
+            ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+                val children: List<MediaItem> = when {
+                    parentId == BROWSE_ROOT -> {
+                        listOf(
+                            buildBrowseFolderItem(BROWSE_ALL_SURAHS, getString(R.string.browse_all_surahs)),
+                            buildBrowseFolderItem(BROWSE_BY_JUZ, getString(R.string.browse_by_juz))
+                        )
+                    }
+                    parentId == BROWSE_ALL_SURAHS -> {
+                        SurahRepository.surahs.map { buildBrowsableSurahItem(it) }
+                    }
+                    parentId == BROWSE_BY_JUZ -> {
+                        (1..30).map { juz ->
+                            buildBrowseFolderItem(
+                                "$BROWSE_JUZ_PREFIX$juz",
+                                getString(R.string.juz_label, juz)
+                            )
+                        }
+                    }
+                    parentId.startsWith(BROWSE_JUZ_PREFIX) -> {
+                        val juz = parentId.removePrefix(BROWSE_JUZ_PREFIX).toIntOrNull()
+                        if (juz != null) {
+                            SurahRepository.surahs.filter { it.juz == juz }.map { buildBrowsableSurahItem(it) }
+                        } else emptyList()
+                    }
+                    else -> emptyList()
+                }
+                return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(children), params))
+            }
+
+            override fun onGetItem(
+                session: MediaLibrarySession,
+                browser: MediaSession.ControllerInfo,
+                mediaId: String
+            ): ListenableFuture<LibraryResult<MediaItem>> {
+                val surahId = mediaId.toIntOrNull()
+                if (surahId != null) {
+                    val surah = SurahRepository.surahs.find { it.id == surahId }
+                    if (surah != null) {
+                        return Futures.immediateFuture(LibraryResult.ofItem(buildBrowsableSurahItem(surah), null))
+                    }
+                }
+                return Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+            }
+
+            override fun onAddMediaItems(
+                mediaSession: MediaSession,
+                controller: MediaSession.ControllerInfo,
+                mediaItems: List<MediaItem>
+            ): ListenableFuture<List<MediaItem>> {
+                val resolved = mediaItems.mapNotNull { item ->
+                    val surahId = item.mediaId.toIntOrNull()
+                    val surah = if (surahId != null) SurahRepository.surahs.find { it.id == surahId } else null
+                    surah?.let { buildMediaItem(it) }
+                }
+                if (resolved.isEmpty()) {
+                    return Futures.immediateFuture(emptyList())
+                }
+
+                val firstSurah = resolved.first().mediaId.toIntOrNull()
+                    ?.let { id -> SurahRepository.surahs.find { it.id == id } }
+
+                if (firstSurah != null && !isSurahCached(firstSurah)) {
+                    val future = SettableFuture.create<List<MediaItem>>()
+                    downloadExecutor.execute {
+                        val c = cache
+                        if (c == null) {
+                            future.set(resolved)
+                            return@execute
+                        }
+                        try {
+                            val httpFactory = DefaultHttpDataSource.Factory()
+                                .setConnectTimeoutMs(HTTP_TIMEOUT_MS)
+                                .setReadTimeoutMs(HTTP_TIMEOUT_MS)
+                            val dataSource = CacheDataSource.Factory()
+                                .setCache(c)
+                                .setUpstreamDataSourceFactory(httpFactory)
+                                .createDataSource()
+                            val dataSpec = DataSpec(firstSurah.url.toUri())
+                            CacheWriter(dataSource, dataSpec, null, null).cache()
+                        } catch (_: Exception) { }
+                        future.set(resolved)
+                    }
+                    return future
+                }
+
+                return Futures.immediateFuture(resolved)
+            }
         }
 
         val sessionActivityIntent = Intent(this, ialorabi.ms.alminshawi.telawat.MainActivity::class.java).apply {
@@ -582,8 +744,7 @@ class PlaybackService : MediaSessionService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        _mediaSession = MediaSession.Builder(this, player)
-            .setCallback(callback)
+        _mediaSession = MediaLibrarySession.Builder(this, player, callback)
             .setSessionActivity(sessionActivityPendingIntent)
             .build()
     }
@@ -603,7 +764,7 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = _mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = _mediaSession
 
     override fun onDestroy() {
         downloadJob?.cancel()
