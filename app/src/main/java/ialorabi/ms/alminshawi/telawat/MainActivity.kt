@@ -973,7 +973,7 @@ fun SearchBarSection(
 
     Surface(
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.primaryContainer,
         shadowElevation = 4.dp,
         modifier = Modifier
             .fillMaxWidth()
