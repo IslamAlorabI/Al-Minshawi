@@ -37,8 +37,7 @@ import android.os.Environment
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.SettableFuture
-import java.util.concurrent.Executors
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -212,6 +211,11 @@ class PlaybackService : MediaLibraryService() {
         val prefix = getString(R.string.surah_prefix)
         val title = "$prefix $name (${surah.id})"
         val artist = getString(R.string.sheikh_name)
+        val downloadStatus = if (isSurahCached(surah)) {
+            "✓ ${getString(R.string.filter_downloaded)}"
+        } else {
+            getString(R.string.filter_not_downloaded)
+        }
 
         return MediaItem.Builder()
             .setMediaId(surah.id.toString())
@@ -219,6 +223,7 @@ class PlaybackService : MediaLibraryService() {
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
+                    .setSubtitle("$artist · $downloadStatus")
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
@@ -456,22 +461,22 @@ class PlaybackService : MediaLibraryService() {
             CommandButton.Builder(CommandButton.ICON_PREVIOUS)
                 .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.rewind))
-                .setSlots(CommandButton.SLOT_BACK_SECONDARY)
+                .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
-                .setSlots(CommandButton.SLOT_BACK)
+                .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(autoNextIcon)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.auto_play_next))
-                .setSlots(CommandButton.SLOT_FORWARD)
+                .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(CommandButton.ICON_NEXT)
                 .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.forward))
-                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY)
+                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
                 .build()
         )
     }
@@ -564,7 +569,6 @@ class PlaybackService : MediaLibraryService() {
         val customCommands = listOf(ACTION_REPEAT, ACTION_AUTO_NEXT, ACTION_PREV_SURAH, ACTION_NEXT_SURAH)
             .map { SessionCommand(it, Bundle.EMPTY) }
 
-        val downloadExecutor = Executors.newSingleThreadExecutor()
 
         val callback = object : MediaLibrarySession.Callback {
             override fun onConnect(
@@ -667,7 +671,11 @@ class PlaybackService : MediaLibraryService() {
                     parentId.startsWith(BROWSE_JUZ_PREFIX) -> {
                         val juz = parentId.removePrefix(BROWSE_JUZ_PREFIX).toIntOrNull()
                         if (juz != null) {
-                            SurahRepository.surahs.filter { it.juz == juz }.map { buildBrowsableSurahItem(it) }
+                            val surahs = SurahRepository.surahs
+                            surahs.filter { surah ->
+                                val nextSurahJuz = surahs.getOrNull(surah.id)?.juz ?: 31
+                                juz in surah.juz until nextSurahJuz
+                            }.map { buildBrowsableSurahItem(it) }
                         } else emptyList()
                     }
                     else -> emptyList()
@@ -700,38 +708,42 @@ class PlaybackService : MediaLibraryService() {
                     val surah = if (surahId != null) SurahRepository.surahs.find { it.id == surahId } else null
                     surah?.let { buildMediaItem(it) }
                 }
-                if (resolved.isEmpty()) {
-                    return Futures.immediateFuture(emptyList())
-                }
-
-                val firstSurah = resolved.first().mediaId.toIntOrNull()
-                    ?.let { id -> SurahRepository.surahs.find { it.id == id } }
-
-                if (firstSurah != null && !isSurahCached(firstSurah)) {
-                    val future = SettableFuture.create<List<MediaItem>>()
-                    downloadExecutor.execute {
-                        val c = cache
-                        if (c == null) {
-                            future.set(resolved)
-                            return@execute
-                        }
-                        try {
-                            val httpFactory = DefaultHttpDataSource.Factory()
-                                .setConnectTimeoutMs(HTTP_TIMEOUT_MS)
-                                .setReadTimeoutMs(HTTP_TIMEOUT_MS)
-                            val dataSource = CacheDataSource.Factory()
-                                .setCache(c)
-                                .setUpstreamDataSourceFactory(httpFactory)
-                                .createDataSource()
-                            val dataSpec = DataSpec(firstSurah.url.toUri())
-                            CacheWriter(dataSource, dataSpec, null, null).cache()
-                        } catch (_: Exception) { }
-                        future.set(resolved)
-                    }
-                    return future
-                }
-
                 return Futures.immediateFuture(resolved)
+            }
+
+            override fun onSearch(
+                session: MediaLibrarySession,
+                browser: MediaSession.ControllerInfo,
+                query: String,
+                params: LibraryParams?
+            ): ListenableFuture<LibraryResult<Void>> {
+                val localizedNames = resources.getStringArray(R.array.surah_names)
+                val results = SurahRepository.surahs.filter { surah ->
+                    val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
+                    name.contains(query, ignoreCase = true) ||
+                        surah.name.contains(query, ignoreCase = true) ||
+                        surah.id.toString() == query
+                }.map { buildBrowsableSurahItem(it) }
+                session.notifySearchResultChanged(browser, query, results.size, params)
+                return Futures.immediateFuture(LibraryResult.ofVoid(params))
+            }
+
+            override fun onGetSearchResult(
+                session: MediaLibrarySession,
+                browser: MediaSession.ControllerInfo,
+                query: String,
+                page: Int,
+                pageSize: Int,
+                params: LibraryParams?
+            ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+                val localizedNames = resources.getStringArray(R.array.surah_names)
+                val results = SurahRepository.surahs.filter { surah ->
+                    val name = localizedNames.getOrElse(surah.id - 1) { surah.name }
+                    name.contains(query, ignoreCase = true) ||
+                        surah.name.contains(query, ignoreCase = true) ||
+                        surah.id.toString() == query
+                }.map { buildBrowsableSurahItem(it) }
+                return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(results), params))
             }
         }
 
