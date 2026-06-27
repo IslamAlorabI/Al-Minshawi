@@ -264,6 +264,15 @@ class PlaybackService : MediaLibraryService() {
                 )
                 .build()
             player.replaceMediaItem(0, indicatorItem)
+        } else {
+            val placeholderItem = buildMediaItem(surah).buildUpon()
+                .setMediaMetadata(
+                    buildMediaItem(surah).mediaMetadata.buildUpon()
+                        .setTitle(downloadingTitle)
+                        .build()
+                )
+                .build()
+            player.setMediaItem(placeholderItem)
         }
         player.pause()
         currentDownloadingSurahId = surah.id
@@ -702,12 +711,18 @@ class PlaybackService : MediaLibraryService() {
                 controller: MediaSession.ControllerInfo,
                 mediaItems: List<MediaItem>
             ): ListenableFuture<List<MediaItem>> {
-                val resolved = mediaItems.mapNotNull { item ->
-                    val surahId = item.mediaId.toIntOrNull()
-                    val surah = if (surahId != null) SurahRepository.surahs.find { it.id == surahId } else null
-                    surah?.let { buildMediaItem(it) }
+                val firstItem = mediaItems.firstOrNull() ?: return Futures.immediateFuture(emptyList())
+                val surahId = firstItem.mediaId.toIntOrNull()
+                val surah = if (surahId != null) SurahRepository.surahs.find { it.id == surahId } else null
+
+                if (surah == null) return Futures.immediateFuture(emptyList())
+
+                if (isSurahCached(surah)) {
+                    return Futures.immediateFuture(listOf(buildMediaItem(surah)))
                 }
-                return Futures.immediateFuture(resolved)
+
+                downloadAndPlay(mediaSession.player, surah)
+                return Futures.immediateFuture(emptyList())
             }
 
             override fun onSearch(
