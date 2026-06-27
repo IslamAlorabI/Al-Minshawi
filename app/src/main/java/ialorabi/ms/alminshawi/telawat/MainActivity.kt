@@ -206,19 +206,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
     var showFavoritesOnly by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
-    val appSettingsPrefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
-    var isHelpBannerHidden by remember { mutableStateOf(appSettingsPrefs.getBoolean("hide_help_banner", false)) }
-
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                isHelpBannerHidden = appSettingsPrefs.getBoolean("hide_help_banner", false)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
@@ -324,7 +311,20 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.size(48.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shadowElevation = 4.dp,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        IconButton(onClick = { showHelpDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Info,
+                                contentDescription = stringResource(R.string.help_title),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
 
                     Surface(
                         shape = RoundedCornerShape(50),
@@ -398,52 +398,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         showFavoritesOnly = it
                     }
                 )
-
-                androidx.compose.animation.AnimatedVisibility(visible = !isHelpBannerHidden) {
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clip(RoundedCornerShape(50))
-                            .clickable { showHelpDialog = true }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.help_title),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
-                                onClick = {
-                                    isHelpBannerHidden = true
-                                    appSettingsPrefs.edit { putBoolean("hide_help_banner", true) }
-                                },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = stringResource(R.string.hide_help_banner),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    }
-                }
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(

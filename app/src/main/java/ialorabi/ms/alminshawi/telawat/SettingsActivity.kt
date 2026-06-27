@@ -205,22 +205,6 @@ class SettingsActivity : AppCompatActivity() {
                             onClick = { showClearAllDialog = true }
                         )
 
-                        var isHelpBannerHidden by remember { mutableStateOf(sharedPrefs.getBoolean("hide_help_banner", false)) }
-                        androidx.compose.animation.AnimatedVisibility(visible = isHelpBannerHidden) {
-                            Column {
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                SettingOption(
-                                    label = stringResource(R.string.show_help_banner),
-                                    icon = { Icon(Icons.Rounded.Info, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                                    isSelected = false,
-                                    onClick = {
-                                        sharedPrefs.edit { putBoolean("hide_help_banner", false) }
-                                        isHelpBannerHidden = false
-                                    }
-                                )
-                            }
-                        }
                       }
 
                         Spacer(modifier = Modifier.height(8.dp))
