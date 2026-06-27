@@ -67,13 +67,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _isBuffering = MutableStateFlow(false)
     val isBuffering: StateFlow<Boolean> = _isBuffering.asStateFlow()
 
-    private val _currentPlayingSurahId = MutableStateFlow<Int?>(null)
+    private val _currentPlayingSurahId = MutableStateFlow<Int?>(
+        prefs.getInt("last_surah_id", -1).takeIf { it != -1 }
+    )
     val currentPlayingSurahId: StateFlow<Int?> = _currentPlayingSurahId.asStateFlow()
 
-    private val _currentPosition = MutableStateFlow(0L)
+    private val _currentPosition = MutableStateFlow(prefs.getLong("last_pos", 0L))
     val currentPosition: StateFlow<Long> = _currentPosition.asStateFlow()
 
-    private val _duration = MutableStateFlow(0L)
+    private val _duration = MutableStateFlow(prefs.getLong("last_duration", 0L))
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
     private val _downloadingSurahs = MutableStateFlow<Set<Int>>(emptySet())
