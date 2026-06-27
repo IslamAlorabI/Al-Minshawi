@@ -328,7 +328,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         shadowElevation = 4.dp,
                         modifier = Modifier.weight(1f, fill = false)
                     ) {
@@ -341,7 +341,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -349,14 +349,14 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 text = stringResource(R.string.app_subtitle),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
 
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         shadowElevation = 4.dp,
                         modifier = Modifier.size(48.dp)
                     ) {
@@ -366,7 +366,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
                                 contentDescription = stringResource(R.string.settings),
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
