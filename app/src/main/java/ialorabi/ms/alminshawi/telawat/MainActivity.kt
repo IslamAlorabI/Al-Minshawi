@@ -302,13 +302,12 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
                 ) {
-                    Column {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                         Row(
                             modifier = Modifier
@@ -320,7 +319,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                shadowElevation = 4.dp,
                                 modifier = Modifier.size(48.dp)
                             ) {
                                 IconButton(onClick = { showHelpDialog = true }) {
@@ -335,7 +333,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                shadowElevation = 4.dp,
                                 modifier = Modifier.weight(1f, fill = false)
                             ) {
                                 Column(
@@ -363,7 +360,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                shadowElevation = 4.dp,
                                 modifier = Modifier.size(48.dp)
                             ) {
                                 IconButton(onClick = {
@@ -405,8 +401,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                             }
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -938,7 +932,6 @@ fun SearchBarSection(
     Surface(
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.primaryContainer,
-        shadowElevation = 4.dp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
