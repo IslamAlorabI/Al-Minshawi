@@ -91,6 +91,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 import androidx.compose.ui.platform.LocalContext
@@ -2155,102 +2156,133 @@ fun ActiveDownloadIndicator(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        val surahs = SurahRepository.surahs
-                        downloadingSurahIds.forEachIndexed { index, surahId ->
-                            val surah = surahs.find { it.id == surahId }
-                            val name = surah?.let { s ->
-                                val locName = localizedSurahNames.getOrElse(s.id - 1) { s.name }
-                                "${stringResource(R.string.surah_prefix)} $locName"
-                            } ?: "#$surahId"
-                            val progress = downloadingProgress[surahId] ?: 0f
-                            val percent = (progress * 100).toInt()
-                            val isForPlay = surahId == pendingDownloadSurahId
+                        val scrollState = rememberScrollState()
+                        val showBottomFade by remember {
+                            derivedStateOf {
+                                scrollState.value < scrollState.maxValue && scrollState.maxValue > 0
+                            }
+                        }
 
+                        Box {
                             Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .heightIn(max = 240.dp)
+                                    .verticalScroll(scrollState)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    if (isForPlay) {
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                            modifier = Modifier.size(20.dp)
+                                val surahs = SurahRepository.surahs
+                                downloadingSurahIds.forEachIndexed { index, surahId ->
+                                    val surah = surahs.find { it.id == surahId }
+                                    val name = surah?.let { s ->
+                                        val locName = localizedSurahNames.getOrElse(s.id - 1) { s.name }
+                                        "${stringResource(R.string.surah_prefix)} $locName"
+                                    } ?: "#$surahId"
+                                    val progress = downloadingProgress[surahId] ?: 0f
+                                    val percent = (progress * 100).toInt()
+                                    val isForPlay = surahId == pendingDownloadSurahId
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.PlayArrow,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(14.dp)
+                                            if (isForPlay) {
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                                    modifier = Modifier.size(20.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                            imageVector = Icons.Rounded.PlayArrow,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(14.dp)
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                            }
+                                            Text(
+                                                text = name,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                modifier = Modifier.weight(1f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            val isQueued = progress == 0f
+                                            Surface(
+                                                shape = RoundedCornerShape(50),
+                                                color = if (isQueued) MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
+                                                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                            ) {
+                                                Text(
+                                                    text = if (isQueued) stringResource(R.string.download_queued) else "$percent%",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = if (isQueued) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                 )
                                             }
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .clip(CircleShape)
+                                                    .clickable { onCancelDownload(surahId) }
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Close,
+                                                        contentDescription = stringResource(R.string.cancel_download),
+                                                        tint = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                }
+                                            }
                                         }
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                    }
-                                    Text(
-                                        text = name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        modifier = Modifier.weight(1f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    val isQueued = progress == 0f
-                                    Surface(
-                                        shape = RoundedCornerShape(50),
-                                        color = if (isQueued) MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
-                                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                    ) {
-                                        Text(
-                                            text = if (isQueued) stringResource(R.string.download_queued) else "$percent%",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = if (isQueued) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clip(CircleShape)
-                                            .clickable { onCancelDownload(surahId) }
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Close,
-                                                contentDescription = stringResource(R.string.cancel_download),
-                                                tint = MaterialTheme.colorScheme.error,
-                                                modifier = Modifier.size(14.dp)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                            LinearProgressIndicator(
+                                                progress = { progress.coerceIn(0f, 1f) },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(6.dp)
+                                                    .clip(RoundedCornerShape(50)),
+                                                color = MaterialTheme.colorScheme.primary,
+                                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                             )
                                         }
                                     }
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                                    LinearProgressIndicator(
-                                        progress = { progress.coerceIn(0f, 1f) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(6.dp)
-                                            .clip(RoundedCornerShape(50)),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                    )
+                                    if (index < downloadingSurahIds.size - 1) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = 20.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        )
+                                    }
                                 }
                             }
-                            if (index < downloadingSurahIds.size - 1) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 20.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            if (showBottomFade) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .height(20.dp)
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.Transparent,
+                                                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f)
+                                                )
+                                            )
+                                        )
                                 )
                             }
                         }
