@@ -1102,10 +1102,12 @@ fun SurahItem(
             .clip(cardShape)
             .combinedClickable(
                 onClick = { 
-                    if (!isCurrentSelected) {
-                        onPlayClick()
-                    } else if (!isPlaying) {
-                        onPauseClick() // togglePlayPause inside will resume it
+                    if (isDownloaded) {
+                        if (!isCurrentSelected) {
+                            onPlayClick()
+                        } else if (!isPlaying) {
+                            onPauseClick() // togglePlayPause inside will resume it
+                        }
                     }
                 },
                 onLongClick = {
@@ -1226,7 +1228,18 @@ fun SurahItem(
                     }
                 }
             } else {
-                Spacer(modifier = Modifier.size(40.dp))
+                IconButton(
+                    onClick = {},
+                    enabled = false,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PlayArrow,
+                        contentDescription = "Not Downloaded",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
         androidx.compose.animation.AnimatedVisibility(

@@ -647,8 +647,21 @@ class PlaybackService : MediaLibraryService() {
             val c = cache ?: return@launch
             val downloadedSet = prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
             val newSet = downloadedSet.toMutableSet()
-            
             var modified = false
+            
+            // 1. Recover/migrate any already fully downloaded surahs into SharedPreferences
+            SurahRepository.surahs.forEach { surah ->
+                val surahIdStr = surah.id.toString()
+                if (!newSet.contains(surahIdStr)) {
+                    val length = c.getContentMetadata(surah.url).get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
+                    if (length > 0 && c.getCachedBytes(surah.url, 0, length) == length) {
+                        newSet.add(surahIdStr)
+                        modified = true
+                    }
+                }
+            }
+            
+            // 2. Remove any IDs from SharedPreferences that are missing in the actual cache
             val iterator = newSet.iterator()
             while (iterator.hasNext()) {
                 val surahIdStr = iterator.next()
