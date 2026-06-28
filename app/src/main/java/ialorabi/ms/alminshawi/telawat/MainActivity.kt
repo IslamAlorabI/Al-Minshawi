@@ -65,6 +65,7 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.PlayDisabled
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
@@ -1234,7 +1235,7 @@ fun SurahItem(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.PlayArrow,
+                        imageVector = Icons.Rounded.PlayDisabled,
                         contentDescription = "Not Downloaded",
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                         modifier = Modifier.size(28.dp)
