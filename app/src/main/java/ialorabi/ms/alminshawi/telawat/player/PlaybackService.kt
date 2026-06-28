@@ -304,6 +304,9 @@ class PlaybackService : MediaLibraryService() {
                     .createDataSource()
                 val dataSpec = DataSpec(surah.url.toUri())
                 val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                    if (currentDownloadingSurahId != surah.id) {
+                        throw CancellationException("Play download cancelled")
+                    }
                     if (requestLength > 0 && currentDownloadingSurahId == surah.id) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
@@ -371,6 +374,9 @@ class PlaybackService : MediaLibraryService() {
                     .createDataSource()
                 val dataSpec = DataSpec(surah.url.toUri())
                 val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                    if (cancelledManualDownloads.contains(surah.id)) {
+                        throw CancellationException("Manual download cancelled")
+                    }
                     if (requestLength > 0 && !cancelledManualDownloads.contains(surah.id)) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
