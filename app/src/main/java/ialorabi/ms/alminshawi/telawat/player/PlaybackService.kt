@@ -259,6 +259,10 @@ class PlaybackService : MediaLibraryService() {
             return
         }
 
+        try {
+            cache?.removeResource(surah.url)
+        } catch (_: Exception) {}
+
         val downloadingTitle = getString(R.string.widget_downloading, getLocalizedSurahName(surah))
 
         val originalMediaItem = if (player.mediaItemCount > 0) player.currentMediaItem else null
@@ -355,6 +359,9 @@ class PlaybackService : MediaLibraryService() {
         manualDownloadJobs[surah.id] = serviceScope.launch {
             onManualDownloadStateChanged?.invoke(surah.id, true, 0.001f)
             val success = withContext(Dispatchers.IO) {
+                try {
+                    c.removeResource(surah.url)
+                } catch (_: Exception) {}
                 val httpFactory = DefaultHttpDataSource.Factory()
                     .setConnectTimeoutMs(HTTP_TIMEOUT_MS)
                     .setReadTimeoutMs(HTTP_TIMEOUT_MS)
