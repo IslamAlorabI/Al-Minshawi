@@ -489,10 +489,36 @@ class PlaybackService : MediaLibraryService() {
         )
     }
 
+    private fun buildAutoCustomLayout(): List<CommandButton> {
+        val repeatOn = prefs.getBoolean("repeat_mode", false)
+        val autoNextOn = prefs.getBoolean("auto_play_next", false)
+
+        val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
+        val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
+
+        return listOf(
+            CommandButton.Builder(repeatIcon)
+                .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
+                .setDisplayName(getString(R.string.repeat_surah))
+                .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
+                .build(),
+            CommandButton.Builder(autoNextIcon)
+                .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
+                .setDisplayName(getString(R.string.auto_play_next))
+                .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
+                .build()
+        )
+    }
+
     fun refreshCustomLayout() {
         _mediaSession?.let { session ->
-            val layout = buildCustomLayout()
-            session.setCustomLayout(layout)
+            for (controller in session.connectedControllers) {
+                if (session.isMediaNotificationController(controller)) {
+                    session.setCustomLayout(controller, buildCustomLayout())
+                } else {
+                    session.setCustomLayout(controller, buildAutoCustomLayout())
+                }
+            }
         }
     }
 
@@ -556,21 +582,20 @@ class PlaybackService : MediaLibraryService() {
         })
 
         val player = object : ForwardingPlayer(exoPlayer) {
-            override fun getAvailableCommands(): Player.Commands {
-                return super.getAvailableCommands().buildUpon()
-                    .remove(COMMAND_SEEK_TO_PREVIOUS)
-                    .remove(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                    .remove(COMMAND_SEEK_TO_NEXT)
-                    .remove(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                    .build()
+            override fun seekToPrevious() {
+                playPreviousSurah(this)
             }
 
-            override fun isCommandAvailable(command: Int): Boolean {
-                return when (command) {
-                    COMMAND_SEEK_TO_PREVIOUS, COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
-                    COMMAND_SEEK_TO_NEXT, COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> false
-                    else -> super.isCommandAvailable(command)
-                }
+            override fun seekToPreviousMediaItem() {
+                playPreviousSurah(this)
+            }
+
+            override fun seekToNext() {
+                playNextSurah(this)
+            }
+
+            override fun seekToNextMediaItem() {
+                playNextSurah(this)
             }
         }
 
@@ -585,16 +610,25 @@ class PlaybackService : MediaLibraryService() {
             ): MediaSession.ConnectionResult {
                 val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 customCommands.forEach { sessionCommands.add(it) }
-                val playerCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
-                    .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
-                    .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                    .remove(Player.COMMAND_SEEK_TO_NEXT)
-                    .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                    .build()
+
+                if (session.isMediaNotificationController(controller)) {
+                    val playerCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
+                        .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
+                        .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                        .remove(Player.COMMAND_SEEK_TO_NEXT)
+                        .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                        .build()
+                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                        .setAvailableSessionCommands(sessionCommands.build())
+                        .setAvailablePlayerCommands(playerCommands)
+                        .setCustomLayout(buildCustomLayout())
+                        .build()
+                }
+
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(sessionCommands.build())
-                    .setAvailablePlayerCommands(playerCommands)
-                    .setCustomLayout(buildCustomLayout())
+                    .setAvailablePlayerCommands(MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS)
+                    .setCustomLayout(buildAutoCustomLayout())
                     .build()
             }
 
