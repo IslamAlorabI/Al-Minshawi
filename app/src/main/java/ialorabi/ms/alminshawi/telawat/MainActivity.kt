@@ -1240,14 +1240,9 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val isDownloadingForPlay = pendingDownloadId != null
     val dlProgress = pendingDownloadId?.let { downloadingProgressMap[it] } ?: 0f
 
-    val rawProgress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
-    var isDragging by remember { mutableStateOf(false) }
-    val animatedProgress by animateFloatAsState(
-        targetValue = rawProgress,
-        animationSpec = tween(durationMillis = 300, easing = LinearEasing),
-        label = "sliderProgress"
-    )
-    val progress = if (isDragging) rawProgress else animatedProgress
+    val playbackProgress = if (duration > 0) currentPos.toFloat() / duration.toFloat() else 0f
+    var sliderPosition by remember { mutableStateOf<Float?>(null) }
+    val sliderValue = sliderPosition ?: playbackProgress
     var showSleepTimerSheet by remember { mutableStateOf(false) }
 
     val pulseTransition = rememberInfiniteTransition(label = "pulse")
@@ -1420,17 +1415,19 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
             Slider(
-                value = if (isDownloadingForPlay) dlProgress else progress,
+                value = if (isDownloadingForPlay) dlProgress else sliderValue,
                 onValueChange = { newProgress ->
                     if (!isDownloadingForPlay) {
-                        isDragging = true
-                        viewModel.seekTo((newProgress * duration).toLong())
+                        sliderPosition = newProgress
                     }
                 },
                 onValueChangeFinished = {
                     if (!isDownloadingForPlay) {
-                        viewModel.finishSeek()
-                        isDragging = false
+                        sliderPosition?.let { pos ->
+                            viewModel.seekTo((pos * duration).toLong())
+                            viewModel.finishSeek()
+                        }
+                        sliderPosition = null
                     }
                 },
                 enabled = !isDownloadingForPlay,
