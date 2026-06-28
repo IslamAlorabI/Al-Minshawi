@@ -1418,6 +1418,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 value = if (isDownloadingForPlay) dlProgress else sliderValue,
                 onValueChange = { newProgress ->
                     if (!isDownloadingForPlay) {
+                        if (sliderPosition == null) viewModel.beginSeek()
                         sliderPosition = newProgress
                     }
                 },

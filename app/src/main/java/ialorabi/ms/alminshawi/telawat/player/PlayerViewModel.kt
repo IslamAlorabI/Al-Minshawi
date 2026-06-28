@@ -390,12 +390,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 _currentPosition.value = player?.currentPosition ?: 0L
             }
             while (isActive) {
-                delay(250L)
+                delay(100L)
                 if (!isSeeking) {
                     _currentPosition.value = player?.currentPosition ?: 0L
                 }
                 tickCount++
-                if (tickCount % 8 == 0) saveCurrentState()
+                if (tickCount % 20 == 0) saveCurrentState()
             }
         }
     }
@@ -470,6 +470,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 it.play()
             }
         }
+    }
+
+    fun beginSeek() {
+        isSeeking = true
     }
 
     fun seekTo(positionMs: Long) {
