@@ -63,6 +63,7 @@ class PlaybackService : MediaLibraryService() {
     var onDownloadFailed: (() -> Unit)? = null
     var onPlaybackError: (() -> Unit)? = null
     private val manualDownloadJobs = mutableMapOf<Int, Job>()
+    private val cancelledManualDownloads = mutableSetOf<Int>()
 
     companion object {
         var instance: PlaybackService? = null
@@ -147,7 +148,9 @@ class PlaybackService : MediaLibraryService() {
         }
 
         fun getActiveDownloadCount(): Int {
-            return instance?.manualDownloadJobs?.size ?: 0
+            val manual = instance?.manualDownloadJobs?.size ?: 0
+            val play = if (instance?.currentDownloadingSurahId != null) 1 else 0
+            return manual + play
         }
 
         private fun getFolderSize(file: File): Long {
@@ -354,10 +357,12 @@ class PlaybackService : MediaLibraryService() {
                     .createDataSource()
                 val dataSpec = DataSpec(surah.url.toUri())
                 val progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
-                    if (requestLength > 0 && manualDownloadJobs.containsKey(surah.id)) {
+                    if (requestLength > 0 && !cancelledManualDownloads.contains(surah.id)) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
-                            onManualDownloadStateChanged?.invoke(surah.id, true, progress)
+                            if (!cancelledManualDownloads.contains(surah.id)) {
+                                onManualDownloadStateChanged?.invoke(surah.id, true, progress)
+                            }
                         }
                     }
                 }
@@ -379,18 +384,20 @@ class PlaybackService : MediaLibraryService() {
                 false
             }
             manualDownloadJobs.remove(surah.id)
-            onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
-            if (!success) onDownloadFailed?.invoke()
+            if (!cancelledManualDownloads.remove(surah.id)) {
+                onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
+                if (!success) onDownloadFailed?.invoke()
+            }
         }
     }
 
     fun cancelManualDownload(surahId: Int) {
         val job = manualDownloadJobs.remove(surahId)
-        onManualDownloadStateChanged?.invoke(surahId, false, 0f)
-        val surah = SurahRepository.surahs.find { it.id == surahId } ?: return
+        cancelledManualDownloads.add(surahId)
+        val surah = SurahRepository.surahs.find { it.id == surahId }
         serviceScope.launch {
             job?.cancelAndJoin()
-            withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
+            if (surah != null) withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
         }
     }
 
@@ -399,7 +406,6 @@ class PlaybackService : MediaLibraryService() {
         val job = downloadJob
         downloadJob = null
         currentDownloadingSurahId = null
-        onWidgetDownloadStateChanged?.invoke(surahId, false, 0f)
         isSkipping = false
         val surah = SurahRepository.surahs.find { it.id == surahId }
         serviceScope.launch {

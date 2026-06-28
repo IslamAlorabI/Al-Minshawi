@@ -423,6 +423,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
         } else if (surah.id !in _downloadingSurahs.value) {
+            val currentPlayCount = if (_pendingDownloadSurahId.value != null) 1 else 0
+            val totalWithoutCurrentPlay = PlaybackService.getActiveDownloadCount() - currentPlayCount
+            if (totalWithoutCurrentPlay >= 3) {
+                viewModelScope.launch { _downloadLimitReached.emit(Unit) }
+                return
+            }
             val previousPendingId = _pendingDownloadSurahId.value
             if (previousPendingId != null && previousPendingId != surah.id) {
                 _downloadingSurahs.value -= previousPendingId
