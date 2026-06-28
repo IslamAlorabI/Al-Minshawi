@@ -1169,46 +1169,52 @@ fun SurahItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (isDownloading) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .clickable { onCancelDownload() }
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isDownloading) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .clickable { onCancelDownload() }
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = stringResource(R.string.cancel_download),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                } else if (isDownloaded) {
                     Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.cancel_download),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            } else if (isDownloaded) {
-                Icon(
-                    imageVector = Icons.Rounded.CloudDone,
-                    contentDescription = "Downloaded",
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                IconButton(
-                    onClick = onDownloadClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Download,
-                        contentDescription = "Download",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        imageVector = Icons.Rounded.CloudDone,
+                        contentDescription = "Downloaded",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         modifier = Modifier.size(24.dp)
                     )
+                } else {
+                    IconButton(
+                        onClick = onDownloadClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = "Download",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
+
             Spacer(modifier = Modifier.width(8.dp))
 
             if (isDownloaded) {
@@ -1216,7 +1222,8 @@ fun SurahItem(
                     BufferingIndicator(modifier = Modifier.size(40.dp))
                 } else {
                     IconButton(
-                        onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() }
+                        onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() },
+                        modifier = Modifier.size(40.dp)
                     ) {
                         val icon = if (isCurrentSelected && isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow
                         val desc = if (isCurrentSelected && isPlaying) stringResource(R.string.pause) else stringResource(R.string.play)
