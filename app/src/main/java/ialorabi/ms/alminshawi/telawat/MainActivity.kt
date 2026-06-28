@@ -302,102 +302,112 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shadowElevation = 4.dp,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        IconButton(onClick = { showHelpDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Rounded.Info,
-                                contentDescription = stringResource(R.string.help_title),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
+                    Column {
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shadowElevation = 4.dp,
-                        modifier = Modifier.weight(1f, fill = false)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(R.string.sheikh_name),
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = stringResource(R.string.app_subtitle),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                IconButton(onClick = { showHelpDialog = true }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Info,
+                                        contentDescription = stringResource(R.string.help_title),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shadowElevation = 4.dp,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        IconButton(onClick = {
-                            context.startActivity(Intent(context, SettingsActivity::class.java))
-                        }) {
-                            Icon(
-                                imageVector = Icons.Rounded.Settings,
-                                contentDescription = stringResource(R.string.settings),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.weight(1f, fill = false)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.sheikh_name),
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.app_subtitle),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = ialorabi.ms.alminshawi.telawat.ui.theme.FustatFontFamily,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shadowElevation = 4.dp,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                IconButton(onClick = {
+                                    context.startActivity(Intent(context, SettingsActivity::class.java))
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Settings,
+                                        contentDescription = stringResource(R.string.settings),
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
                         }
+
+                        SearchBarSection(
+                            query = searchQuery,
+                            onQueryChange = {
+                                if (!isFilterActive) {
+                                    savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                                    savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                                }
+                                searchQuery = it
+                            },
+                            downloadFilter = downloadFilter,
+                            onFilterChange = {
+                                if (!isFilterActive) {
+                                    savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                                    savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                                }
+                                downloadFilter = it
+                            },
+                            showFavoritesOnly = showFavoritesOnly,
+                            onFavoritesToggle = {
+                                if (!isFilterActive) {
+                                    savedScrollIndex.intValue = listState.firstVisibleItemIndex
+                                    savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
+                                }
+                                showFavoritesOnly = it
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
-
-                SearchBarSection(
-                    query = searchQuery,
-                    onQueryChange = {
-                        if (!isFilterActive) {
-                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                        }
-                        searchQuery = it
-                    },
-                    downloadFilter = downloadFilter,
-                    onFilterChange = {
-                        if (!isFilterActive) {
-                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                        }
-                        downloadFilter = it
-                    },
-                    showFavoritesOnly = showFavoritesOnly,
-                    onFavoritesToggle = {
-                        if (!isFilterActive) {
-                            savedScrollIndex.intValue = listState.firstVisibleItemIndex
-                            savedScrollOffset.intValue = listState.firstVisibleItemScrollOffset
-                        }
-                        showFavoritesOnly = it
-                    }
-                )
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
