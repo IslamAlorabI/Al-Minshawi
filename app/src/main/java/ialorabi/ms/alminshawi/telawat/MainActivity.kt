@@ -1215,7 +1215,11 @@ fun SurahItem(
                 }
             }
         }
-        if (isDownloading) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = isDownloading,
+            enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut()
+        ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 LinearProgressIndicator(
                     progress = { downloadProgress },

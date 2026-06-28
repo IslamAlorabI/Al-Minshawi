@@ -19,6 +19,7 @@ import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -63,7 +64,7 @@ class PlaybackService : MediaLibraryService() {
     var onDownloadFailed: (() -> Unit)? = null
     var onPlaybackError: (() -> Unit)? = null
     private val manualDownloadJobs = mutableMapOf<Int, Job>()
-    private val cancelledManualDownloads = mutableSetOf<Int>()
+    private val cancelledManualDownloads = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
 
     companion object {
         var instance: PlaybackService? = null
@@ -95,7 +96,11 @@ class PlaybackService : MediaLibraryService() {
             val player = instance?.mediaSession?.player
             player?.stop()
             player?.clearMediaItems()
-            cache?.keys?.toSet()?.forEach { cache?.removeResource(it) }
+            cache?.keys?.toSet()?.forEach { 
+                try {
+                    cache?.removeResource(it)
+                } catch (_: Exception) {}
+            }
             val cacheFolder = File(context.filesDir, "audio_cache")
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
@@ -103,12 +108,14 @@ class PlaybackService : MediaLibraryService() {
         }
 
         fun getCachedSurahs(): List<Surah> {
-            val cachedKeys = cache?.keys ?: emptySet()
-            return SurahRepository.surahs.filter { surah -> cachedKeys.contains(surah.url) }
+            return SurahRepository.surahs.filter { isSurahCached(it) }
         }
 
         fun isSurahCached(surah: Surah): Boolean {
-            return cache?.keys?.contains(surah.url) == true
+            val c = cache ?: return false
+            val length = c.getContentMetadata(surah.url).get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
+            if (length <= 0) return false
+            return c.getCachedBytes(surah.url, 0, length) == length
         }
 
         fun removeSurahCache(surah: Surah) {
