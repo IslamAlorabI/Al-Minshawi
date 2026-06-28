@@ -119,6 +119,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _downloadLimitReached = MutableSharedFlow<Unit>()
     val downloadLimitReached: SharedFlow<Unit> = _downloadLimitReached.asSharedFlow()
 
+    private val _downloadQueueLimitReached = MutableSharedFlow<Unit>()
+    val downloadQueueLimitReached: SharedFlow<Unit> = _downloadQueueLimitReached.asSharedFlow()
+
     private val _downloadFailed = MutableSharedFlow<Unit>()
     val downloadFailed: SharedFlow<Unit> = _downloadFailed.asSharedFlow()
 
@@ -166,10 +169,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun downloadSurah(surah: Surah) {
         if (_downloadingSurahs.value.contains(surah.id)) return
-        if (PlaybackService.getActiveDownloadCount() >= 3) {
-            viewModelScope.launch { _downloadLimitReached.emit(Unit) }
-            return
-        }
         PlaybackService.instance?.downloadSurahInBackground(surah)
     }
 
@@ -250,6 +249,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     viewModelScope.launch {
                         _pendingDownloadSurahId.value = null
                         _downloadFailed.emit(Unit)
+                    }
+                }
+                PlaybackService.instance?.onDownloadQueueLimitReached = {
+                    viewModelScope.launch {
+                        _downloadQueueLimitReached.emit(Unit)
                     }
                 }
                 PlaybackService.instance?.onPlaybackError = {
@@ -422,22 +426,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun playSurah(surah: Surah) {
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
-        } else if (surah.id !in _downloadingSurahs.value) {
-            val currentPlayCount = if (_pendingDownloadSurahId.value != null) 1 else 0
-            val totalWithoutCurrentPlay = PlaybackService.getActiveDownloadCount() - currentPlayCount
-            if (totalWithoutCurrentPlay >= 3) {
-                viewModelScope.launch { _downloadLimitReached.emit(Unit) }
-                return
-            }
-            val previousPendingId = _pendingDownloadSurahId.value
-            if (previousPendingId != null && previousPendingId != surah.id) {
-                _downloadingSurahs.value -= previousPendingId
-                _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                    remove(previousPendingId)
-                }
-            }
-            _pendingDownloadSurahId.value = surah.id
-            PlaybackService.instance?.downloadAndPlay(PlaybackService.instance?.mediaSession?.player ?: return, surah)
         }
     }
 

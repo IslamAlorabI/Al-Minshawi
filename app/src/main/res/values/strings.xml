@@ -78,5 +78,7 @@
     <string name="playback_error">خطأ في التشغيل، أعد تحميل السورة</string>
     <string name="browse_all_surahs">كل السور</string>
     <string name="browse_by_juz">الأجزاء</string>
+    <string name="download_queued">في الانتظار…</string>
+    <string name="download_limit_queued_reached">تم الوصول للحد الأقصى لصف الانتظار (١٠ تنزيلات)</string>
 
 </resources>

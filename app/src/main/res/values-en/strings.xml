@@ -78,5 +78,7 @@
     <string name="playback_error">Playback error, please re-download the surah</string>
     <string name="browse_all_surahs">All Surahs</string>
     <string name="browse_by_juz">By Juz</string>
+    <string name="download_queued">Queued…</string>
+    <string name="download_limit_queued_reached">Download queue limit reached (max 10 downloads)</string>
 
 </resources>

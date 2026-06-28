@@ -262,6 +262,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
 
     val snackbarHostState = remember { SnackbarHostState() }
     val downloadLimitMsg = stringResource(R.string.download_limit_reached)
+    val downloadQueueLimitMsg = stringResource(R.string.download_limit_queued_reached)
     val downloadFailedMsg = stringResource(R.string.download_failed)
     val playbackErrorMsg = stringResource(R.string.playback_error)
     LaunchedEffect(Unit) {
@@ -269,6 +270,15 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(
                 message = downloadLimitMsg,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.downloadQueueLimitReached.collect {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(
+                message = downloadQueueLimitMsg,
                 duration = SnackbarDuration.Short
             )
         }
@@ -1198,21 +1208,25 @@ fun SurahItem(
             }
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (isBuffering) {
-                BufferingIndicator(modifier = Modifier.size(40.dp))
-            } else {
-                IconButton(
-                    onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() }
-                ) {
-                    val icon = if (isCurrentSelected && isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow
-                    val desc = if (isCurrentSelected && isPlaying) stringResource(R.string.pause) else stringResource(R.string.play)
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = desc,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
-                    )
+            if (isDownloaded) {
+                if (isBuffering) {
+                    BufferingIndicator(modifier = Modifier.size(40.dp))
+                } else {
+                    IconButton(
+                        onClick = { if (isCurrentSelected) onPauseClick() else onPlayClick() }
+                    ) {
+                        val icon = if (isCurrentSelected && isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow
+                        val desc = if (isCurrentSelected && isPlaying) stringResource(R.string.pause) else stringResource(R.string.play)
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = desc,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
+            } else {
+                Spacer(modifier = Modifier.size(40.dp))
             }
         }
         androidx.compose.animation.AnimatedVisibility(
@@ -2166,14 +2180,16 @@ fun ActiveDownloadIndicator(
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
+                                    val isQueued = progress == 0f
                                     Surface(
                                         shape = RoundedCornerShape(50),
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                        color = if (isQueued) MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
+                                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                     ) {
                                         Text(
-                                            text = "$percent%",
+                                            text = if (isQueued) stringResource(R.string.download_queued) else "$percent%",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = if (isQueued) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                         )

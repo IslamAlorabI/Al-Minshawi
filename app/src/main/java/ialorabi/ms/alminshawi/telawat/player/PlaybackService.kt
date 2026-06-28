@@ -63,8 +63,10 @@ class PlaybackService : MediaLibraryService() {
     var onManualDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
     var onDownloadFailed: (() -> Unit)? = null
     var onPlaybackError: (() -> Unit)? = null
+    var onDownloadQueueLimitReached: (() -> Unit)? = null
     private val manualDownloadJobs = mutableMapOf<Int, Job>()
     private val cancelledManualDownloads = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
+    private val downloadQueue = mutableListOf<Surah>()
 
     companion object {
         var instance: PlaybackService? = null
@@ -74,8 +76,7 @@ class PlaybackService : MediaLibraryService() {
             private set
         private const val CACHE_SIZE = 2L * 1024 * 1024 * 1024
         private const val MAX_PARALLEL_DOWNLOADS = 3
-        private const val MAX_DOWNLOAD_RETRIES = 3
-        private const val RETRY_DELAY_MS = 2000L
+        private const val MAX_DOWNLOAD_RETRIES = 5
         private const val HTTP_TIMEOUT_MS = 30_000
 
         const val ACTION_REPEAT = "action_repeat"
@@ -105,6 +106,8 @@ class PlaybackService : MediaLibraryService() {
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
             }
+            val sharedPrefs = context.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
+            sharedPrefs.edit { remove("downloaded_surahs") }
         }
 
         fun getCachedSurahs(): List<Surah> {
@@ -113,6 +116,11 @@ class PlaybackService : MediaLibraryService() {
 
         fun isSurahCached(surah: Surah): Boolean {
             val c = cache ?: return false
+            val inst = instance
+            if (inst != null) {
+                val downloadedSet = inst.prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
+                return downloadedSet.contains(surah.id.toString()) && c.keys.contains(surah.url)
+            }
             val length = c.getContentMetadata(surah.url).get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
             if (length <= 0) return false
             return c.getCachedBytes(surah.url, 0, length) == length
@@ -125,6 +133,7 @@ class PlaybackService : MediaLibraryService() {
                 player.clearMediaItems()
             }
             cache?.removeResource(surah.url)
+            instance?.removeSurahFromDownloaded(surah.id)
         }
 
         fun saveSurahToDownloads(context: Context, surah: Surah, fileName: String): Boolean {
@@ -174,6 +183,18 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private val prefs by lazy { getSharedPreferences("player_prefs", Context.MODE_PRIVATE) }
+
+    fun markSurahAsDownloaded(surahId: Int) {
+        val current = prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
+        val newSet = current.toMutableSet().apply { add(surahId.toString()) }
+        prefs.edit { putStringSet("downloaded_surahs", newSet) }
+    }
+
+    fun removeSurahFromDownloaded(surahId: Int) {
+        val current = prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
+        val newSet = current.toMutableSet().apply { remove(surahId.toString()) }
+        prefs.edit { putStringSet("downloaded_surahs", newSet) }
+    }
 
     private fun getArtworkData(): ByteArray? {
         _artworkData?.let { return it }
@@ -324,7 +345,7 @@ class PlaybackService : MediaLibraryService() {
                         if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            delay(RETRY_DELAY_MS)
+                            delay(1000L * attempt)
                         }
                     }
                 }
@@ -355,9 +376,36 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
+    fun getQueueAndActiveCount(): Int {
+        return manualDownloadJobs.size + downloadQueue.size
+    }
+
+    private fun processNextInQueue() {
+        if (downloadQueue.isNotEmpty() && manualDownloadJobs.size < MAX_PARALLEL_DOWNLOADS) {
+            val nextSurah = downloadQueue.removeAt(0)
+            startManualDownload(nextSurah)
+        }
+    }
+
     fun downloadSurahInBackground(surah: Surah) {
-        if (manualDownloadJobs.containsKey(surah.id)) return
-        if (manualDownloadJobs.size >= MAX_PARALLEL_DOWNLOADS) return
+        if (manualDownloadJobs.containsKey(surah.id) || downloadQueue.any { it.id == surah.id }) return
+        
+        val totalCount = manualDownloadJobs.size + downloadQueue.size
+        if (totalCount >= 10) {
+            onDownloadQueueLimitReached?.invoke()
+            return
+        }
+        
+        if (manualDownloadJobs.size >= MAX_PARALLEL_DOWNLOADS) {
+            downloadQueue.add(surah)
+            onManualDownloadStateChanged?.invoke(surah.id, true, 0f)
+            return
+        }
+        
+        startManualDownload(surah)
+    }
+
+    private fun startManualDownload(surah: Surah) {
         val c = cache ?: return
         manualDownloadJobs[surah.id] = serviceScope.launch {
             onManualDownloadStateChanged?.invoke(surah.id, true, 0.001f)
@@ -379,9 +427,10 @@ class PlaybackService : MediaLibraryService() {
                     }
                     if (requestLength > 0 && !cancelledManualDownloads.contains(surah.id)) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
+                        val safeProgress = progress.coerceIn(0.001f, 1f)
                         serviceScope.launch {
                             if (!cancelledManualDownloads.contains(surah.id)) {
-                                onManualDownloadStateChanged?.invoke(surah.id, true, progress)
+                                onManualDownloadStateChanged?.invoke(surah.id, true, safeProgress)
                             }
                         }
                     }
@@ -396,7 +445,7 @@ class PlaybackService : MediaLibraryService() {
                         if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            delay(RETRY_DELAY_MS)
+                            delay(1000L * attempt)
                         }
                     }
                 }
@@ -406,18 +455,39 @@ class PlaybackService : MediaLibraryService() {
             manualDownloadJobs.remove(surah.id)
             if (!cancelledManualDownloads.remove(surah.id)) {
                 onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
-                if (!success) onDownloadFailed?.invoke()
+                if (success) {
+                    markSurahAsDownloaded(surah.id)
+                } else {
+                    onDownloadFailed?.invoke()
+                }
             }
+            processNextInQueue()
         }
     }
 
     fun cancelManualDownload(surahId: Int) {
+        val queuedIndex = downloadQueue.indexOfFirst { it.id == surahId }
+        if (queuedIndex != -1) {
+            downloadQueue.removeAt(queuedIndex)
+            onManualDownloadStateChanged?.invoke(surahId, false, 0f)
+            return
+        }
+
         val job = manualDownloadJobs.remove(surahId)
-        cancelledManualDownloads.add(surahId)
-        val surah = SurahRepository.surahs.find { it.id == surahId }
-        serviceScope.launch {
-            job?.cancelAndJoin()
-            if (surah != null) withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
+        if (job != null) {
+            cancelledManualDownloads.add(surahId)
+            val surah = SurahRepository.surahs.find { it.id == surahId }
+            serviceScope.launch {
+                job.cancelAndJoin()
+                if (surah != null) {
+                    try {
+                        withContext(Dispatchers.IO) { cache?.removeResource(surah.url) }
+                    } catch (_: Exception) {}
+                    removeSurahFromDownloaded(surah.id)
+                }
+                onManualDownloadStateChanged?.invoke(surahId, false, 0f)
+                processNextInQueue()
+            }
         }
     }
 
@@ -435,6 +505,10 @@ class PlaybackService : MediaLibraryService() {
     }
 
     fun cancelAllDownloads() {
+        val queuedIds = downloadQueue.map { it.id }
+        downloadQueue.clear()
+        queuedIds.forEach { onManualDownloadStateChanged?.invoke(it, false, 0f) }
+
         val playId = currentDownloadingSurahId
         if (playId != null) cancelPlayDownload()
 
@@ -567,6 +641,28 @@ class PlaybackService : MediaLibraryService() {
             val evictor = LeastRecentlyUsedCacheEvictor(CACHE_SIZE)
             val databaseProvider = StandaloneDatabaseProvider(this)
             cache = SimpleCache(newCacheDir, evictor, databaseProvider)
+        }
+
+        serviceScope.launch(Dispatchers.IO) {
+            val c = cache ?: return@launch
+            val downloadedSet = prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
+            val newSet = downloadedSet.toMutableSet()
+            
+            var modified = false
+            val iterator = newSet.iterator()
+            while (iterator.hasNext()) {
+                val surahIdStr = iterator.next()
+                val id = surahIdStr.toIntOrNull()
+                val surah = SurahRepository.surahs.find { it.id == id }
+                if (surah == null || !c.keys.contains(surah.url)) {
+                    iterator.remove()
+                    modified = true
+                }
+            }
+            
+            if (modified) {
+                prefs.edit { putStringSet("downloaded_surahs", newSet) }
+            }
         }
 
         val cacheDataSourceFactory = CacheDataSource.Factory()
