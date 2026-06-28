@@ -446,6 +446,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .padding(horizontal = 16.dp)
+                            .padding(top = 8.dp)
                     ) { data ->
                         Snackbar(
                             snackbarData = data,
@@ -461,7 +462,15 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                         pendingDownloadSurahId = pendingDownloadSurahId,
                         localizedSurahNames = localizedSurahNames,
                         onCancelDownload = { viewModel.cancelDownload(it) },
-                        onCancelAll = { viewModel.cancelAllDownloads() }
+                        onCancelAll = { viewModel.cancelAllDownloads() },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                bottom = if (showFloatingPlayer && playerHeightPx > 0) {
+                                    val navBarPx = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+                                    with(LocalDensity.current) { (playerHeightPx - navBarPx).coerceAtLeast(0).toDp() } + 16.dp
+                                } else 16.dp
+                            )
                     )
                 }
             }
@@ -2016,7 +2025,8 @@ fun ActiveDownloadIndicator(
     pendingDownloadSurahId: Int?,
     localizedSurahNames: Array<String>,
     onCancelDownload: (Int) -> Unit,
-    onCancelAll: () -> Unit
+    onCancelAll: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val hasActiveDownloads = downloadingSurahIds.isNotEmpty()
     var showPopup by remember { mutableStateOf(false) }
@@ -2039,48 +2049,15 @@ fun ActiveDownloadIndicator(
         visible = hasActiveDownloads,
         enter = fadeIn(tween(400)),
         exit = fadeOut(tween(300)),
-        modifier = Modifier
-            .padding(end = 16.dp, top = 8.dp)
+        modifier = modifier
     ) {
         Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier.fillMaxWidth()
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    CircularProgressIndicator(
-                        progress = { animatedProgress.coerceIn(0f, 1f) },
-                        modifier = Modifier.size(52.dp),
-                        strokeWidth = 3.5.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                    )
-                }
-                Surface(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .clickable { showPopup = !showPopup },
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shadowElevation = 4.dp,
-                    tonalElevation = 2.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(
-                            imageVector = Icons.Rounded.Download,
-                            contentDescription = stringResource(R.string.active_downloads),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-            }
-
             androidx.compose.animation.AnimatedVisibility(
                 visible = showPopup,
-                enter = expandVertically(tween(250), expandFrom = Alignment.Top) + fadeIn(tween(200)),
-                exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Top) + fadeOut(tween(150))
+                enter = expandVertically(tween(250), expandFrom = Alignment.Bottom) + fadeIn(tween(200)),
+                exit = shrinkVertically(tween(200), shrinkTowards = Alignment.Bottom) + fadeOut(tween(150))
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
@@ -2088,7 +2065,7 @@ fun ActiveDownloadIndicator(
                     shadowElevation = 8.dp,
                     tonalElevation = 4.dp,
                     modifier = Modifier
-                        .padding(top = 8.dp, start = 16.dp)
+                        .padding(bottom = 8.dp)
                         .widthIn(max = 320.dp)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 12.dp)) {
@@ -2236,6 +2213,37 @@ fun ActiveDownloadIndicator(
                                 )
                             }
                         }
+                    }
+                }
+            }
+
+            Box(contentAlignment = Alignment.Center) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    CircularProgressIndicator(
+                        progress = { animatedProgress.coerceIn(0f, 1f) },
+                        modifier = Modifier.size(52.dp),
+                        strokeWidth = 3.5.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    )
+                }
+                Surface(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .clickable { showPopup = !showPopup },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shadowElevation = 4.dp,
+                    tonalElevation = 2.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = stringResource(R.string.active_downloads),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
             }
