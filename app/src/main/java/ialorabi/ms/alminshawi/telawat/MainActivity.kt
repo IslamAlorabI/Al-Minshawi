@@ -783,8 +783,19 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp)
+                                            .padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 8.dp)
                                     ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.SkipPrevious,
+                                            contentDescription = stringResource(R.string.rewind),
+                                            tint = if (currentSurahId == 1) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .clickable(enabled = currentSurahId != 1) { viewModel.playPreviousSurah() }
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = if (duration > 0) formatTime(currentPosition) else "--:--",
                                             fontSize = 11.sp,
@@ -808,6 +819,17 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             fontWeight = FontWeight.Bold,
                                             fontFamily = FontFamily.Monospace,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Rounded.SkipNext,
+                                            contentDescription = stringResource(R.string.forward),
+                                            tint = if (currentSurahId == 114) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .clickable(enabled = currentSurahId != 114) { viewModel.playNextSurah() }
                                         )
                                     }
                                 }
