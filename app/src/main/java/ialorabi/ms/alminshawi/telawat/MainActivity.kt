@@ -525,7 +525,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                         Surface(
                                             shape = RoundedCornerShape(50),
                                             color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                else MaterialTheme.colorScheme.surfaceContainerHigh,
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(50))
                                                 .clickable {
@@ -538,7 +538,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium,
                                                 color = if (sleepTimerMs == 0L) MaterialTheme.colorScheme.onPrimary
-                                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    else MaterialTheme.colorScheme.onSurface,
                                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                             )
                                         }
@@ -560,7 +560,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     color = if (isActive) MaterialTheme.colorScheme.onPrimary
-                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        else MaterialTheme.colorScheme.onSurface,
                                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                                 )
                                             }
@@ -613,7 +613,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             Surface(
                                                 shape = RoundedCornerShape(50),
                                                 color = if (isRepeatOn) MaterialTheme.colorScheme.primary
-                                                    else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                    else MaterialTheme.colorScheme.surfaceContainerHigh,
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(50))
                                                     .clickable { viewModel.toggleRepeat() }
@@ -626,7 +626,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                         imageVector = Icons.Rounded.Repeat,
                                                         contentDescription = stringResource(R.string.repeat_surah),
                                                         tint = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
-                                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            else MaterialTheme.colorScheme.onSurface,
                                                         modifier = Modifier.size(14.dp)
                                                     )
                                                     Spacer(modifier = Modifier.width(4.dp))
@@ -635,7 +635,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                         fontSize = 12.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = if (isRepeatOn) MaterialTheme.colorScheme.onPrimary
-                                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                                            else MaterialTheme.colorScheme.onSurface
                                                     )
                                                 }
                                             }
@@ -719,7 +719,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                     ) {
                                         Surface(
                                             shape = CircleShape,
-                                            color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            color = if (isAutoPlayNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
                                             modifier = Modifier
                                                 .size(40.dp)
                                                 .clip(CircleShape)
@@ -737,7 +737,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                                     Icon(
                                                         imageVector = if (isAutoPlayReversed) Icons.AutoMirrored.Rounded.Sort else Icons.AutoMirrored.Rounded.QueueMusic,
                                                         contentDescription = stringResource(R.string.auto_play_next),
-                                                        tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        tint = if (isAutoPlayNext) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                                         modifier = Modifier.size(20.dp)
                                                     )
                                                 }
