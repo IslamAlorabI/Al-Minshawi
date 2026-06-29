@@ -1556,7 +1556,10 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                     color = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Text(
-                        text = if (duration > 0) formatTime(currentPos) else "--:--",
+                        text = if (duration > 0) {
+                            val displayMs = sliderPosition?.let { (it * duration).toLong() } ?: currentPos
+                            formatTime(displayMs)
+                        } else "--:--",
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
