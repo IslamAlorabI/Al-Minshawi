@@ -812,16 +812,41 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             .fillMaxWidth()
                                             .padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 8.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.SkipPrevious,
-                                            contentDescription = stringResource(R.string.rewind),
-                                            tint = if (currentSurahId == 1) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        val miniCurrentId = currentSurahId ?: -1
+                                        val isMiniFirst = miniCurrentId <= 1
+                                        val isMiniPrevDownloaded = (miniCurrentId - 1) in cachedSurahIds
+                                        val canMiniSkipPrev = !isMiniFirst && isMiniPrevDownloaded
+
+                                        Box(
                                             modifier = Modifier
                                                 .size(24.dp)
                                                 .clip(CircleShape)
-                                                .clickable(enabled = currentSurahId != 1) { viewModel.playPreviousSurah() }
-                                        )
+                                                .clickable(enabled = canMiniSkipPrev) { viewModel.playPreviousSurah() },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isMiniFirst) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.SkipPrevious,
+                                                    contentDescription = stringResource(R.string.rewind),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            } else if (!isMiniPrevDownloaded) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Download,
+                                                    contentDescription = stringResource(R.string.rewind),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.SkipPrevious,
+                                                    contentDescription = stringResource(R.string.rewind),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = if (duration > 0) formatTime(currentPosition) else "--:--",
@@ -848,16 +873,40 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Icon(
-                                            imageVector = Icons.Rounded.SkipNext,
-                                            contentDescription = stringResource(R.string.forward),
-                                            tint = if (currentSurahId == 114) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        val isMiniLast = miniCurrentId >= 114 || miniCurrentId == -1
+                                        val isMiniNextDownloaded = (miniCurrentId + 1) in cachedSurahIds
+                                        val canMiniSkipNext = !isMiniLast && isMiniNextDownloaded
+
+                                        Box(
                                             modifier = Modifier
                                                 .size(24.dp)
                                                 .clip(CircleShape)
-                                                .clickable(enabled = currentSurahId != 114) { viewModel.playNextSurah() }
-                                        )
+                                                .clickable(enabled = canMiniSkipNext) { viewModel.playNextSurah() },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isMiniLast) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.SkipNext,
+                                                    contentDescription = stringResource(R.string.forward),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            } else if (!isMiniNextDownloaded) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Download,
+                                                    contentDescription = stringResource(R.string.forward),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.SkipNext,
+                                                    contentDescription = stringResource(R.string.forward),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                     }
@@ -1210,6 +1259,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
     val isPlaying by viewModel.isPlaying.collectAsState()
     val isBuffering by viewModel.isBuffering.collectAsState()
     val currentPos by viewModel.currentPosition.collectAsState()
+    val cachedSurahIds by viewModel.cachedSurahIds.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val isRepeatOn by viewModel.repeatMode.collectAsState()
     val isAutoPlayNext by viewModel.autoPlayNext.collectAsState()
@@ -1555,6 +1605,8 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 val surahs = SurahRepository.surahs
                 val isFirstSurah = surah.id <= 1
                 val isLastSurah = surah.id >= surahs.size
+                val isPrevDownloaded = (surah.id - 1) in cachedSurahIds
+                val isNextDownloaded = (surah.id + 1) in cachedSurahIds
 
                 val prevScale = remember { Animatable(1f) }
                 val prevOffsetX = remember { Animatable(0f) }
@@ -1562,7 +1614,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 IconButton(
                     onClick = {
-                        if (isFirstSurah) {
+                        if (isFirstSurah || !isPrevDownloaded) {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch {
                                 prevOffsetX.animateTo(
@@ -1598,12 +1650,28 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             translationX = prevOffsetX.value.dp.toPx()
                         }
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SkipPrevious,
-                        contentDescription = stringResource(R.string.rewind),
-                        modifier = Modifier.size(32.dp),
-                        tint = if (isFirstSurah) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface
-                    )
+                    if (isFirstSurah) {
+                        Icon(
+                            imageVector = Icons.Rounded.SkipPrevious,
+                            contentDescription = stringResource(R.string.rewind),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                    } else if (!isPrevDownloaded) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = stringResource(R.string.rewind),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.SkipPrevious,
+                            contentDescription = stringResource(R.string.rewind),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 val rewindRotation = remember { Animatable(0f) }
@@ -1696,7 +1764,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
 
                 IconButton(
                     onClick = {
-                        if (isLastSurah) {
+                        if (isLastSurah || !isNextDownloaded) {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch {
                                 nextOffsetX.animateTo(
@@ -1732,12 +1800,28 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             translationX = nextOffsetX.value.dp.toPx()
                         }
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SkipNext,
-                        contentDescription = stringResource(R.string.forward),
-                        modifier = Modifier.size(32.dp),
-                        tint = if (isLastSurah) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface
-                    )
+                    if (isLastSurah) {
+                        Icon(
+                            imageVector = Icons.Rounded.SkipNext,
+                            contentDescription = stringResource(R.string.forward),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                    } else if (!isNextDownloaded) {
+                        Icon(
+                            imageVector = Icons.Rounded.Download,
+                            contentDescription = stringResource(R.string.forward),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.SkipNext,
+                            contentDescription = stringResource(R.string.forward),
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
