@@ -985,7 +985,7 @@ fun SearchBarSection(
 
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SurahItem(
     surah: Surah,
@@ -1036,10 +1036,11 @@ fun SurahItem(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val numberShape = MaterialShapes.Cookie9Sided.toShape()
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
+                    .clip(numberShape)
                     .background(
                         if (isFavorite) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
