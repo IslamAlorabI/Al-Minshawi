@@ -340,7 +340,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     isTransitioning = false
                     isSkipping = false
                 }
-                if (playbackState == Player.STATE_ENDED && !isTransitioning) {
+                if (playbackState == Player.STATE_ENDED && !isTransitioning && !isSeeking) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                     _currentPosition.value = _duration.value
                 }
@@ -456,8 +456,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    private var wasPlayingBeforeSeek = false
+
     fun beginSeek() {
         isSeeking = true
+        PlaybackService.isUserSeeking = true
+        wasPlayingBeforeSeek = player?.isPlaying == true
+        player?.pause()
     }
 
     fun seekTo(positionMs: Long) {
@@ -467,7 +472,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun finishSeek() {
         player?.seekTo(_currentPosition.value)
-        isSeeking = false
+        if (wasPlayingBeforeSeek) {
+            player?.play()
+        }
+        viewModelScope.launch {
+            delay(300.milliseconds)
+            isSeeking = false
+            PlaybackService.isUserSeeking = false
+        }
     }
 
     fun seekForward() {

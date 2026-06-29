@@ -74,6 +74,8 @@ class PlaybackService : MediaLibraryService() {
     companion object {
         var instance: PlaybackService? = null
             private set
+        @Volatile
+        var isUserSeeking = false
         
         var cache: SimpleCache? = null
             private set
@@ -763,7 +765,7 @@ class PlaybackService : MediaLibraryService() {
                 if (playbackState == Player.STATE_READY) {
                     isAutoPlayTransitioning = false
                 }
-                if (playbackState == Player.STATE_ENDED && !isAutoPlayTransitioning) {
+                if (playbackState == Player.STATE_ENDED && !isAutoPlayTransitioning && !isUserSeeking) {
                     val repeatOn = prefs.getBoolean("repeat_mode", false)
                     val autoNextOn = prefs.getBoolean("auto_play_next", false)
                     val autoReversed = prefs.getBoolean("auto_play_reversed", false)
