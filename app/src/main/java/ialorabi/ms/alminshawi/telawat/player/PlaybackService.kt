@@ -324,7 +324,7 @@ class PlaybackService : MediaLibraryService() {
                     if (currentDownloadingSurahId != surah.id) {
                         throw CancellationException("Play download cancelled")
                     }
-                    if (requestLength > 0 && currentDownloadingSurahId == surah.id) {
+                    if (requestLength > 0) {
                         val progress = bytesCached.toFloat() / requestLength.toFloat()
                         serviceScope.launch {
                             onWidgetDownloadStateChanged?.invoke(surah.id, true, progress)
