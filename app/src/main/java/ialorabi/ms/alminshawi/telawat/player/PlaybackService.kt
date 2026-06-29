@@ -521,12 +521,25 @@ class PlaybackService : MediaLibraryService() {
         return "$prefix $name (${surah.id})"
     }
 
+    private fun isNextSurahCached(): Boolean {
+        val currentId = _mediaSession?.player?.currentMediaItem?.mediaId?.toIntOrNull() ?: return false
+        val surahs = SurahRepository.surahs
+        if (currentId >= surahs.size) return false
+        return isSurahCached(surahs[currentId])
+    }
+
+    private fun isPreviousSurahCached(): Boolean {
+        val currentId = _mediaSession?.player?.currentMediaItem?.mediaId?.toIntOrNull() ?: return false
+        if (currentId <= 1) return false
+        return isSurahCached(SurahRepository.surahs[currentId - 2])
+    }
+
     private fun playNextSurah(player: Player) {
         if (isSkipping) return
         isSkipping = true
         val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
-        if (currentId < surahs.size) {
+        if (currentId < surahs.size && isSurahCached(surahs[currentId])) {
             downloadAndPlay(player, surahs[currentId])
         } else {
             isSkipping = false
@@ -538,7 +551,7 @@ class PlaybackService : MediaLibraryService() {
         isSkipping = true
         val currentId = player.currentMediaItem?.mediaId?.toIntOrNull() ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
-        if (currentId > 1) {
+        if (currentId > 1 && isSurahCached(surahs[currentId - 2])) {
             downloadAndPlay(player, surahs[currentId - 2])
         } else {
             isSkipping = false
@@ -572,12 +585,24 @@ class PlaybackService : MediaLibraryService() {
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
         val (autoPlayIconRes, autoPlayNameRes) = resolveAutoPlayIcon()
 
+        val prevCached = isPreviousSurahCached()
+        val nextCached = isNextSurahCached()
+
         return listOf(
-            CommandButton.Builder(CommandButton.ICON_PREVIOUS)
-                .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.rewind))
-                .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                .build(),
+            if (prevCached) {
+                CommandButton.Builder(CommandButton.ICON_PREVIOUS)
+                    .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
+                    .setDisplayName(getString(R.string.rewind))
+                    .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
+                    .build()
+            } else {
+                CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+                    .setCustomIconResId(R.drawable.ic_notification_download)
+                    .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
+                    .setDisplayName(getString(R.string.rewind))
+                    .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
+                    .build()
+            },
             CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
@@ -589,11 +614,20 @@ class PlaybackService : MediaLibraryService() {
                 .setDisplayName(getString(autoPlayNameRes))
                 .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
                 .build(),
-            CommandButton.Builder(CommandButton.ICON_NEXT)
-                .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.forward))
-                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                .build()
+            if (nextCached) {
+                CommandButton.Builder(CommandButton.ICON_NEXT)
+                    .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
+                    .setDisplayName(getString(R.string.forward))
+                    .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
+                    .build()
+            } else {
+                CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+                    .setCustomIconResId(R.drawable.ic_notification_download)
+                    .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
+                    .setDisplayName(getString(R.string.forward))
+                    .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
+                    .build()
+            }
         )
     }
 
@@ -747,6 +781,10 @@ class PlaybackService : MediaLibraryService() {
                         }
                     }
                 }
+            }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                refreshCustomLayout()
             }
         })
 
