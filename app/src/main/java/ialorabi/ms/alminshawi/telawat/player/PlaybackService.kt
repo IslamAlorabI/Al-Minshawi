@@ -164,11 +164,6 @@ class PlaybackService : MediaLibraryService() {
             }
         }
 
-        fun getActiveDownloadCount(): Int {
-            val manual = instance?.manualDownloadJobs?.size ?: 0
-            val play = if (instance?.currentDownloadingSurahId != null) 1 else 0
-            return manual + play
-        }
 
         private fun getFolderSize(file: File): Long {
             var size: Long = 0
