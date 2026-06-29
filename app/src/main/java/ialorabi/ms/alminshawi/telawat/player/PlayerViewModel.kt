@@ -352,7 +352,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         player?.play()
                     } else if (_autoPlayNext.value) {
                         isTransitioning = true
-                        if (_autoPlayReversed.value) playPreviousSurah() else playNextSurah()
+                        if (_autoPlayReversed.value) playPreviousSurah(autoPlay = true) else playNextSurah(autoPlay = true)
                     }
                 }
             }
@@ -418,9 +418,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob = null
     }
 
-    fun playSurah(surah: Surah) {
+    fun playSurah(surah: Surah, autoPlay: Boolean = false) {
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
+        } else if (autoPlay) {
+            val exoPlayer = player ?: run { isTransitioning = false; isSkipping = false; return }
+            PlaybackService.instance?.downloadAndPlay(exoPlayer, surah)
         } else {
             isTransitioning = false
             isSkipping = false
@@ -494,26 +497,26 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun playNextSurah() {
+    fun playNextSurah(autoPlay: Boolean = false) {
         if (isSkipping) return
         isSkipping = true
         val currentId = _currentPlayingSurahId.value ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId < surahs.size) {
-            playSurah(surahs[currentId])
+            playSurah(surahs[currentId], autoPlay)
         } else {
             isTransitioning = false
             isSkipping = false
         }
     }
 
-    fun playPreviousSurah() {
+    fun playPreviousSurah(autoPlay: Boolean = false) {
         if (isSkipping) return
         isSkipping = true
         val currentId = _currentPlayingSurahId.value ?: run { isSkipping = false; return }
         val surahs = SurahRepository.surahs
         if (currentId > 1) {
-            playSurah(surahs[currentId - 2])
+            playSurah(surahs[currentId - 2], autoPlay)
         } else {
             isTransitioning = false
             isSkipping = false
