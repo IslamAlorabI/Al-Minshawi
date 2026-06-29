@@ -350,6 +350,9 @@ class PlaybackService : MediaLibraryService() {
                 false
             }
             currentDownloadingSurahId = null
+            if (success) {
+                markSurahAsDownloaded(surah.id)
+            }
             onWidgetDownloadStateChanged?.invoke(surah.id, false, 0f)
             if (success) {
                 player.stop()
@@ -448,10 +451,11 @@ class PlaybackService : MediaLibraryService() {
             }
             manualDownloadJobs.remove(surah.id)
             if (!cancelledManualDownloads.remove(surah.id)) {
-                onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
                 if (success) {
                     markSurahAsDownloaded(surah.id)
-                } else {
+                }
+                onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
+                if (!success) {
                     onDownloadFailed?.invoke()
                 }
             }
