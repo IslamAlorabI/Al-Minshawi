@@ -11,7 +11,6 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.MoreExecutors
 import androidx.core.content.edit
 import ialorabi.ms.alminshawi.telawat.R
@@ -27,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlin.time.Duration.Companion.milliseconds
 
 @androidx.media3.common.util.UnstableApi
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
@@ -53,9 +53,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         return _artworkData
     }
 
-    fun refreshArtwork() {
-        _artworkData = null
-    }
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
     var player: Player? = null
@@ -183,7 +180,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply { remove(surahId) }
         _cachedSurahIds.value -= surahId
         viewModelScope.launch {
-            delay(1000)
+            delay(1000.milliseconds)
             refreshCachedSurahs()
         }
     }
@@ -196,7 +193,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         _downloadingProgress.value = emptyMap()
         _cachedSurahIds.value -= downloading
         viewModelScope.launch {
-            delay(1000)
+            delay(1000.milliseconds)
             refreshCachedSurahs()
         }
     }
@@ -334,7 +331,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 bufferingJob?.cancel()
                 if (playbackState == Player.STATE_BUFFERING) {
                     bufferingJob = viewModelScope.launch {
-                        delay(500L)
+                        delay(500L.milliseconds)
                         _isBuffering.value = true
                     }
                 } else {
@@ -394,7 +391,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 _currentPosition.value = player?.currentPosition ?: 0L
             }
             while (isActive) {
-                delay(100L)
+                delay(100L.milliseconds)
                 if (!isSeeking) {
                     _currentPosition.value = player?.currentPosition ?: 0L
                 }
@@ -565,7 +562,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         sleepTimerJob = viewModelScope.launch {
             val startTime = System.currentTimeMillis()
             while (isActive) {
-                delay(500L)
+                delay(500L.milliseconds)
                 val elapsed = System.currentTimeMillis() - startTime
                 val remaining = (totalMs - elapsed).coerceAtLeast(0L)
                 _sleepTimerRemainingMs.value = remaining

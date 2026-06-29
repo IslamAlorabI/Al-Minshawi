@@ -50,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.seconds
 
 @androidx.media3.common.util.UnstableApi
 class PlaybackService : MediaLibraryService() {
@@ -341,7 +342,7 @@ class PlaybackService : MediaLibraryService() {
                         if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            delay(1000L * attempt)
+                            delay(attempt.seconds)
                         }
                     }
                 }
@@ -372,9 +373,6 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    fun getQueueAndActiveCount(): Int {
-        return manualDownloadJobs.size + downloadQueue.size
-    }
 
     private fun processNextInQueue() {
         if (downloadQueue.isNotEmpty() && manualDownloadJobs.size < MAX_PARALLEL_DOWNLOADS) {
@@ -441,7 +439,7 @@ class PlaybackService : MediaLibraryService() {
                         if (e is CancellationException) throw e
                         lastError = e
                         if (attempt < MAX_DOWNLOAD_RETRIES) {
-                            delay(1000L * attempt)
+                            delay(attempt.seconds)
                         }
                     }
                 }
@@ -966,12 +964,10 @@ class PlaybackService : MediaLibraryService() {
             .build()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        try {
-            return super.onStartCommand(intent, flags, startId)
-        } catch (e: Exception) {
-            return START_NOT_STICKY
-        }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = try {
+        super.onStartCommand(intent, flags, startId)
+    } catch (_: Exception) {
+        START_NOT_STICKY
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
