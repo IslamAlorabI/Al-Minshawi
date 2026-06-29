@@ -282,7 +282,8 @@ class PlaybackService : MediaLibraryService() {
             cache?.removeResource(surah.url)
         } catch (_: Exception) {}
 
-        val downloadingTitle = getString(R.string.widget_downloading, getLocalizedSurahName(surah))
+        val downloadingTitle = getLocalizedSurahName(surah)
+        val downloadingArtist = getString(R.string.widget_downloading_status)
 
         val originalMediaItem = if (player.mediaItemCount > 0) player.currentMediaItem else null
         val originalPosition = player.currentPosition
@@ -293,6 +294,7 @@ class PlaybackService : MediaLibraryService() {
                 .setMediaMetadata(
                     currentItem.mediaMetadata.buildUpon()
                         .setTitle(downloadingTitle)
+                        .setArtist(downloadingArtist)
                         .build()
                 )
                 .build()
@@ -302,6 +304,7 @@ class PlaybackService : MediaLibraryService() {
                 .setMediaMetadata(
                     buildMediaItem(surah).mediaMetadata.buildUpon()
                         .setTitle(downloadingTitle)
+                        .setArtist(downloadingArtist)
                         .build()
                 )
                 .build()
