@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
 import ialorabi.ms.alminshawi.telawat.player.PlaybackService
-import android.content.Context
 import java.util.Locale
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -70,7 +69,7 @@ class SettingsActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             AlMinshawiTheme {
-                val sharedPrefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                val sharedPrefs = getSharedPreferences("app_settings", MODE_PRIVATE)
 
                 var currentLang by remember {
                     mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags())
