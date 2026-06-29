@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 
-class QuranApp : Application() {
+class AlMinshawiApp : Application() {
     override fun onCreate() {
         super.onCreate()
         val sharedPrefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)

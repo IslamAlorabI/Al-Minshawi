@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContent {
             AlMinshawiTheme {
-                QuranAppUi(playerViewModel, openPlayerRequest)
+                AlMinshawiAppUi(playerViewModel, openPlayerRequest)
             }
         }
         playerViewModel.initializeController(this)
@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines.flow.MutableStateFlow<Boolean>) {
+fun AlMinshawiAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines.flow.MutableStateFlow<Boolean>) {
     val surahs = SurahRepository.surahs
     val currentSurahId by viewModel.currentPlayingSurahId.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
