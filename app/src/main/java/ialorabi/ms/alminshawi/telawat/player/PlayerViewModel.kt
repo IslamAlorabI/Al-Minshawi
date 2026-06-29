@@ -64,7 +64,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _isBuffering = MutableStateFlow(false)
     val isBuffering: StateFlow<Boolean> = _isBuffering.asStateFlow()
 
-    private val _currentPlayingSurahId = MutableStateFlow<Int?>(
+    private val _currentPlayingSurahId = MutableStateFlow(
         prefs.getInt("last_surah_id", -1).takeIf { it != -1 }
     )
     val currentPlayingSurahId: StateFlow<Int?> = _currentPlayingSurahId.asStateFlow()
@@ -125,9 +125,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _playbackError = MutableSharedFlow<Unit>()
     val playbackError: SharedFlow<Unit> = _playbackError.asSharedFlow()
 
-    companion object {
-    }
-    
+
     private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             "repeat_mode" -> _repeatMode.value = prefs.getBoolean("repeat_mode", false)
