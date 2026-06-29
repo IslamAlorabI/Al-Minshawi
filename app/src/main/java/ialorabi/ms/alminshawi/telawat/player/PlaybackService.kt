@@ -178,7 +178,7 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    private val prefs by lazy { getSharedPreferences("player_prefs", Context.MODE_PRIVATE) }
+    private val prefs by lazy { getSharedPreferences("player_prefs", MODE_PRIVATE) }
 
     fun markSurahAsDownloaded(surahId: Int) {
         val current = prefs.getStringSet("downloaded_surahs", emptySet()) ?: emptySet()
