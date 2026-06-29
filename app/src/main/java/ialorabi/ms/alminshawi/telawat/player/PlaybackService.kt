@@ -558,12 +558,20 @@ class PlaybackService : MediaLibraryService() {
         player.replaceMediaItem(player.currentMediaItemIndex, buildMediaItem(currentSurah))
     }
 
+    private fun resolveAutoPlayIcon(): Pair<Int, Int> {
+        val autoNextOn = prefs.getBoolean("auto_play_next", false)
+        val autoReversed = prefs.getBoolean("auto_play_reversed", false)
+        return when {
+            autoNextOn && autoReversed -> R.drawable.ic_auto_play_reverse to R.string.auto_play_reverse
+            autoNextOn -> R.drawable.ic_auto_play_next to R.string.auto_play_next
+            else -> R.drawable.ic_auto_play_off to R.string.auto_play_next
+        }
+    }
+
     private fun buildCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
-        val autoNextOn = prefs.getBoolean("auto_play_next", false)
-
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
-        val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
+        val (autoPlayIconRes, autoPlayNameRes) = resolveAutoPlayIcon()
 
         return listOf(
             CommandButton.Builder(CommandButton.ICON_PREVIOUS)
@@ -576,9 +584,10 @@ class PlaybackService : MediaLibraryService() {
                 .setDisplayName(getString(R.string.repeat_surah))
                 .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
                 .build(),
-            CommandButton.Builder(autoNextIcon)
+            CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+                .setCustomIconResId(autoPlayIconRes)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.auto_play_next))
+                .setDisplayName(getString(autoPlayNameRes))
                 .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(CommandButton.ICON_NEXT)
@@ -591,10 +600,8 @@ class PlaybackService : MediaLibraryService() {
 
     private fun buildAutoCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
-        val autoNextOn = prefs.getBoolean("auto_play_next", false)
-
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
-        val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
+        val (autoPlayIconRes, autoPlayNameRes) = resolveAutoPlayIcon()
 
         return listOf(
             CommandButton.Builder(repeatIcon)
@@ -602,9 +609,10 @@ class PlaybackService : MediaLibraryService() {
                 .setDisplayName(getString(R.string.repeat_surah))
                 .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
                 .build(),
-            CommandButton.Builder(autoNextIcon)
+            CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+                .setCustomIconResId(autoPlayIconRes)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
-                .setDisplayName(getString(R.string.auto_play_next))
+                .setDisplayName(getString(autoPlayNameRes))
                 .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
                 .build()
         )
@@ -778,15 +786,33 @@ class PlaybackService : MediaLibraryService() {
                         val newState = !prefs.getBoolean("repeat_mode", false)
                         prefs.edit { putBoolean("repeat_mode", newState) }
                         if (newState) {
-                            prefs.edit { putBoolean("auto_play_next", false) }
+                            prefs.edit {
+                                putBoolean("auto_play_next", false)
+                                putBoolean("auto_play_reversed", false)
+                            }
                         }
                         refreshCustomLayout()
                     }
                     ACTION_AUTO_NEXT -> {
-                        val newState = !prefs.getBoolean("auto_play_next", false)
-                        prefs.edit { putBoolean("auto_play_next", newState) }
-                        if (newState) {
-                            prefs.edit { putBoolean("repeat_mode", false) }
+                        val autoNextOn = prefs.getBoolean("auto_play_next", false)
+                        val autoReversed = prefs.getBoolean("auto_play_reversed", false)
+                        when {
+                            !autoNextOn -> {
+                                prefs.edit {
+                                    putBoolean("auto_play_next", true)
+                                    putBoolean("auto_play_reversed", false)
+                                    putBoolean("repeat_mode", false)
+                                }
+                            }
+                            !autoReversed -> {
+                                prefs.edit { putBoolean("auto_play_reversed", true) }
+                            }
+                            else -> {
+                                prefs.edit {
+                                    putBoolean("auto_play_next", false)
+                                    putBoolean("auto_play_reversed", false)
+                                }
+                            }
                         }
                         refreshCustomLayout()
                     }

@@ -44,6 +44,7 @@
     <string name="repeat_surah">تكرار السورة</string>
     <string name="repeat_label">تكرار</string>
     <string name="auto_play_next">تشغيل تلقائي</string>
+    <string name="auto_play_reverse">تشغيل تلقائي عكسي</string>
     <string name="help_auto_play_desc">عند تفعيله، ينتقل التشغيل تلقائيًا إلى السورة التالية بعد انتهاء الحالية.</string>
     <string name="help_auto_play_reverse_desc">اضغط مطولاً على زر التشغيل التلقائي لعكس الاتجاه والانتقال إلى السورة السابقة بدلاً من التالية.</string>
     <string name="copyright">© ٢٠٢٦ إسلام العرابي</string>
