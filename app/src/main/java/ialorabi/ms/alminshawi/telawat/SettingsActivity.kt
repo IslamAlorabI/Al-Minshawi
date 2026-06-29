@@ -10,7 +10,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.layout.layout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.animation.AnimatedContent
@@ -32,7 +30,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import android.widget.Toast
@@ -42,7 +39,6 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
@@ -56,14 +52,18 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.util.UnstableApi
 
 class SettingsActivity : AppCompatActivity() {
     private val cacheSizeBytes = mutableLongStateOf(0L)
 
+    @androidx.annotation.OptIn(UnstableApi::class)
     override fun onResume() {
         super.onResume()
         cacheSizeBytes.longValue = PlaybackService.getCacheSize(this)
     }
+
+    @androidx.annotation.OptIn(UnstableApi::class)
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
