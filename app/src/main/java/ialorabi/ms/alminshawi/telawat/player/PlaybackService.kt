@@ -53,8 +53,8 @@ import kotlinx.coroutines.withContext
 
 @androidx.media3.common.util.UnstableApi
 class PlaybackService : MediaLibraryService() {
-    private var _mediaSession: MediaLibraryService.MediaLibrarySession? = null
-    val mediaSession: MediaLibraryService.MediaLibrarySession? get() = _mediaSession
+    private var _mediaSession: MediaLibrarySession? = null
+    val mediaSession: MediaLibrarySession? get() = _mediaSession
     private var _artworkData: ByteArray? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var downloadJob: Job? = null
@@ -107,7 +107,7 @@ class PlaybackService : MediaLibraryService() {
             if (cache == null && cacheFolder.exists()) {
                 cacheFolder.deleteRecursively()
             }
-            val sharedPrefs = context.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
+            val sharedPrefs = context.getSharedPreferences("player_prefs", MODE_PRIVATE)
             sharedPrefs.edit { remove("downloaded_surahs") }
         }
 
