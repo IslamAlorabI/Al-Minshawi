@@ -22,6 +22,7 @@
         </activity>
 
         <activity android:name=".SettingsActivity" android:exported="false" android:theme="@style/Theme.AlMinshawi" />
+        <activity android:name=".GuideActivity" android:exported="false" android:theme="@style/Theme.AlMinshawi" />
 
         <service android:name=".player.PlaybackService" android:exported="true" android:foregroundServiceType="mediaPlayback">
             <intent-filter>

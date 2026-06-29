@@ -80,5 +80,27 @@
     <string name="browse_by_juz">By Juz</string>
     <string name="download_queued">Queued…</string>
     <string name="download_limit_queued_reached">Download queue limit reached (max 10 downloads)</string>
+    <string name="guide_title">How to use the app?</string>
+    <string name="guide_section_surah_list">Surah List and Playback</string>
+    <string name="guide_desc_play_pause">Tap any downloaded Surah to play or pause it instantly.</string>
+    <string name="guide_desc_favorite_toggle">Long-press a Surah to add or remove it from your Favorites list.</string>
+    <string name="guide_desc_favorite_highlight">Favorited Surahs highlight their number badge in the primary theme color for easy reference.</string>
+    <string name="guide_desc_not_downloaded_play">A play icon with a slash (Play Disabled) shows for non-downloaded Surahs, meaning they must be downloaded first before playback.</string>
+    <string name="guide_section_search_filters">Search &amp; Filters</string>
+    <string name="guide_desc_search_box">Search Box: Type in the search box to quickly filter Surahs by name or number.</string>
+    <string name="guide_desc_filter_chips_downloaded">Downloaded Filter: Tap the cloud check button (✓) to show only downloaded Surahs. Tap it again to deselect and view all.</string>
+    <string name="guide_desc_filter_chips_not_downloaded">Not Downloaded Filter: Tap the crossed-out cloud button to show only Surahs that are not yet downloaded.</string>
+    <string name="guide_desc_favorites_only">Favorites Filter: Tap the heart button next to the search bar to display only your favorited Surahs.</string>
+    <string name="guide_section_downloads">Downloading &amp; Offline Listening</string>
+    <string name="guide_desc_not_downloaded">Download Button: Appears next to non-downloaded Surahs. Tap it to start downloading for offline playback.</string>
+    <string name="guide_desc_downloaded_surah">Ready for listening: The cloud check icon appears next to successfully downloaded Surahs, meaning they are ready for playback without an internet connection.</string>
+    <string name="guide_desc_download_progress">Cancel Download: During download, a circular progress indicator appears with a cancel (✕) icon to stop downloading at any time.</string>
+    <string name="guide_desc_download_limit">Download limits: You can download up to 3 Surahs concurrently, with a maximum of 7 pending downloads in the queue (10 downloads in total).</string>
+    <string name="guide_desc_active_downloads_bar">Floating download button: Appears at the bottom above the mini-player when downloads are active. Tap it to monitor progress or cancel some or all of the ongoing downloads with one click.</string>
+    <string name="guide_desc_save_downloads">Export to device downloads: To permanently save audio files to your device\'s Downloads directory, navigate to Settings -> Manage and Save Cached Surahs, and tap the Save button.</string>
+    <string name="guide_section_mini_player">Players &amp; Control Buttons</string>
+    <string name="guide_desc_mini_player_features">Control buttons: Repeat, Sleep Timer (to set auto-stop countdown), and Auto-Play (tap to toggle, long-press to reverse direction) are available in both players (the mini-player at the bottom of the home screen and the full-screen player).</string>
+    <string name="guide_desc_player_navigation_shared">Navigation and Play/Pause: Play/Pause and Skip to next/previous Surah buttons are available in both players for easy control.</string>
+    <string name="guide_desc_player_navigation_exclusive">Seek buttons: The 30-second fast-forward and 10-second rewind buttons are only available inside the full-screen player.</string>
 
 </resources>

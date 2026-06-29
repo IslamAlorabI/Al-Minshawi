@@ -80,5 +80,27 @@
     <string name="browse_by_juz">الأجزاء</string>
     <string name="download_queued">في الانتظار…</string>
     <string name="download_limit_queued_reached">تم الوصول للحد الأقصى لصف الانتظار (١٠ تنزيلات)</string>
+    <string name="guide_title">كيف تستخدم التطبيق؟</string>
+    <string name="guide_section_surah_list">قائمة السور وتشغيلها</string>
+    <string name="guide_desc_play_pause">اضغط بلمسة بسيطة على أي سورة محملة لتشغيلها مباشرة أو إيقافها مؤقتاً.</string>
+    <string name="guide_desc_favorite_toggle">لتسهيل الوصول، اضغط مطولاً على السورة لإضافتها إلى مفضلتك أو إزالتها منها.</string>
+    <string name="guide_desc_favorite_highlight">تظهر أرقام السور التي أضفتها للمفضلة بلون التطبيق الأساسي، لتتعرف عليها بنظرة واحدة.</string>
+    <string name="guide_desc_not_downloaded_play">يظهر رمز تشغيل مشطوب (غير متاح) للسور غير المحملة، مما يعني ضرورة تحميل السورة أولاً لتتمكن من تشغيلها.</string>
+    <string name="guide_section_search_filters">البحث والتصفية</string>
+    <string name="guide_desc_search_box">مربع البحث: اكتب اسم السورة أو رقمها للوصول إليها مباشرة، وستظهر النتائج فوراً أثناء الكتابة.</string>
+    <string name="guide_desc_filter_chips_downloaded">تصفية المحمل: اضغط على زر السحابة (✓) لعرض السور المحملة فقط على جهازك، واضغط عليه مرة أخرى للرجوع للقائمة الكاملة.</string>
+    <string name="guide_desc_filter_chips_not_downloaded">تصفية غير المحمل: اضغط على زر السحابة المشطوبة لعرض السور المتبقية التي لم تقم بتحميلها بعد.</string>
+    <string name="guide_desc_favorites_only">عرض المفضلة فقط: اضغط على زر القلب لتصفية القائمة وعرض السور التي تفضلها فقط.</string>
+    <string name="guide_section_downloads">التحميل والاستماع بدون إنترنت</string>
+    <string name="guide_desc_not_downloaded">زر التحميل: يظهر بجانب السور غير المحملة. اضغط عليه لحفظ السورة والاستماع إليها في أي وقت دون اتصال بالإنترنت.</string>
+    <string name="guide_desc_downloaded_surah">جاهزة للاستماع: يظهر رمز السحابة المكتملة بجانب السور التي تم تحميلها بنجاح وجاهزيتها للتشغيل دون اتصال بالإنترنت.</string>
+    <string name="guide_desc_download_progress">إلغاء التحميل: أثناء تحميل السورة، يظهر مؤشر دائري يعرض التقدم. يمكنك إلغاء التحميل في أي وقت بالضغط على علامة (✕).</string>
+    <string name="guide_desc_download_limit">حدود التحميل: يمكنك تحميل حتى ٣ سور في نفس الوقت. وفي حال اخترت أكثر، ستوضع التنزيلات الإضافية (حتى ٧ سور) في قائمة الانتظار تلقائياً (إجمالي ١٠ تحميلات كحد أقصى).</string>
+    <string name="guide_desc_active_downloads_bar">زر التحميل العائم: يظهر بالأسفل فوق المشغل الصغير عند وجود تحميلات نشطة. اضغط عليه لمتابعة التقدم أو إلغاء بعض/كل التحميلات الجارية بضغطة واحدة.</string>
+    <string name="guide_desc_save_downloads">حفظ في ملفات جهازك: لحفظ السور بشكل دائم في مجلد التنزيلات (Downloads) بجهازك، توجه للإعدادات -> إدارة وحفظ السور المخزنة واضغط على زر الحفظ.</string>
+    <string name="guide_section_mini_player">أدوات التشغيل والمشغلات</string>
+    <string name="guide_desc_mini_player_features">أزرار التحكم: خيارات التكرار، ومؤقت النوم (لتحديد وقت الإيقاف التلقائي)، والتشغيل التلقائي (اضغط لتفعيله، أو اضغط مطولاً لعكس الترتيب) متوفرة في كلا المشغلين (المشغل الصغير بالأسفل في الصفحة الرئيسية ومشغل الشاشة الكاملة).</string>
+    <string name="guide_desc_player_navigation_shared">الانتقال والتشغيل/الإيقاف: أزرار التشغيل/الإيقاف، والتخطي للسورة التالية/السابقة، متوفرة في كلا المشغلين لتسهيل التحكم.</string>
+    <string name="guide_desc_player_navigation_exclusive">أزرار التقديم والتأخير: زرا التقديم السريع ٣٠ ثانية والإرجاع ١٠ ثوانٍ متوفران فقط داخل مشغل الشاشة الكاملة.</string>
 
 </resources>

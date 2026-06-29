@@ -207,7 +207,6 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
     var searchQuery by remember { mutableStateOf("") }
     var downloadFilter by remember { mutableStateOf(DownloadFilter.ALL) }
     var showFavoritesOnly by remember { mutableStateOf(false) }
-    var showHelpDialog by remember { mutableStateOf(false) }
 
     val localizedSurahNames = stringArrayResource(R.array.surah_names)
 
@@ -331,7 +330,9 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(48.dp)
                             ) {
-                                IconButton(onClick = { showHelpDialog = true }) {
+                                IconButton(onClick = {
+                                    context.startActivity(Intent(context, GuideActivity::class.java))
+                                }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Info,
                                         contentDescription = stringResource(R.string.help_title),
@@ -860,103 +861,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
             }
         }
     }
-    if (showHelpDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.help_title),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(text = stringResource(R.string.help_tap_play_desc), style = MaterialTheme.typography.bodyMedium)
-                    Text(text = stringResource(R.string.help_long_press_favorite_desc), style = MaterialTheme.typography.bodyMedium)
-                    Text(text = stringResource(R.string.help_favorite_wave_desc), style = MaterialTheme.typography.bodyMedium)
-                    HorizontalDivider()
-                    Text(
-                        text = stringResource(R.string.help_icons_title),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.Download,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.help_download_desc), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp).padding(2.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.help_downloading_desc), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Rounded.CloudDone,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.help_downloaded_desc), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    HorizontalDivider()
-                    Text(text = stringResource(R.string.help_filter_desc), style = MaterialTheme.typography.bodyMedium)
-                    HorizontalDivider()
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.help_auto_play_desc), style = MaterialTheme.typography.bodyMedium)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.Sort,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.help_auto_play_reverse_desc), style = MaterialTheme.typography.bodyMedium)
-                    }
 
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { showHelpDialog = false },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            }
-        )
-    }
 }
 
 @Composable
