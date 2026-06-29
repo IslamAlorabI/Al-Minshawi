@@ -29,6 +29,7 @@ import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
 import ialorabi.ms.alminshawi.telawat.R
 import ialorabi.ms.alminshawi.telawat.data.Surah
@@ -898,7 +899,7 @@ class PlaybackService : MediaLibraryService() {
                         return Futures.immediateFuture(LibraryResult.ofItem(buildBrowsableSurahItem(surah), null))
                     }
                 }
-                return Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+                return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
             }
 
             override fun onAddMediaItems(
