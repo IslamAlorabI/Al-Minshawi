@@ -362,9 +362,6 @@ class SettingsActivity : AppCompatActivity() {
                             var cachedSurahs by remember { mutableStateOf(PlaybackService.getCachedSurahs()) }
                             val localizedNames = stringArrayResource(R.array.surah_names)
                             val snackbarHostState = remember { SnackbarHostState() }
-                            val scope = rememberCoroutineScope()
-                            val undoText = stringResource(R.string.undo)
-                            val deletedText = stringResource(R.string.surah_deleted)
 
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 Column(modifier = Modifier
