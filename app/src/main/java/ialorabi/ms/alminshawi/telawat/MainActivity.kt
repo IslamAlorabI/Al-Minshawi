@@ -78,6 +78,8 @@ import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
@@ -1858,14 +1860,26 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     ) {
-                        Text(
-                            text = prevName ?: "",
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            maxLines = 1,
-                            textAlign = TextAlign.Center
-                        )
+                        Row(
+                            modifier = Modifier.padding(start = 8.dp, end = 14.dp, top = 6.dp, bottom = 6.dp).defaultMinSize(minWidth = 40.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.KeyboardArrowUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = prevName ?: "",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 } else {
                     Surface(
@@ -1914,14 +1928,26 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer,
                     ) {
-                        Text(
-                            text = nextName ?: "",
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp).defaultMinSize(minWidth = 40.dp),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            maxLines = 1,
-                            textAlign = TextAlign.Center
-                        )
+                        Row(
+                            modifier = Modifier.padding(start = 14.dp, end = 8.dp, top = 6.dp, bottom = 6.dp).defaultMinSize(minWidth = 40.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = nextName ?: "",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Icon(
+                                imageVector = Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 } else {
                     Surface(
