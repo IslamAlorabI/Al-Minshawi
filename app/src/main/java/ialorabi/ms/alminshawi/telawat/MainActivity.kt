@@ -1294,45 +1294,90 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 val context = LocalContext.current
                 val prefs = remember { context.getSharedPreferences("player_prefs", Context.MODE_PRIVATE) }
                 var showSheikhPhoto by remember { mutableStateOf(prefs.getBoolean("show_sheikh_photo", false)) }
-                Box(
-                    modifier = Modifier
-                        .then(
-                            if (isTablet) Modifier.size(screenHeightDp * 0.30f)
-                            else Modifier.fillMaxWidth(0.70f).aspectRatio(1f)
-                        )
-                        .clip(cookieShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .clickable {
-                            showSheikhPhoto = !showSheikhPhoto
-                            prefs.edit { putBoolean("show_sheikh_photo", showSheikhPhoto) }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(
-                        targetState = showSheikhPhoto,
-                        animationSpec = tween(500),
-                        label = "artworkSwitch"
-                    ) { showPhoto ->
-                        if (showPhoto) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sheikh_photo),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                var showArtworkHint by remember { mutableStateOf(!prefs.getBoolean("artwork_hint_dismissed", false)) }
+                Box(contentAlignment = Alignment.BottomCenter) {
+                    Box(
+                        modifier = Modifier
+                            .then(
+                                if (isTablet) Modifier.size(screenHeightDp * 0.30f)
+                                else Modifier.fillMaxWidth(0.70f).aspectRatio(1f)
                             )
-                        } else {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.player_logo),
+                            .clip(cookieShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .clickable {
+                                showSheikhPhoto = !showSheikhPhoto
+                                prefs.edit { putBoolean("show_sheikh_photo", showSheikhPhoto) }
+                                if (showArtworkHint) {
+                                    showArtworkHint = false
+                                    prefs.edit { putBoolean("artwork_hint_dismissed", true) }
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Crossfade(
+                            targetState = showSheikhPhoto,
+                            animationSpec = tween(500),
+                            label = "artworkSwitch"
+                        ) { showPhoto ->
+                            if (showPhoto) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.sheikh_photo),
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .fillMaxSize(0.55f)
-                                        .rotate(discRotation.value),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
                                 )
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.player_logo),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize(0.55f)
+                                            .rotate(discRotation.value),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = showArtworkHint,
+                        enter = fadeIn(tween(400)),
+                        exit = fadeOut(tween(300)),
+                        modifier = Modifier.offset(y = 20.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.85f),
+                            shadowElevation = 4.dp
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.artwork_tap_hint),
+                                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                IconButton(
+                                    onClick = {
+                                        showArtworkHint = false
+                                        prefs.edit { putBoolean("artwork_hint_dismissed", true) }
+                                    },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.inverseOnSurface,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
                             }
                         }
                     }

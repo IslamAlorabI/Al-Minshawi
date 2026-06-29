@@ -102,5 +102,6 @@
     <string name="guide_desc_mini_player_features">Control buttons: Repeat, Sleep Timer (to set auto-stop countdown), and Auto-Play (tap to toggle, long-press to reverse direction) are available in both players (the mini-player at the bottom of the home screen and the full-screen player).</string>
     <string name="guide_desc_player_navigation_shared">Navigation and Play/Pause: Play/Pause and Skip to next/previous Surah buttons are available in both players for easy control.</string>
     <string name="guide_desc_player_navigation_exclusive">Seek buttons: The 30-second fast-forward and 10-second rewind buttons are only available inside the full-screen player.</string>
+    <string name="artwork_tap_hint">Tap to switch artwork</string>
 
 </resources>
