@@ -61,6 +61,7 @@ class PlaybackService : MediaLibraryService() {
     private var downloadJob: Job? = null
     private var currentDownloadingSurahId: Int? = null
     private var isSkipping = false
+    private var isAutoPlayTransitioning = false
     var onWidgetDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
     var onManualDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
     var onDownloadFailed: (() -> Unit)? = null
@@ -719,6 +720,33 @@ class PlaybackService : MediaLibraryService() {
                     if (surah != null) cache?.removeResource(surah.url)
                 }
                 onPlaybackError?.invoke()
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_READY) {
+                    isAutoPlayTransitioning = false
+                }
+                if (playbackState == Player.STATE_ENDED && !isAutoPlayTransitioning) {
+                    val repeatOn = prefs.getBoolean("repeat_mode", false)
+                    val autoNextOn = prefs.getBoolean("auto_play_next", false)
+                    val autoReversed = prefs.getBoolean("auto_play_reversed", false)
+
+                    if (repeatOn) {
+                        exoPlayer.seekTo(0)
+                        exoPlayer.play()
+                    } else if (autoNextOn) {
+                        isAutoPlayTransitioning = true
+                        val currentId = exoPlayer.currentMediaItem?.mediaId?.toIntOrNull() ?: return
+                        val surahs = SurahRepository.surahs
+                        if (autoReversed) {
+                            if (currentId > 1) downloadAndPlay(exoPlayer, surahs[currentId - 2])
+                            else isAutoPlayTransitioning = false
+                        } else {
+                            if (currentId < surahs.size) downloadAndPlay(exoPlayer, surahs[currentId])
+                            else isAutoPlayTransitioning = false
+                        }
+                    }
+                }
             }
         })
 

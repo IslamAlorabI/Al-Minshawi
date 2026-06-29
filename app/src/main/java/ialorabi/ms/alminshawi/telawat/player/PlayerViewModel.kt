@@ -343,17 +343,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (playbackState == Player.STATE_ENDED && !isTransitioning) {
                     _duration.value = player?.duration?.coerceAtLeast(0L) ?: 0L
                     _currentPosition.value = _duration.value
-                    _repeatMode.value = prefs.getBoolean("repeat_mode", false)
-                    _autoPlayNext.value = prefs.getBoolean("auto_play_next", false)
-                    _autoPlayReversed.value = prefs.getBoolean("auto_play_reversed", false)
-                    
-                    if (_repeatMode.value) {
-                        player?.seekTo(0)
-                        player?.play()
-                    } else if (_autoPlayNext.value) {
-                        isTransitioning = true
-                        if (_autoPlayReversed.value) playPreviousSurah(autoPlay = true) else playNextSurah(autoPlay = true)
-                    }
                 }
             }
 
