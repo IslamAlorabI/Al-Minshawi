@@ -35,12 +35,7 @@
     <string name="save_failed">فشل الحفظ</string>
     <string name="filter_downloaded">محملة</string>
     <string name="filter_not_downloaded">غير محملة</string>
-    <string name="help_title">كيف يعمل التطبيق؟</string>
-    <string name="help_download_desc">اضغط لتحميل السورة والاستماع إليها بدون إنترنت.</string>
-    <string name="help_downloading_desc">جاري تحميل السورة حالياً…</string>
-    <string name="help_downloaded_desc">السورة محملة وجاهزة للاستماع بدون إنترنت.</string>
-    <string name="help_filter_desc">استخدم الفلاتر بالأعلى للتبديل بين السور المحملة وغير المحملة.</string>
-    <string name="help_streaming_note">الاستماع المباشر لا يحفظ السورة كاملة. لتحميلها للاستماع بدون إنترنت، اضغط على زر التحميل.</string>
+
     <string name="sleep_timer">مؤقت النوم</string>
     <string name="sleep_timer_off">إيقاف</string>
     <string name="sleep_timer_off_label">مؤقت النوم متوقف</string>

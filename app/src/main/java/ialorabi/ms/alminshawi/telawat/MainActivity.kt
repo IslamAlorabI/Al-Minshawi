@@ -338,7 +338,7 @@ fun QuranAppUi(viewModel: PlayerViewModel, openPlayerRequest: kotlinx.coroutines
                                 }) {
                                     Icon(
                                         imageVector = Icons.Rounded.Info,
-                                        contentDescription = stringResource(R.string.help_title),
+                                        contentDescription = stringResource(R.string.guide_title),
                                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
