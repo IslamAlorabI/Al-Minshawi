@@ -23,6 +23,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 
@@ -106,6 +107,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -1288,6 +1291,9 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                 }
 
                 val cookieShape = MaterialShapes.Cookie9Sided.toShape()
+                val context = LocalContext.current
+                val prefs = remember { context.getSharedPreferences("player_prefs", Context.MODE_PRIVATE) }
+                var showSheikhPhoto by remember { mutableStateOf(prefs.getBoolean("show_sheikh_photo", false)) }
                 Box(
                     modifier = Modifier
                         .then(
@@ -1295,17 +1301,41 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                             else Modifier.fillMaxWidth(0.70f).aspectRatio(1f)
                         )
                         .clip(cookieShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clickable {
+                            showSheikhPhoto = !showSheikhPhoto
+                            prefs.edit { putBoolean("show_sheikh_photo", showSheikhPhoto) }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.player_logo),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize(0.55f)
-                            .rotate(discRotation.value),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Crossfade(
+                        targetState = showSheikhPhoto,
+                        animationSpec = tween(500),
+                        label = "artworkSwitch"
+                    ) { showPhoto ->
+                        if (showPhoto) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sheikh_photo),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.player_logo),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize(0.55f)
+                                        .rotate(discRotation.value),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
