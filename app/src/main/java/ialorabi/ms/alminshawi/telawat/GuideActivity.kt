@@ -45,7 +45,7 @@ class GuideActivity : AppCompatActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun GuideScreen(onBack: () -> Unit) {
     Scaffold(
@@ -178,10 +178,11 @@ fun GuideScreen(onBack: () -> Unit) {
 
             GuideCard(
                 icon = {
+                    val numberShape = MaterialShapes.Cookie9Sided.toShape()
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(CircleShape)
+                            .clip(numberShape)
                             .background(badgeBgColor),
                         contentAlignment = Alignment.Center
                     ) {
