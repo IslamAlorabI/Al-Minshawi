@@ -421,6 +421,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun playSurah(surah: Surah) {
         if (surah.id in _cachedSurahIds.value) {
             playFromCache(surah)
+        } else {
+            isTransitioning = false
+            isSkipping = false
         }
     }
 
