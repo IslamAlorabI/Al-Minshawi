@@ -17,7 +17,7 @@ import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheWriter
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.exoplayer.ExoPlayer
@@ -79,7 +79,7 @@ class PlaybackService : MediaLibraryService() {
         
         var cache: SimpleCache? = null
             private set
-        private const val CACHE_SIZE = 2L * 1024 * 1024 * 1024
+
         private const val MAX_PARALLEL_DOWNLOADS = 3
         private const val MAX_DOWNLOAD_RETRIES = 5
         private const val HTTP_TIMEOUT_MS = 30_000
@@ -685,7 +685,7 @@ class PlaybackService : MediaLibraryService() {
             } else if (oldCacheDir.exists() && newCacheDir.exists()) {
                 oldCacheDir.deleteRecursively()
             }
-            val evictor = LeastRecentlyUsedCacheEvictor(CACHE_SIZE)
+            val evictor = NoOpCacheEvictor()
             val databaseProvider = StandaloneDatabaseProvider(this)
             cache = SimpleCache(newCacheDir, evictor, databaseProvider)
         }
