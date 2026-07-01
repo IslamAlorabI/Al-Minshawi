@@ -638,8 +638,10 @@ class PlaybackService : MediaLibraryService() {
 
     private fun buildAutoCustomLayout(): List<CommandButton> {
         val repeatOn = prefs.getBoolean("repeat_mode", false)
+        val autoNextOn = prefs.getBoolean("auto_play_next", false)
+
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
-        val (autoPlayIconRes, autoPlayNameRes) = resolveAutoPlayIcon()
+        val autoNextIcon = if (autoNextOn) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
 
         return listOf(
             CommandButton.Builder(repeatIcon)
@@ -647,10 +649,9 @@ class PlaybackService : MediaLibraryService() {
                 .setDisplayName(getString(R.string.repeat_surah))
                 .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
                 .build(),
-            CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-                .setCustomIconResId(autoPlayIconRes)
+            CommandButton.Builder(autoNextIcon)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
-                .setDisplayName(getString(autoPlayNameRes))
+                .setDisplayName(getString(R.string.auto_play_next))
                 .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
                 .build()
         )
