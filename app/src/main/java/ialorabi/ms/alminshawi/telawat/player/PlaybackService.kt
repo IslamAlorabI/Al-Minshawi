@@ -272,8 +272,13 @@ class PlaybackService : MediaLibraryService() {
         currentDownloadingSurahId = null
 
         if (isSurahCached(surah)) {
-            player.stop()
-            player.setMediaItem(buildMediaItem(surah))
+            val newItem = buildMediaItem(surah)
+            if (player.mediaItemCount > 0) {
+                player.replaceMediaItem(player.currentMediaItemIndex, newItem)
+                player.seekTo(0)
+            } else {
+                player.setMediaItem(newItem)
+            }
             player.prepare()
             player.play()
             isSkipping = false
@@ -361,8 +366,13 @@ class PlaybackService : MediaLibraryService() {
             }
             onWidgetDownloadStateChanged?.invoke(surah.id, false, 0f)
             if (success) {
-                player.stop()
-                player.setMediaItem(buildMediaItem(surah))
+                val newItem = buildMediaItem(surah)
+                if (player.mediaItemCount > 0) {
+                    player.replaceMediaItem(player.currentMediaItemIndex, newItem)
+                    player.seekTo(0)
+                } else {
+                    player.setMediaItem(newItem)
+                }
                 player.prepare()
                 player.play()
             } else {
