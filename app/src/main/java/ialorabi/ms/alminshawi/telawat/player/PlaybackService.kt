@@ -56,7 +56,7 @@ import kotlin.time.Duration.Companion.seconds
 class PlaybackService : MediaLibraryService() {
     private var _mediaSession: MediaLibrarySession? = null
     val mediaSession: MediaLibrarySession? get() = _mediaSession
-    private var _artworkData: ByteArray? = null
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var downloadJob: Job? = null
     private var currentDownloadingSurahId: Int? = null
@@ -196,10 +196,8 @@ class PlaybackService : MediaLibraryService() {
         prefs.edit { putStringSet("downloaded_surahs", newSet) }
     }
 
-    private fun getArtworkData(): ByteArray? {
-        _artworkData?.let { return it }
-        _artworkData = ArtworkHelper.generate(this)
-        return _artworkData
+    private fun getArtworkUri(): android.net.Uri? {
+        return ArtworkHelper.getArtworkUri(this)
     }
 
     private fun buildMediaItem(surah: Surah): MediaItem {
@@ -216,7 +214,7 @@ class PlaybackService : MediaLibraryService() {
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
-                    .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                    .apply { getArtworkUri()?.let { setArtworkUri(it) } }
                     .build()
             )
             .build()
@@ -257,7 +255,7 @@ class PlaybackService : MediaLibraryService() {
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-                    .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                    .apply { getArtworkUri()?.let { setArtworkUri(it) } }
                     .build()
             )
             .build()

@@ -45,12 +45,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         return context.getString(R.string.sheikh_name)
     }
 
-    private var _artworkData: ByteArray? = null
-
-    private fun getArtworkData(): ByteArray? {
-        _artworkData?.let { return it }
-        _artworkData = ArtworkHelper.generate(getApplication())
-        return _artworkData
+    private fun getArtworkUri(): android.net.Uri? {
+        return ArtworkHelper.getArtworkUri(getApplication())
     }
 
 
@@ -280,7 +276,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                             MediaMetadata.Builder()
                                 .setTitle(getLocalizedTitle(surah))
                                 .setArtist(getLocalizedArtist())
-                                .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                                .apply { getArtworkUri()?.let { setArtworkUri(it) } }
                                 .build()
                         )
                         .build()
@@ -429,7 +425,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     MediaMetadata.Builder()
                         .setTitle(getLocalizedTitle(surah))
                         .setArtist(getLocalizedArtist())
-                        .apply { getArtworkData()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                        .apply { getArtworkUri()?.let { setArtworkUri(it) } }
                         .build()
                 )
                 .build()

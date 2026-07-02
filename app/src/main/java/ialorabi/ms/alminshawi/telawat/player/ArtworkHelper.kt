@@ -7,32 +7,24 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import ialorabi.ms.alminshawi.telawat.R
-import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 object ArtworkHelper {
 
-    private const val MAX_ARTWORK_BYTES = 150_000
+    private const val ARTWORK_FILENAME = "media_artwork.png"
+    private const val AUTHORITY_SUFFIX = ".fileprovider"
 
-    private data class ArtworkConfig(
-        val size: Int,
-        val withLogo: Boolean,
-        val format: Bitmap.CompressFormat,
-        val quality: Int,
-    )
+    private var cachedUri: Uri? = null
 
-    private val FALLBACK_CONFIGS = listOf(
-        ArtworkConfig(512, withLogo = true, Bitmap.CompressFormat.PNG, 100),
-        ArtworkConfig(512, withLogo = true, Bitmap.CompressFormat.JPEG, 85),
-        ArtworkConfig(320, withLogo = true, Bitmap.CompressFormat.JPEG, 80),
-        ArtworkConfig(256, withLogo = true, Bitmap.CompressFormat.JPEG, 75),
-        ArtworkConfig(128, withLogo = false, Bitmap.CompressFormat.JPEG, 70),
-        ArtworkConfig(64, withLogo = false, Bitmap.CompressFormat.PNG, 100),
-    )
+    fun getArtworkUri(context: Context): Uri? {
+        cachedUri?.let { return it }
 
-    fun generate(context: Context): ByteArray? {
         val isDark = (context.resources.configuration.uiMode and
                 android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         val primaryContainer = if (isDark) {
@@ -46,53 +38,53 @@ object ArtworkHelper {
             context.getColor(android.R.color.system_accent1_600)
         }
 
-        for (config in FALLBACK_CONFIGS) {
+        try {
+            val size = 512
+            val bitmap = createBitmap(size, size)
             try {
-                val bytes = renderArtwork(context, config, primaryContainer, primary)
-                if (bytes != null && bytes.size <= MAX_ARTWORK_BYTES) return bytes
-            } catch (_: Exception) {
-                continue
+                val canvas = Canvas(bitmap)
+                canvas.drawColor(primaryContainer)
+
+                val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.player_logo)
+                if (logoBitmap != null) {
+                    try {
+                        val logoSize = (size * 0.65f).toInt()
+                        val scaled = logoBitmap.scale(logoSize, logoSize)
+                        try {
+                            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                            paint.colorFilter = PorterDuffColorFilter(primary, PorterDuff.Mode.SRC_IN)
+                            val left = (size - logoSize) / 2f
+                            val top = (size - logoSize) / 2f
+                            canvas.drawBitmap(scaled, left, top, paint)
+                        } finally {
+                            scaled.recycle()
+                        }
+                    } finally {
+                        logoBitmap.recycle()
+                    }
+                }
+
+                val artworkDir = File(context.cacheDir, "artwork")
+                artworkDir.mkdirs()
+                val file = File(artworkDir, ARTWORK_FILENAME)
+
+                FileOutputStream(file).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                }
+
+                val authority = context.packageName + AUTHORITY_SUFFIX
+                val uri = FileProvider.getUriForFile(context, authority, file)
+                cachedUri = uri
+                return uri
+            } finally {
+                bitmap.recycle()
             }
+        } catch (_: Exception) {
+            return null
         }
-        return null
     }
 
-    private fun renderArtwork(
-        context: Context,
-        config: ArtworkConfig,
-        backgroundColor: Int,
-        logoColor: Int,
-    ): ByteArray? {
-        val bitmap = createBitmap(config.size, config.size)
-        try {
-            val canvas = Canvas(bitmap)
-            canvas.drawColor(backgroundColor)
-
-            if (config.withLogo) {
-                val logoBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.player_logo)
-                    ?: return null
-                try {
-                    val logoSize = (config.size * 0.65f).toInt()
-                    val scaled = logoBitmap.scale(logoSize, logoSize)
-                    try {
-                        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-                        paint.colorFilter = PorterDuffColorFilter(logoColor, PorterDuff.Mode.SRC_IN)
-                        val left = (config.size - logoSize) / 2f
-                        val top = (config.size - logoSize) / 2f
-                        canvas.drawBitmap(scaled, left, top, paint)
-                    } finally {
-                        scaled.recycle()
-                    }
-                } finally {
-                    logoBitmap.recycle()
-                }
-            }
-
-            val stream = ByteArrayOutputStream()
-            bitmap.compress(config.format, config.quality, stream)
-            return stream.toByteArray()
-        } finally {
-            bitmap.recycle()
-        }
+    fun invalidate() {
+        cachedUri = null
     }
 }
