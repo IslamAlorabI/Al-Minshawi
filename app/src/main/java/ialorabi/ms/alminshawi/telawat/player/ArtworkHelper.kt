@@ -8,7 +8,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.net.Uri
-import androidx.core.content.FileProvider
+
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import ialorabi.ms.alminshawi.telawat.R
@@ -18,7 +18,7 @@ import java.io.FileOutputStream
 object ArtworkHelper {
 
     private const val ARTWORK_FILENAME = "media_artwork.png"
-    private const val AUTHORITY_SUFFIX = ".fileprovider"
+
 
     private var cachedUri: Uri? = null
 
@@ -72,8 +72,7 @@ object ArtworkHelper {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 }
 
-                val authority = context.packageName + AUTHORITY_SUFFIX
-                val uri = FileProvider.getUriForFile(context, authority, file)
+                val uri = ArtworkContentProvider.getUri(context)
                 cachedUri = uri
                 return uri
             } finally {
