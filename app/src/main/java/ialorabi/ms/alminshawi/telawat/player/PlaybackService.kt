@@ -243,7 +243,7 @@ class PlaybackService : MediaLibraryService() {
         val downloadStatus = if (isSurahCached(surah)) {
             "✓ ${getString(R.string.filter_downloaded)}"
         } else {
-            getString(R.string.filter_not_downloaded)
+            "✕ ${getString(R.string.filter_not_downloaded)}"
         }
 
         return MediaItem.Builder()
