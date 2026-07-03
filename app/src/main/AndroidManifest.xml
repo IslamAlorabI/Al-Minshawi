@@ -35,7 +35,8 @@
         <provider
             android:name=".player.ArtworkContentProvider"
             android:authorities="${applicationId}.artwork"
-            android:exported="true" />
+            android:exported="true"
+            tools:ignore="ExportedContentProvider" />
 
     </application>
 

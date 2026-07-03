@@ -598,24 +598,7 @@ class PlaybackService : MediaLibraryService() {
         val repeatIcon = if (repeatOn) CommandButton.ICON_REPEAT_ONE else CommandButton.ICON_REPEAT_OFF
         val (autoPlayIconRes, autoPlayNameRes) = resolveAutoPlayIcon()
 
-        val prevCached = isPreviousSurahCached()
-        val nextCached = isNextSurahCached()
-
         return listOf(
-            if (prevCached) {
-                CommandButton.Builder(CommandButton.ICON_PREVIOUS)
-                    .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
-                    .setDisplayName(getString(R.string.rewind))
-                    .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                    .build()
-            } else {
-                CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-                    .setCustomIconResId(R.drawable.ic_notification_download)
-                    .setSessionCommand(SessionCommand(ACTION_PREV_SURAH, Bundle.EMPTY))
-                    .setDisplayName(getString(R.string.rewind))
-                    .setSlots(CommandButton.SLOT_BACK_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                    .build()
-            },
             CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
@@ -626,21 +609,7 @@ class PlaybackService : MediaLibraryService() {
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
                 .setDisplayName(getString(autoPlayNameRes))
                 .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
-                .build(),
-            if (nextCached) {
-                CommandButton.Builder(CommandButton.ICON_NEXT)
-                    .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
-                    .setDisplayName(getString(R.string.forward))
-                    .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                    .build()
-            } else {
-                CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-                    .setCustomIconResId(R.drawable.ic_notification_download)
-                    .setSessionCommand(SessionCommand(ACTION_NEXT_SURAH, Bundle.EMPTY))
-                    .setDisplayName(getString(R.string.forward))
-                    .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
-                    .build()
-            }
+                .build()
         )
     }
 
@@ -655,12 +624,12 @@ class PlaybackService : MediaLibraryService() {
             CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
-                .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
+                .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(autoNextIcon)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.auto_play_next))
-                .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
+                .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build()
         )
     }
@@ -803,6 +772,27 @@ class PlaybackService : MediaLibraryService() {
         })
 
         val player = object : ForwardingPlayer(exoPlayer) {
+            override fun getAvailableCommands(): Player.Commands {
+                return super.getAvailableCommands().buildUpon()
+                    .add(COMMAND_SEEK_TO_NEXT)
+                    .add(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .add(COMMAND_SEEK_TO_PREVIOUS)
+                    .add(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .build()
+            }
+
+            override fun isCommandAvailable(command: Int): Boolean {
+                return when (command) {
+                    COMMAND_SEEK_TO_NEXT, COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                    COMMAND_SEEK_TO_PREVIOUS, COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> true
+                    else -> super.isCommandAvailable(command)
+                }
+            }
+
+            override fun hasNextMediaItem(): Boolean = true
+
+            override fun hasPreviousMediaItem(): Boolean = true
+
             override fun seekToPrevious() {
                 playPreviousSurah(this)
             }
@@ -832,24 +822,16 @@ class PlaybackService : MediaLibraryService() {
                 val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 customCommands.forEach { sessionCommands.add(it) }
 
-                if (session.isMediaNotificationController(controller)) {
-                    val playerCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
-                        .remove(Player.COMMAND_SEEK_TO_PREVIOUS)
-                        .remove(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                        .remove(Player.COMMAND_SEEK_TO_NEXT)
-                        .remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                        .build()
-                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
-                        .setAvailableSessionCommands(sessionCommands.build())
-                        .setAvailablePlayerCommands(playerCommands)
-                        .setCustomLayout(buildCustomLayout())
-                        .build()
+                val layout = if (session.isMediaNotificationController(controller)) {
+                    buildCustomLayout()
+                } else {
+                    buildAutoCustomLayout()
                 }
 
                 return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                     .setAvailableSessionCommands(sessionCommands.build())
                     .setAvailablePlayerCommands(MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS)
-                    .setCustomLayout(buildAutoCustomLayout())
+                    .setCustomLayout(layout)
                     .build()
             }
 
