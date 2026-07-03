@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="surah_names">
-        <item>Al-Fatihah</item><item>Al-Baqarah</item><item>Ali \'Imran</item><item>An-Nisa</item><item>Al-Ma\'idah</item><item>Al-An\'am</item><item>Al-A\'raf</item><item>Al-Anfal</item>
+        <item>Al-Fatihah</item><item>Al-Baqarah</item><item>Aal-Imran</item><item>An-Nisa</item><item>Al-Ma\'idah</item><item>Al-An\'am</item><item>Al-A\'raf</item><item>Al-Anfal</item>
         <item>At-Tawbah</item><item>Yunus</item><item>Hud</item><item>Yusuf</item><item>Ar-Ra\'d</item><item>Ibrahim</item><item>Al-Hijr</item><item>An-Nahl</item>
         <item>Al-Isra</item><item>Al-Kahf</item><item>Maryam</item><item>Taha</item><item>Al-Anbiya</item><item>Al-Hajj</item><item>Al-Mu\'minun</item><item>An-Nur</item>
         <item>Al-Furqan</item><item>Ash-Shu\'ara</item><item>An-Naml</item><item>Al-Qasas</item><item>Al-\'Ankabut</item><item>Ar-Rum</item><item>Luqman</item><item>As-Sajdah</item>
