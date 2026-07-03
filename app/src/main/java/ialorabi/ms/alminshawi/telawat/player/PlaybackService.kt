@@ -361,6 +361,10 @@ class PlaybackService : MediaLibraryService() {
             currentDownloadingSurahId = null
             if (success) {
                 markSurahAsDownloaded(surah.id)
+                _mediaSession?.let { session ->
+                    session.notifyChildrenChanged(BROWSE_ALL_SURAHS, SurahRepository.surahs.size, null)
+                    session.notifyChildrenChanged("$BROWSE_JUZ_PREFIX${surah.juz}", SurahRepository.surahs.count { it.juz == surah.juz }, null)
+                }
             }
             onWidgetDownloadStateChanged?.invoke(surah.id, false, 0f)
             if (success) {
@@ -467,6 +471,10 @@ class PlaybackService : MediaLibraryService() {
             if (!cancelledManualDownloads.remove(surah.id)) {
                 if (success) {
                     markSurahAsDownloaded(surah.id)
+                    _mediaSession?.let { session ->
+                        session.notifyChildrenChanged(BROWSE_ALL_SURAHS, SurahRepository.surahs.size, null)
+                        session.notifyChildrenChanged("$BROWSE_JUZ_PREFIX${surah.juz}", SurahRepository.surahs.count { it.juz == surah.juz }, null)
+                    }
                 }
                 onManualDownloadStateChanged?.invoke(surah.id, false, 0f)
                 if (!success) {
