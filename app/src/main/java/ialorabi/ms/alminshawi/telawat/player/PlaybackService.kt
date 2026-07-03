@@ -629,13 +629,13 @@ class PlaybackService : MediaLibraryService() {
             CommandButton.Builder(repeatIcon)
                 .setSessionCommand(SessionCommand(ACTION_REPEAT, Bundle.EMPTY))
                 .setDisplayName(getString(R.string.repeat_surah))
-                .setSlots(CommandButton.SLOT_BACK, CommandButton.SLOT_OVERFLOW)
+                .setSlots(CommandButton.SLOT_CENTRAL, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(CommandButton.ICON_UNDEFINED)
                 .setCustomIconResId(autoPlayIconRes)
                 .setSessionCommand(SessionCommand(ACTION_AUTO_NEXT, Bundle.EMPTY))
                 .setDisplayName(getString(autoPlayNameRes))
-                .setSlots(CommandButton.SLOT_FORWARD, CommandButton.SLOT_OVERFLOW)
+                .setSlots(CommandButton.SLOT_CENTRAL, CommandButton.SLOT_OVERFLOW)
                 .build()
         )
     }
