@@ -50,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @androidx.media3.common.util.UnstableApi
@@ -61,6 +62,7 @@ class PlaybackService : MediaLibraryService() {
     private var downloadJob: Job? = null
     private var currentDownloadingSurahId: Int? = null
     private var isSkipping = false
+    private var notDownloadedJob: Job? = null
     private var isAutoPlayTransitioning = false
     var onWidgetDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
     var onManualDownloadStateChanged: ((surahId: Int, downloading: Boolean, progress: Float) -> Unit)? = null
@@ -563,6 +565,7 @@ class PlaybackService : MediaLibraryService() {
         if (currentId < surahs.size && isSurahCached(surahs[currentId])) {
             downloadAndPlay(player, surahs[currentId])
         } else {
+            if (currentId < surahs.size) showNotDownloadedFlash(player, surahs[currentId])
             isSkipping = false
         }
     }
@@ -575,7 +578,36 @@ class PlaybackService : MediaLibraryService() {
         if (currentId > 1 && isSurahCached(surahs[currentId - 2])) {
             downloadAndPlay(player, surahs[currentId - 2])
         } else {
+            if (currentId > 1) showNotDownloadedFlash(player, surahs[currentId - 2])
             isSkipping = false
+        }
+    }
+
+    private fun showNotDownloadedFlash(player: Player, targetSurah: Surah) {
+        if (player.mediaItemCount == 0) return
+        val currentItem = player.currentMediaItem ?: return
+        val originalMetadata = currentItem.mediaMetadata
+
+        notDownloadedJob?.cancel()
+
+        val flashItem = currentItem.buildUpon()
+            .setMediaMetadata(
+                originalMetadata.buildUpon()
+                    .setTitle(getLocalizedSurahName(targetSurah))
+                    .setArtist(getString(R.string.skip_not_downloaded))
+                    .build()
+            )
+            .build()
+        player.replaceMediaItem(player.currentMediaItemIndex, flashItem)
+
+        notDownloadedJob = serviceScope.launch {
+            delay(2000.milliseconds)
+            if (player.mediaItemCount > 0) {
+                val restored = player.currentMediaItem?.buildUpon()
+                    ?.setMediaMetadata(originalMetadata)
+                    ?.build() ?: return@launch
+                player.replaceMediaItem(player.currentMediaItemIndex, restored)
+            }
         }
     }
 
