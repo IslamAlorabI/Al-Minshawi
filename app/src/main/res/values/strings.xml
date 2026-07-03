@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">المنشاوي</string>
     <string name="sheikh_name">محمد صديق المنشاوي</string>
-    <string name="sheikh_short">الشيخ المنشاوي - مرتل</string>
     <string name="app_subtitle">المصحف المرتل للقارئ الشيخ محمد صديق المنشاوي</string>
     <string name="surah_prefix">سورة</string>
     <string name="search_surahs">ابحث في السور…</string>
@@ -27,10 +26,7 @@
     <string name="cancel">إلغاء</string>
     <string name="delete">حذف</string>
     <string name="no_cached_surahs">لا توجد سور مخزنة حالياً.</string>
-    <string name="undo">تراجع</string>
-    <string name="surah_deleted">تم حذف السورة</string>
     <string name="confirm_delete_surah">تأكيد مسح السورة؟</string>
-    <string name="downloading_to_storage">جارِ الحفظ في مجلد التنزيلات…</string>
     <string name="saved_to_downloads">تم الحفظ في مجلد التنزيلات</string>
     <string name="save_failed">فشل الحفظ</string>
     <string name="filter_downloaded">محملة</string>
@@ -45,16 +41,10 @@
     <string name="repeat_label">تكرار</string>
     <string name="auto_play_next">تشغيل تلقائي</string>
     <string name="auto_play_reverse">تشغيل تلقائي عكسي</string>
-    <string name="help_auto_play_desc">عند تفعيله، ينتقل التشغيل تلقائيًا إلى السورة التالية بعد انتهاء الحالية.</string>
-    <string name="help_auto_play_reverse_desc">اضغط مطولاً على زر التشغيل التلقائي لعكس الاتجاه والانتقال إلى السورة السابقة بدلاً من التالية.</string>
     <string name="copyright">© ٢٠٢٦ إسلام العرابي</string>
     <string name="rights_notice">جميع التلاوات ملك لأصحابها</string>
     <string name="made_with_love">اللَّهُمَّ اجْعَلْ هَذَا العَمَلَ خَالِصًا لِوَجْهِكَ الكَرِيمِ، وَتَقَبَّلْهُ مِنَّا</string>
     <string name="filter_favorites">المفضلة</string>
-    <string name="help_icons_title">معاني الرموز:</string>
-    <string name="help_tap_play_desc">اضغط على السورة لتشغيلها أو إيقافها.</string>
-    <string name="help_long_press_favorite_desc">اضغط مطولاً على السورة لإضافتها أو إزالتها من المفضلة.</string>
-    <string name="help_favorite_wave_desc">الخط المتموج تحت الاسم يعني أن السورة مضافة للمفضلة.</string>
     <string name="widget_downloading">⏳ جارِ تحميل %s…</string>
     <string name="widget_downloading_status">⏳ جارِ التحميل…</string>
     <string name="skip_not_downloaded">✕ السورة غير محملة</string>
@@ -65,11 +55,7 @@
     <string name="revelation_makki">مكية</string>
     <string name="revelation_madani">مدنية</string>
     <string name="juz_label">الجزء %d</string>
-    <string name="hide_help_banner">إخفاء</string>
-    <string name="show_help_banner">إظهار شريط "كيف يعمل التطبيق"</string>
     <string name="active_downloads">التحميلات النشطة</string>
-    <string name="active_downloads_count">%d تحميلات جارية</string>
-    <string name="active_download_single">تحميل جاري…</string>
     <string name="cancel_download">إلغاء التحميل</string>
     <string name="cancel_all_downloads">إلغاء الكل</string>
     <string name="download_failed">فشل تحميل السورة، تحقق من اتصال الإنترنت</string>

@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Al-Minshawi</string>
     <string name="sheikh_name">Mohamed Siddiq Al-Minshawi</string>
-    <string name="sheikh_short">Sheikh Al-Minshawi - Murattal</string>
     <string name="app_subtitle">Sheikh Al-Minshawi – Murattal Quran</string>
     <string name="surah_prefix">Surah</string>
     <string name="search_surahs">Search surahs…</string>
@@ -27,10 +26,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="no_cached_surahs">No Surahs have been cached yet.</string>
-    <string name="undo">Undo</string>
-    <string name="surah_deleted">Surah deleted</string>
     <string name="confirm_delete_surah">Confirm delete?</string>
-    <string name="downloading_to_storage">Saving to Downloads folder…</string>
     <string name="saved_to_downloads">Saved to Downloads folder</string>
     <string name="save_failed">Save failed</string>
     <string name="filter_downloaded">Downloaded</string>
@@ -45,16 +41,10 @@
     <string name="repeat_label">Repeat</string>
     <string name="auto_play_next">Auto Play Next</string>
     <string name="auto_play_reverse">Auto Play Reverse</string>
-    <string name="help_auto_play_desc">When enabled, playback automatically moves to the next Surah after the current one ends.</string>
-    <string name="help_auto_play_reverse_desc">Long-press the auto-play button to reverse direction and move to the previous Surah instead.</string>
     <string name="copyright">© 2026 Islam AlorabI</string>
     <string name="rights_notice">All recitations belong to their respective owners</string>
     <string name="made_with_love">O Allah, make this work sincerely for You</string>
     <string name="filter_favorites">Favorites</string>
-    <string name="help_icons_title">Icon meanings:</string>
-    <string name="help_tap_play_desc">Tap a Surah to play or pause it.</string>
-    <string name="help_long_press_favorite_desc">Long-press a Surah to add or remove it from favorites.</string>
-    <string name="help_favorite_wave_desc">The wavy line under the name means the Surah is favorited.</string>
     <string name="widget_downloading">⏳ Downloading %s…</string>
     <string name="widget_downloading_status">⏳ Downloading…</string>
     <string name="skip_not_downloaded">✕ Surah Not Downloaded</string>
@@ -65,11 +55,7 @@
     <string name="revelation_makki">Makki</string>
     <string name="revelation_madani">Madani</string>
     <string name="juz_label">Juz\' %d</string>
-    <string name="hide_help_banner">Dismiss</string>
-    <string name="show_help_banner">Show "How it works" banner</string>
     <string name="active_downloads">Active Downloads</string>
-    <string name="active_downloads_count">%d downloads in progress</string>
-    <string name="active_download_single">Downloading…</string>
     <string name="cancel_download">Cancel Download</string>
     <string name="cancel_all_downloads">Cancel All</string>
     <string name="download_failed">Download failed, check your internet connection</string>

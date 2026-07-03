@@ -544,19 +544,6 @@ class PlaybackService : MediaLibraryService() {
         return "$prefix $name (${surah.id})"
     }
 
-    private fun isNextSurahCached(): Boolean {
-        val currentId = _mediaSession?.player?.currentMediaItem?.mediaId?.toIntOrNull() ?: return false
-        val surahs = SurahRepository.surahs
-        if (currentId >= surahs.size) return false
-        return isSurahCached(surahs[currentId])
-    }
-
-    private fun isPreviousSurahCached(): Boolean {
-        val currentId = _mediaSession?.player?.currentMediaItem?.mediaId?.toIntOrNull() ?: return false
-        if (currentId <= 1) return false
-        return isSurahCached(SurahRepository.surahs[currentId - 2])
-    }
-
     private fun playNextSurah(player: Player) {
         if (isSkipping) return
         isSkipping = true
@@ -829,9 +816,9 @@ class PlaybackService : MediaLibraryService() {
                 }
             }
 
-            override fun hasNextMediaItem(): Boolean = isNextSurahCached()
+            override fun hasNextMediaItem(): Boolean = true
 
-            override fun hasPreviousMediaItem(): Boolean = isPreviousSurahCached()
+            override fun hasPreviousMediaItem(): Boolean = true
 
             override fun seekToPrevious() {
                 playPreviousSurah(this)
