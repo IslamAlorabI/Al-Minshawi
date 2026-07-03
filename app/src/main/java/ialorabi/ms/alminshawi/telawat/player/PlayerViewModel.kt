@@ -281,7 +281,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                         )
                         .build()
                     
-                    exo.setMediaItem(mediaItem, lastPos)
+                    if (exo.mediaItemCount > 0) {
+                        exo.replaceMediaItem(exo.currentMediaItemIndex, mediaItem)
+                        exo.seekTo(lastPos)
+                    } else {
+                        exo.setMediaItem(mediaItem, lastPos)
+                    }
                     exo.playWhenReady = false
                     exo.prepare()
                     
@@ -431,7 +436,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 .build()
 
             exoPlayer.stop()
-            exoPlayer.setMediaItem(mediaItem)
+            if (exoPlayer.mediaItemCount > 0) {
+                exoPlayer.replaceMediaItem(exoPlayer.currentMediaItemIndex, mediaItem)
+            } else {
+                exoPlayer.setMediaItem(mediaItem)
+            }
             exoPlayer.prepare()
             exoPlayer.play()
             isSkipping = false
