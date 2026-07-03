@@ -789,9 +789,9 @@ class PlaybackService : MediaLibraryService() {
                 }
             }
 
-            override fun hasNextMediaItem(): Boolean = true
+            override fun hasNextMediaItem(): Boolean = isNextSurahCached()
 
-            override fun hasPreviousMediaItem(): Boolean = true
+            override fun hasPreviousMediaItem(): Boolean = isPreviousSurahCached()
 
             override fun seekToPrevious() {
                 playPreviousSurah(this)
