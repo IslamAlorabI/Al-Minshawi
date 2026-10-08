@@ -1,6 +1,7 @@
 name: Release
 
-# Push a tag that matches versionName (for example v1.3) to build, sign and publish a release
+# Push a tag that matches versionName (for example v1.4) to build, sign and publish a release.
+# Running it by hand from the Actions tab builds and uploads the files without publishing.
 on:
   push:
     tags:
@@ -12,30 +13,37 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Pinned so the ubuntu-latest move to Ubuntu 26 cannot change the build unannounced
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Read app version
         id: version
         run: |
           VERSION_NAME=$(grep -E '^\s*versionName\s*=' app/build.gradle.kts | sed -E 's/.*"(.*)".*/\1/')
           VERSION_CODE=$(grep -E '^\s*versionCode\s*=' app/build.gradle.kts | sed -E 's/[^0-9]*([0-9]+).*/\1/')
-          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "versionName=$VERSION_NAME versionCode=$VERSION_CODE"
+          MIN_SDK=$(grep -E '^\s*minSdk\s*=' app/build.gradle.kts | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+          TARGET_SDK=$(grep -E '^\s*targetSdk\s*=' app/build.gradle.kts | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+          {
+            echo "name=$VERSION_NAME"
+            echo "code=$VERSION_CODE"
+            echo "min_sdk=$MIN_SDK"
+            echo "target_sdk=$TARGET_SDK"
+          } >> "$GITHUB_OUTPUT"
+          echo "versionName=$VERSION_NAME versionCode=$VERSION_CODE minSdk=$MIN_SDK targetSdk=$TARGET_SDK"
 
       - name: Check tag matches versionName
         if: startsWith(github.ref, 'refs/tags/')
@@ -67,6 +75,7 @@ jobs:
             echo "keyPassword=$KEY_PASSWORD"
           } > keystore.properties
 
+      # AGP 9 only creates unit test tasks for the debug build type
       - name: Run unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
 
@@ -80,20 +89,108 @@ jobs:
           BASE="Al-Minshawi-v${{ steps.version.outputs.name }}"
           cp app/build/outputs/apk/release/app-release.apk "dist/$BASE.apk"
           cp app/build/outputs/bundle/release/app-release.aab "dist/$BASE.aab"
-          (cd dist && sha256sum * > SHA256SUMS.txt)
-          ls -l dist
+          (cd dist && sha256sum "$BASE.apk" "$BASE.aab" > SHA256SUMS.txt)
+
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          SIGNER_SHA256=$("$APKSIGNER" verify --print-certs "dist/$BASE.apk" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          if [ -z "$SIGNER_SHA256" ]; then
+            echo "::error::Could not read the APK signing certificate"
+            exit 1
+          fi
+
+          TESTS=0; FAILURES=0; SKIPPED=0
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do
+            TESTS=$((TESTS + $(grep -o 'tests="[0-9]*"' "$f" | head -1 | tr -dc '0-9')))
+            FAILURES=$((FAILURES + $(grep -o 'failures="[0-9]*"' "$f" | head -1 | tr -dc '0-9')))
+            SKIPPED=$((SKIPPED + $(grep -o 'skipped="[0-9]*"' "$f" | head -1 | tr -dc '0-9')))
+          done
+
+          {
+            echo "base=$BASE"
+            echo "apk_size=$(du -h "dist/$BASE.apk" | cut -f1)"
+            echo "aab_size=$(du -h "dist/$BASE.aab" | cut -f1)"
+            echo "apk_sha256=$(sha256sum "dist/$BASE.apk" | cut -d' ' -f1)"
+            echo "aab_sha256=$(sha256sum "dist/$BASE.aab" | cut -d' ' -f1)"
+            echo "signer_sha256=$SIGNER_SHA256"
+            echo "tests=$TESTS passed, $FAILURES failed, $SKIPPED skipped"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Write build summary
+        env:
+          PUBLISHED: ${{ startsWith(github.ref, 'refs/tags/') && 'Yes, as a GitHub release' || 'No, manual run (files are under Artifacts below)' }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Al-Minshawi v${{ steps.version.outputs.name }}
+
+          | | |
+          |---|---|
+          | Version | ${{ steps.version.outputs.name }} (code ${{ steps.version.outputs.code }}) |
+          | Android | ${{ steps.version.outputs.min_sdk }}+ (min SDK), targets SDK ${{ steps.version.outputs.target_sdk }} |
+          | Commit | \`${GITHUB_SHA::7}\` on \`${GITHUB_REF_NAME}\` |
+          | Unit tests | ${{ steps.artifacts.outputs.tests }} |
+          | Published | $PUBLISHED |
+
+          ### Files
+
+          | File | Size | SHA-256 |
+          |---|---|---|
+          | ${{ steps.artifacts.outputs.base }}.apk | ${{ steps.artifacts.outputs.apk_size }} | \`${{ steps.artifacts.outputs.apk_sha256 }}\` |
+          | ${{ steps.artifacts.outputs.base }}.aab | ${{ steps.artifacts.outputs.aab_size }} | \`${{ steps.artifacts.outputs.aab_sha256 }}\` |
+
+          ### Signing certificate (SHA-256)
+
+          \`${{ steps.artifacts.outputs.signer_sha256 }}\`
+
+          The APK is signed with the upload key. Google Play re-signs its copy with a different key,
+          so this APK cannot update an install that came from the Play Store.
+          EOF
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: Al-Minshawi-v${{ steps.version.outputs.name }}
+          name: ${{ steps.artifacts.outputs.base }}
           path: dist/
+          if-no-files-found: error
+
+      # Notes come from .github/release-notes/v<version>.md. Download and verification
+      # details are added after them, then GitHub appends the list of commits.
+      - name: Prepare release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          NOTES=".github/release-notes/v${{ steps.version.outputs.name }}.md"
+          BODY="$RUNNER_TEMP/release-body.md"
+          if [ -f "$NOTES" ]; then
+            cat "$NOTES" > "$BODY"
+          else
+            echo "::warning::No $NOTES found, the release will only list commits"
+            echo "Al-Minshawi v${{ steps.version.outputs.name }}" > "$BODY"
+          fi
+          cat >> "$BODY" <<EOF
+
+          ## Downloads
+
+          | File | Use it for | Size |
+          |---|---|---|
+          | \`${{ steps.artifacts.outputs.base }}.apk\` | Installing directly on a phone (Android 12+) | ${{ steps.artifacts.outputs.apk_size }} |
+          | \`${{ steps.artifacts.outputs.base }}.aab\` | Uploading to Google Play | ${{ steps.artifacts.outputs.aab_size }} |
+
+          > If the app was installed from Google Play, uninstall it before installing this APK.
+          > Play re-signs apps with its own key, so the two versions cannot update each other.
+
+          ## Verify
+
+          Signing certificate SHA-256:
+          \`${{ steps.artifacts.outputs.signer_sha256 }}\`
+
+          File checksums are in \`SHA256SUMS.txt\`.
+          EOF
 
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: Al-Minshawi v${{ steps.version.outputs.name }}
+          body_path: ${{ runner.temp }}/release-body.md
           generate_release_notes: true
           files: dist/*
 
