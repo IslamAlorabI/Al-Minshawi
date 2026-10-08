@@ -68,7 +68,7 @@ jobs:
           } > keystore.properties
 
       - name: Run unit tests
-        run: ./gradlew --no-daemon testReleaseUnitTest
+        run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: Build release APK and AAB
         run: ./gradlew --no-daemon assembleRelease bundleRelease
