@@ -683,7 +683,7 @@ fun FullScreenPlayer(surah: Surah, localizedName: String, localizedSurahNames: A
                         Icon(
                             imageVector = Icons.Rounded.Bedtime,
                             contentDescription = stringResource(R.string.sleep_timer),
-                            tint = if (sleepTimerMs > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (sleepTimerMs > 0 || isEndOfSurahTimer) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
                     }
