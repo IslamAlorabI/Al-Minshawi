@@ -206,9 +206,9 @@ fun GuideScreen(onBack: () -> Unit) {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.PlayDisabled,
+                            imageVector = Icons.Rounded.PlayArrow,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.size(24.dp)
                         )
                     }

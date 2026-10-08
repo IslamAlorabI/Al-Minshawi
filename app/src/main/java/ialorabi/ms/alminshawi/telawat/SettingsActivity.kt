@@ -33,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringArrayResource
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 import android.content.Intent
 import androidx.core.content.edit
@@ -42,7 +44,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import ialorabi.ms.alminshawi.telawat.ui.theme.AlMinshawiTheme
-import ialorabi.ms.alminshawi.telawat.player.PlaybackService
+import ialorabi.ms.alminshawi.telawat.player.AudioCache
 import java.util.Locale
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -59,7 +61,7 @@ class SettingsActivity : AppCompatActivity() {
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onResume() {
         super.onResume()
-        cacheSizeBytes.longValue = PlaybackService.getCacheSize(this)
+        cacheSizeBytes.longValue = AudioCache.getCacheSize()
     }
 
     @androidx.annotation.OptIn(UnstableApi::class)
@@ -340,9 +342,11 @@ class SettingsActivity : AppCompatActivity() {
                             confirmButton = {
                                 TextButton(
                                     onClick = {
-                                        PlaybackService.clearCache(this@SettingsActivity)
-                                        cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
                                         showClearAllDialog = false
+                                        lifecycleScope.launch {
+                                            AudioCache.clearAll()
+                                            cacheSizeBytes = AudioCache.getCacheSize()
+                                        }
                                     }
                                 ) {
                                     Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
@@ -358,7 +362,7 @@ class SettingsActivity : AppCompatActivity() {
 
                     if (showManageCacheSheet) {
                         ModalBottomSheet(onDismissRequest = { showManageCacheSheet = false }) {
-                            var cachedSurahs by remember { mutableStateOf(PlaybackService.getCachedSurahs()) }
+                            var cachedSurahs by remember { mutableStateOf(AudioCache.getCachedSurahs()) }
                             val localizedNames = stringArrayResource(R.array.surah_names)
                             val snackbarHostState = remember { SnackbarHostState() }
 
@@ -420,9 +424,11 @@ class SettingsActivity : AppCompatActivity() {
                                                                         TextButton(
                                                                             onClick = {
                                                                                 showInlineConfirm = false
-                                                                                PlaybackService.removeSurahCache(surah)
-                                                                                cachedSurahs = PlaybackService.getCachedSurahs()
-                                                                                cacheSizeBytes = PlaybackService.getCacheSize(this@SettingsActivity)
+                                                                                lifecycleScope.launch {
+                                                                                    AudioCache.remove(surah)
+                                                                                    cachedSurahs = AudioCache.getCachedSurahs()
+                                                                                    cacheSizeBytes = AudioCache.getCacheSize()
+                                                                                }
                                                                             }
                                                                         ) {
                                                                             Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
@@ -442,14 +448,16 @@ class SettingsActivity : AppCompatActivity() {
                                                                         IconButton(
                                                                             onClick = {
                                                                                 val fileName = "${surah.id}_${localizedName}_Minshawi.mp3"
-                                                                                val saved = PlaybackService.saveSurahToDownloads(this@SettingsActivity, surah, fileName)
-                                                                                val message = if (saved) R.string.saved_to_downloads else R.string.save_failed
-                                                                                Toast.makeText(this@SettingsActivity, getString(message), Toast.LENGTH_SHORT).show()
+                                                                                lifecycleScope.launch {
+                                                                                    val saved = AudioCache.saveToDownloads(surah, fileName)
+                                                                                    val message = if (saved) R.string.saved_to_downloads else R.string.save_failed
+                                                                                    Toast.makeText(this@SettingsActivity, getString(message), Toast.LENGTH_SHORT).show()
+                                                                                }
                                                                             }
                                                                         ) {
                                                                         Icon(
                                                                             imageVector = Icons.Rounded.SaveAlt,
-                                                                            contentDescription = "Save to device",
+                                                                            contentDescription = stringResource(R.string.save_to_device),
                                                                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                                         )
                                                                     }

@@ -12,8 +12,9 @@ class ArtworkContentProvider : ContentProvider() {
     companion object {
         private const val AUTHORITY_SUFFIX = ".artwork"
 
-        fun getUri(context: android.content.Context): Uri {
-            return Uri.parse("content://${context.packageName}$AUTHORITY_SUFFIX/media_artwork")
+        // The version query makes system UI reload the image after it is regenerated
+        fun getUri(context: android.content.Context, version: Long): Uri {
+            return Uri.parse("content://${context.packageName}$AUTHORITY_SUFFIX/media_artwork?v=$version")
         }
     }
 

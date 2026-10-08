@@ -75,6 +75,15 @@ object SurahRepository {
         30, 30
     )
 
+    // Surahs whose first ayah is also the first ayah of a juz
+    private val juzStartSurahIds = setOf(1, 15, 17, 21, 23, 46, 58, 67, 78)
+
+    fun juzRange(surah: Surah): IntRange {
+        val next = surahs.getOrNull(surah.id) ?: return surah.juz..30
+        val endJuz = if (next.id in juzStartSurahIds) next.juz - 1 else next.juz
+        return surah.juz..endJuz
+    }
+
     private val serverFileNames = mapOf(
         3 to "\u0627\u0653\u0644 \u0639\u0645\u0631\u0627\u0646",
         5 to "\u0627\u0644\u0645\u0627\u064A\u0654\u062F\u0629",

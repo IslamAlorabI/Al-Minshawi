@@ -3,12 +3,15 @@ package ialorabi.ms.alminshawi.telawat.player
 import android.content.ComponentName
 import android.content.Context
 import android.app.Application
+import android.os.Bundle
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
@@ -19,6 +22,9 @@ import ialorabi.ms.alminshawi.telawat.data.SurahRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
@@ -51,6 +57,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
 
     private var mediaControllerFuture: ListenableFuture<MediaController>? = null
+    private var controller: MediaController? = null
     var player: Player? = null
         private set
 
@@ -71,14 +78,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _duration = MutableStateFlow(prefs.getLong("last_duration", 0L))
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    private val _downloadingSurahs = MutableStateFlow<Set<Int>>(emptySet())
-    val downloadingSurahs: StateFlow<Set<Int>> = _downloadingSurahs.asStateFlow()
+    val downloadingProgress: StateFlow<Map<Int, Float>> = PlaybackStore.downloads
 
-    private val _cachedSurahIds = MutableStateFlow<Set<Int>>(emptySet())
-    val cachedSurahIds: StateFlow<Set<Int>> = _cachedSurahIds.asStateFlow()
+    val downloadingSurahs: StateFlow<Set<Int>> = PlaybackStore.downloads
+        .map { it.keys }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
-    private val _downloadingProgress = MutableStateFlow<Map<Int, Float>>(emptyMap())
-    val downloadingProgress: StateFlow<Map<Int, Float>> = _downloadingProgress.asStateFlow()
+    val cachedSurahIds: StateFlow<Set<Int>> = AudioCache.downloadedIds
 
     private var progressJob: Job? = null
 
@@ -91,23 +97,21 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _autoPlayReversed = MutableStateFlow(prefs.getBoolean("auto_play_reversed", false))
     val autoPlayReversed: StateFlow<Boolean> = _autoPlayReversed.asStateFlow()
 
-    private val _sleepTimerRemainingMs = MutableStateFlow(0L)
-    val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
+    val sleepTimerRemainingMs: StateFlow<Long> = SleepTimer.remainingMs
 
-    private val _sleepTimerSelectedMinutes = MutableStateFlow<Int?>(null)
-    val sleepTimerSelectedMinutes: StateFlow<Int?> = _sleepTimerSelectedMinutes.asStateFlow()
+    val sleepTimerSelectedMinutes: StateFlow<Int?> = SleepTimer.selectedMinutes
+
+    val sleepTimerEndOfSurah: StateFlow<Boolean> = SleepTimer.endOfSurah
 
 
     private val _favoriteSurahIds = MutableStateFlow<Set<Int>>(emptySet())
     val favoriteSurahIds: StateFlow<Set<Int>> = _favoriteSurahIds.asStateFlow()
 
-    private var sleepTimerJob: Job? = null
     private var bufferingJob: Job? = null
     private var isTransitioning = false
     private var isSeeking = false
     private var isSkipping = false
-    private val _pendingDownloadSurahId = MutableStateFlow<Int?>(null)
-    val pendingDownloadSurahId: StateFlow<Int?> = _pendingDownloadSurahId.asStateFlow()
+    val pendingDownloadSurahId: StateFlow<Int?> = PlaybackStore.playDownloadSurahId
 
     private val _downloadLimitReached = MutableSharedFlow<Unit>()
     val downloadLimitReached: SharedFlow<Unit> = _downloadLimitReached.asSharedFlow()
@@ -121,6 +125,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     private val _playbackError = MutableSharedFlow<Unit>()
     val playbackError: SharedFlow<Unit> = _playbackError.asSharedFlow()
 
+    val resumedAt: SharedFlow<Long> = PlaybackStore.resumedAt
+
 
     private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
@@ -131,19 +137,39 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     init {
-        refreshCachedSurahs()
         loadFavorites()
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        viewModelScope.launch {
+            PlaybackStore.events.collect { event ->
+                when (event) {
+                    PlaybackStore.Event.DOWNLOAD_FAILED -> {
+                        isTransitioning = false
+                        isSkipping = false
+                        _downloadFailed.emit(Unit)
+                    }
+                    PlaybackStore.Event.QUEUE_LIMIT_REACHED -> _downloadQueueLimitReached.emit(Unit)
+                    PlaybackStore.Event.PLAYBACK_ERROR -> _playbackError.emit(Unit)
+                }
+            }
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
-        sleepTimerJob?.cancel()
     }
     
-    fun refreshCachedSurahs() {
-        _cachedSurahIds.value = PlaybackService.getCachedSurahs().map { it.id }.toSet()
+    private fun sendCommand(action: String, surahId: Int? = null, juz: Int? = null) {
+        val args = Bundle().apply {
+            surahId?.let { putInt(PlaybackService.EXTRA_SURAH_ID, it) }
+            juz?.let { putInt(PlaybackService.EXTRA_JUZ, it) }
+        }
+        controller?.sendCustomCommand(SessionCommand(action, Bundle.EMPTY), args)
+    }
+
+    // Re-applies localized titles to the notification after a language change
+    fun refreshMetadata() {
+        sendCommand(PlaybackService.ACTION_REFRESH_METADATA)
     }
 
     private fun loadFavorites() {
@@ -159,40 +185,34 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun downloadSurah(surah: Surah) {
-        if (_downloadingSurahs.value.contains(surah.id)) return
-        PlaybackService.instance?.downloadSurahInBackground(surah)
+        if (surah.id in downloadingSurahs.value) return
+        sendCommand(PlaybackService.ACTION_DOWNLOAD_SURAH, surah.id)
+    }
+
+    fun surahsMissingInJuz(juz: Int): List<Surah> =
+        SurahRepository.surahs.filter { juz in SurahRepository.juzRange(it) && it.id !in cachedSurahIds.value }
+
+    suspend fun downloadSizeBytes(surahs: List<Surah>): Long? = RemoteSizes.totalBytes(surahs)
+
+    fun freeSpaceBytes(): Long = AudioCache.freeSpaceBytes()
+
+    fun downloadJuz(juz: Int) {
+        sendCommand(PlaybackService.ACTION_DOWNLOAD_JUZ, juz = juz)
     }
 
     fun cancelDownload(surahId: Int) {
-        if (surahId == _pendingDownloadSurahId.value) {
-            PlaybackService.instance?.cancelPlayDownload()
-            _pendingDownloadSurahId.value = null
-        } else {
-            PlaybackService.instance?.cancelManualDownload(surahId)
+        if (surahId == pendingDownloadSurahId.value) {
+            isTransitioning = false
+            isSkipping = false
         }
-        _downloadingSurahs.value -= surahId
-        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply { remove(surahId) }
-        _cachedSurahIds.value -= surahId
-        viewModelScope.launch {
-            delay(1000.milliseconds)
-            refreshCachedSurahs()
-        }
+        sendCommand(PlaybackService.ACTION_CANCEL_DOWNLOAD, surahId)
     }
 
     fun cancelAllDownloads() {
-        val downloading = _downloadingSurahs.value
-        PlaybackService.instance?.cancelAllDownloads()
-        _pendingDownloadSurahId.value = null
-        _downloadingSurahs.value = emptySet()
-        _downloadingProgress.value = emptyMap()
-        _cachedSurahIds.value -= downloading
-        viewModelScope.launch {
-            delay(1000.milliseconds)
-            refreshCachedSurahs()
-        }
+        isTransitioning = false
+        isSkipping = false
+        sendCommand(PlaybackService.ACTION_CANCEL_ALL_DOWNLOADS)
     }
-
-
 
     fun initializeController(context: Context) {
         val sessionToken = SessionToken(
@@ -203,56 +223,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         mediaControllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         mediaControllerFuture?.addListener(
             {
-                player = mediaControllerFuture?.get()
+                controller = mediaControllerFuture?.get()
+                player = controller
                 setupPlayerListeners()
                 restoreLastState()
-                PlaybackService.instance?.onWidgetDownloadStateChanged = { surahId, downloading, progress ->
-                    if (downloading) {
-                        _pendingDownloadSurahId.value = surahId
-                        _downloadingSurahs.value += surahId
-                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                            put(surahId, progress)
-                        }
-                    } else {
-                        _pendingDownloadSurahId.value = null
-                        _downloadingSurahs.value -= surahId
-                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                            remove(surahId)
-                        }
-                        refreshCachedSurahs()
-                    }
-                }
-                PlaybackService.instance?.onManualDownloadStateChanged = { surahId, downloading, progress ->
-                    if (downloading) {
-                        _downloadingSurahs.value += surahId
-                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                            put(surahId, progress)
-                        }
-                    } else {
-                        _downloadingSurahs.value -= surahId
-                        _downloadingProgress.value = _downloadingProgress.value.toMutableMap().apply {
-                            remove(surahId)
-                        }
-                        refreshCachedSurahs()
-                    }
-                }
-                PlaybackService.instance?.onDownloadFailed = {
-                    viewModelScope.launch {
-                        _pendingDownloadSurahId.value = null
-                        _downloadFailed.emit(Unit)
-                    }
-                }
-                PlaybackService.instance?.onDownloadQueueLimitReached = {
-                    viewModelScope.launch {
-                        _downloadQueueLimitReached.emit(Unit)
-                    }
-                }
-                PlaybackService.instance?.onPlaybackError = {
-                    viewModelScope.launch {
-                        _playbackError.emit(Unit)
-                        refreshCachedSurahs()
-                    }
-                }
             },
             MoreExecutors.directExecutor()
         )
@@ -371,20 +345,28 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         })
     }
 
+    private var isUiVisible = true
+
+    fun setUiVisible(visible: Boolean) {
+        isUiVisible = visible
+        if (visible && player?.isPlaying == true) startTrackingProgress()
+    }
+
     private fun startTrackingProgress() {
         progressJob?.cancel()
         progressJob = viewModelScope.launch {
-            var tickCount = 0
-            if (!isSeeking) {
-                _currentPosition.value = player?.currentPosition ?: 0L
-            }
+            var lastSaveAt = SystemClock.elapsedRealtime()
             while (isActive) {
-                delay(100L.milliseconds)
-                if (!isSeeking) {
+                if (isUiVisible && !isSeeking) {
                     _currentPosition.value = player?.currentPosition ?: 0L
                 }
-                tickCount++
-                if (tickCount % 20 == 0) saveCurrentState()
+                val now = SystemClock.elapsedRealtime()
+                if (now - lastSaveAt >= 2000L) {
+                    saveCurrentState()
+                    lastSaveAt = now
+                }
+                // While hidden, only wake up to save the resume position
+                delay(if (isUiVisible) 100L.milliseconds else 2000L.milliseconds)
             }
         }
     }
@@ -400,6 +382,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 putLong("last_pos", pos)
                 putLong("last_duration", dur)
             }
+            if (!isEnded) ResumePositions.save(prefs, surahId, pos, dur)
         }
     }
 
@@ -408,43 +391,21 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         progressJob = null
     }
 
+    // The service starts cached surahs right away (resuming where the listener stopped)
+    // and downloads the rest first when autoPlay is set
     fun playSurah(surah: Surah, autoPlay: Boolean = false) {
-        if (surah.id in _cachedSurahIds.value) {
-            playFromCache(surah)
-        } else if (autoPlay) {
-            val exoPlayer = player ?: run { isTransitioning = false; isSkipping = false; return }
-            PlaybackService.instance?.downloadAndPlay(exoPlayer, surah)
+        val canPlay = surah.id in cachedSurahIds.value || (autoPlay && surah.id !in downloadingSurahs.value)
+        if (canPlay && controller != null) {
+            sendCommand(PlaybackService.ACTION_PLAY_SURAH, surah.id)
         } else {
             isTransitioning = false
             isSkipping = false
         }
     }
 
-    private fun playFromCache(surah: Surah) {
-        _pendingDownloadSurahId.value = null
-        player?.let { exoPlayer ->
-            val mediaItem = MediaItem.Builder()
-                .setMediaId(surah.id.toString())
-                .setUri(surah.url)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(getLocalizedTitle(surah))
-                        .setArtist(getLocalizedArtist())
-                        .apply { getArtworkUri()?.let { setArtworkUri(it) } }
-                        .build()
-                )
-                .build()
-
-            exoPlayer.stop()
-            if (exoPlayer.mediaItemCount > 0) {
-                exoPlayer.replaceMediaItem(exoPlayer.currentMediaItemIndex, mediaItem)
-            } else {
-                exoPlayer.setMediaItem(mediaItem)
-            }
-            exoPlayer.prepare()
-            exoPlayer.play()
-            isSkipping = false
-        }
+    fun restartCurrentSurah() {
+        player?.seekTo(0)
+        _currentPosition.value = 0L
     }
 
     fun togglePlayPause() {
@@ -465,7 +426,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun beginSeek() {
         isSeeking = true
-        PlaybackService.isUserSeeking = true
+        PlaybackStore.isUserSeeking = true
         wasPlayingBeforeSeek = player?.isPlaying == true
         player?.pause()
     }
@@ -483,7 +444,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             delay(300.milliseconds)
             isSeeking = false
-            PlaybackService.isUserSeeking = false
+            PlaybackStore.isUserSeeking = false
         }
     }
 
@@ -531,63 +492,46 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun toggleRepeat() {
         val newState = !_repeatMode.value
-        _repeatMode.value = newState
-        prefs.edit { putBoolean("repeat_mode", newState) }
-        if (newState) {
-            _autoPlayNext.value = false
-            prefs.edit { putBoolean("auto_play_next", false) }
+        prefs.edit {
+            putBoolean("repeat_mode", newState)
+            if (newState) {
+                putBoolean("auto_play_next", false)
+                putBoolean("auto_play_reversed", false)
+            }
         }
-        PlaybackService.instance?.refreshCustomLayout()
     }
 
-    fun toggleAutoPlayNext() {
-        val newState = !_autoPlayNext.value
-        _autoPlayNext.value = newState
-        prefs.edit { putBoolean("auto_play_next", newState) }
-        if (newState) {
-            _repeatMode.value = false
-            prefs.edit { putBoolean("repeat_mode", false) }
-        }
-        PlaybackService.instance?.refreshCustomLayout()
-    }
-
-
-
-    fun toggleAutoPlayReversed() {
-        val newState = !_autoPlayReversed.value
-        _autoPlayReversed.value = newState
-        prefs.edit { putBoolean("auto_play_reversed", newState) }
-    }
-
-    fun setSleepTimer(minutes: Int?) {
-        sleepTimerJob?.cancel()
-        if (minutes == null || minutes <= 0) {
-            _sleepTimerRemainingMs.value = 0L
-            _sleepTimerSelectedMinutes.value = null
-            return
-        }
-        _sleepTimerSelectedMinutes.value = minutes
-        val totalMs = minutes * 60 * 1000L
-        _sleepTimerRemainingMs.value = totalMs
-        sleepTimerJob = viewModelScope.launch {
-            val startTime = System.currentTimeMillis()
-            while (isActive) {
-                delay(500L.milliseconds)
-                val elapsed = System.currentTimeMillis() - startTime
-                val remaining = (totalMs - elapsed).coerceAtLeast(0L)
-                _sleepTimerRemainingMs.value = remaining
-                if (remaining <= 0L) {
-                    player?.pause()
-                    _sleepTimerRemainingMs.value = 0L
-                    _sleepTimerSelectedMinutes.value = null
-                    break
+    // Same order as the notification button: off -> next -> reverse -> off
+    fun cycleAutoPlay() {
+        val autoNextOn = _autoPlayNext.value
+        val autoReversed = _autoPlayReversed.value
+        prefs.edit {
+            when {
+                !autoNextOn -> {
+                    putBoolean("auto_play_next", true)
+                    putBoolean("auto_play_reversed", false)
+                    putBoolean("repeat_mode", false)
+                }
+                !autoReversed -> putBoolean("auto_play_reversed", true)
+                else -> {
+                    putBoolean("auto_play_next", false)
+                    putBoolean("auto_play_reversed", false)
                 }
             }
         }
     }
 
+    fun setSleepTimer(minutes: Int?) {
+        SleepTimer.set(minutes)
+    }
+
+    fun setSleepTimerEndOfSurah() {
+        SleepTimer.setEndOfSurah()
+    }
+
     fun releaseController() {
         mediaControllerFuture?.let { MediaController.releaseFuture(it) }
+        controller = null
         player = null
     }
 }

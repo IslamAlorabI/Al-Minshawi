@@ -72,7 +72,7 @@ object ArtworkHelper {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 }
 
-                val uri = ArtworkContentProvider.getUri(context)
+                val uri = ArtworkContentProvider.getUri(context, System.currentTimeMillis())
                 cachedUri = uri
                 return uri
             } finally {
